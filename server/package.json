@@ -1,0 +1,25 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "A desktop application store for Ubuntu that discovers applications from configured APT repositories, displays app metadata, and simplifies package installation and management.",
+  "main": "server.ts",
+  "scripts": {
+    "dev": "tsx watch server.ts"
+  },
+  "keywords": [],
+  "author": "akash patel",
+  "license": "ISC",
+  "packageManager": "pnpm@12.11.2+sha512.25a51652a196785af5f28bda6dfe8dc582ebefa4ac1d180221ce1390231c5fb76637822ea4b6e4633ce74acdcb0a77f725af11bad38177fdeddaee818a955cb9",
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.7",
+    "express": "^5.3.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}
