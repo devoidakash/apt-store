@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import errorHandle from "./src/midlleware/error-handler";
 
 const app = express();
 
@@ -11,5 +12,7 @@ app.get("/", (req, res) => {
     message: "Hello from apt store!",
   });
 });
+
+app.use(errorHandle);
 
 export default app;
