@@ -17,9 +17,14 @@ export interface CreateRepositoryResponse {
 export async function createRepository(
   repository: CreateRepositoryRequest,
 ): Promise<CreateRepositoryResponse> {
+  const { package_name, ...repositoryData } = repository;
   const response = await axiosClient.post<CreateRepositoryResponse>(
     "/admin/repositories",
-    repository,
+    {
+      ...repositoryData,
+      name: package_name,
+      packageName: [package_name],
+    },
   );
 
   return response.data;
