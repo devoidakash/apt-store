@@ -33,12 +33,12 @@ interface RepositoryData {
 interface ApplicationData {
   repositoryId: string;
   packageName: string;
-  description: string;
+  description: string | null;
   version: string;
   downloadSizeBytes: number;
   installedSizeBytes: number;
-  homepage: string;
-  maintainer: string;
+  homepage: string | null;
+  maintainer: string | null;
 }
 
 export async function insertIntoRepository(
@@ -54,6 +54,41 @@ export async function insertIntoRepository(
       RETURNING *
     `,
     [
+      data.name,
+      data.packageName,
+      data.uri,
+      data.suite,
+      data.component,
+      data.architecture,
+      data.signedBy,
+    ],
+  );
+
+  return toCamelCase(result.rows[0]);
+}
+
+export async function updateRepository(
+  client: PoolClient,
+  repositoryId: string,
+  data: RepositoryData,
+): Promise<Record<string, unknown> | null> {
+  const result = await client.query(
+    `
+      UPDATE repositories
+      SET
+        name = $2,
+        package_name = $3::text[],
+        uri = $4,
+        suite = $5,
+        component = $6,
+        architecture = $7,
+        signedBy = $8,
+        updated_at = now()
+      WHERE id = $1
+      RETURNING *
+    `,
+    [
+      repositoryId,
       data.name,
       data.packageName,
       data.uri,

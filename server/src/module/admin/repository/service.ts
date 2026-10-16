@@ -1,28 +1,23 @@
 import compareDpkgVersions from "dpkg-compare-versions";
+import { promisify } from "node:util";
+import { gunzip } from "node:zlib";
 import { type PoolClient } from "pg";
 import ApiError from "../../../err/api-error";
+import ERROR_CODES from "../../../err/error-code";
 import pool from "../../../infra/database/db";
 import withTransaction from "../../../utils/with-transaction";
 import * as repository from "./repository";
-import { gunzip } from "node:zlib";
-import { promisify } from "node:util";
 
 export async function getRepositories() {
   return repository.fetchRepositories();
 }
 
 export async function getRepositoryById(repositoryId: string) {
-  return repository.fetchRepositoryById(repositoryId);
-}
-
-interface createRepositoryData {
-  name: string;
-  packageName: Array<string>;
-  uri: string;
-  suite: string;
-  component: string;
-  architecture: string;
-  signedBy: string;
+  const result = await repository.fetchRepositoryById(repositoryId);
+  if (!result) {
+    throw new ApiError(ERROR_CODES.REPOSITORY_NOT_FOUND);
+  }
+  return result;
 }
 
 function getPackagesObject(text: string): Record<string, string>[] {
@@ -58,14 +53,36 @@ function getPackagesObject(text: string): Record<string, string>[] {
   return objects;
 }
 
+async function getRepositoryMetadata(
+  data: createRepositoryData,
+): Promise<string> {
+  const url = `${data.uri}/dists/${encodeURIComponent(data.suite)}/${encodeURIComponent(data.component)}/binary-${encodeURIComponent(data.architecture)}/Packages.gz`;
+
+  const res = await fetch(url, { signal: AbortSignal.timeout(15000) });
+
+  if (!res.ok) {
+    throw new ApiError({
+      statusCode: res.status,
+      message: "Repository request failed",
+      code: "REPOSITORY_REQUEST_FAILED",
+    });
+  }
+
+  const gunzipAsync = promisify(gunzip);
+
+  const compressed = Buffer.from(await res.arrayBuffer());
+  const decompressed = await gunzipAsync(compressed);
+  return decompressed.toString("utf8");
+}
+
 interface latestApplication {
   packageName: string;
-  description: string;
+  description: string | null;
   version: string;
   downloadSizeBytes: number;
   installedSizeBytes: number;
-  homepage: string;
-  maintainer: string;
+  homepage: string | null;
+  maintainer: string | null;
 }
 
 function getLatestApplication(
@@ -99,41 +116,43 @@ function getLatestApplication(
     installedSizeBytes:
       Number.parseInt(latestPackage["Installed-Size"] ?? "0", 10) * 1024,
     homepage: latestPackage.Homepage ?? null,
-    maintainer: (latestPackage.Maintainer ?? null)
-      .replace(/\s*<[^>]*>/, "")
-      .trim(),
+    maintainer:
+      latestPackage.Maintainer?.replace(/\s*<[^>]*>/, "").trim() || null,
   };
 
   return application;
 }
 
-export async function createRepository(data: createRepositoryData) {
-  const url = `${data.uri}/dists/${data.suite}/${data.component}/binary-${data.architecture}/Packages.gz`;
-  const res = await fetch(url, { signal: AbortSignal.timeout(15000) });
-
-  if (!res.ok) {
-    throw new ApiError({
-      statusCode: res.status,
-      message: "Repository request failed",
-      code: "REPOSITORY_REQUEST_FAILED",
-    });
+async function getRepositoryApplication(
+  data: createRepositoryData,
+): Promise<latestApplication> {
+  const packageName = data.packageName[0];
+  if (!packageName) {
+    throw new ApiError(ERROR_CODES.PACKAGE_NOT_FOUND);
   }
 
-  const gunzipAsync = promisify(gunzip);
-
-  const compressed = Buffer.from(await res.arrayBuffer());
-  const decompressed = await gunzipAsync(compressed);
-  const text = decompressed.toString("utf8");
-
+  const text = await getRepositoryMetadata(data);
   const packages = getPackagesObject(text);
-  const application = getLatestApplication(data.packageName[0], packages);
+
+  const application = getLatestApplication(packageName, packages);
   if (!application) {
-    throw new ApiError({
-      statusCode: 404,
-      message: "Package not found in repository",
-      code: "PACKAGE_NOT_FOUND",
-    });
+    throw new ApiError(ERROR_CODES.PACKAGE_NOT_FOUND);
   }
+  return application;
+}
+
+interface createRepositoryData {
+  name: string;
+  packageName: Array<string>;
+  uri: string;
+  suite: string;
+  component: string;
+  architecture: string;
+  signedBy: string;
+}
+
+export async function createRepository(data: createRepositoryData) {
+  const application = await getRepositoryApplication(data);
 
   return withTransaction(pool, async (client: PoolClient) => {
     const newRepository = await repository.insertIntoRepository(client, {
@@ -143,6 +162,32 @@ export async function createRepository(data: createRepositoryData) {
 
     if (typeof newRepository?.id !== "string") {
       throw new Error("Repository ID is missing or invalid");
+    }
+
+    await repository.insertIntoApplications(client, {
+      repositoryId: newRepository.id,
+      ...application,
+    });
+
+    return newRepository;
+  });
+}
+
+export async function updateRepository(
+  repositoryId: string,
+  data: createRepositoryData,
+) {
+  const application = await getRepositoryApplication(data);
+
+  return withTransaction(pool, async (client: PoolClient) => {
+    const newRepository = await repository.updateRepository(
+      client,
+      repositoryId,
+      data,
+    );
+
+    if (typeof newRepository?.id !== "string") {
+      throw new ApiError(ERROR_CODES.REPOSITORY_NOT_FOUND);
     }
 
     await repository.insertIntoApplications(client, {

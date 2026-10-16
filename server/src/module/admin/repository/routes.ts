@@ -19,4 +19,11 @@ router.post(
   controller.createRepository,
 );
 
+router.patch(
+  "/repositories/:repositoryId",
+  validateSchema(schema.repositoryId, "params"),
+  validateSchema(schema.createRepository),
+  controller.updateRepository,
+);
+
 export default router;
