@@ -2,8 +2,11 @@ import { useEffect, useState, type FormEvent } from "react";
 import axios from "axios";
 import {
   ArrowLeft,
+  BadgeCheck,
+  Boxes,
   Check,
   Database,
+  FileText,
   LoaderCircle,
   Pencil,
   X,
@@ -77,6 +80,24 @@ const sidebarLinks = [
     label: "Repositories",
     icon: Database,
     end: false,
+  },
+  {
+    to: "/applications",
+    label: "Applications",
+    icon: Boxes,
+    end: false,
+    children: [
+      {
+        to: "/applications?applicationStatus=draft",
+        label: "Draft",
+        icon: FileText,
+      },
+      {
+        to: "/applications?applicationStatus=live",
+        label: "Live",
+        icon: BadgeCheck,
+      },
+    ],
   },
 ];
 

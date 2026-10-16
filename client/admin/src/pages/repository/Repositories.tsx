@@ -1,6 +1,14 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { Boxes, Database, LoaderCircle, Package, Plus } from "lucide-react";
+import {
+  BadgeCheck,
+  Boxes,
+  Database,
+  FileText,
+  LoaderCircle,
+  Package,
+  Plus,
+} from "lucide-react";
 import { Link } from "react-router";
 import Layout from "../../components/dashboard/Layout";
 import { getRepositories, type Repository } from "../../api/repository";
@@ -11,6 +19,24 @@ const sidebarLinks = [
     label: "Repositories",
     icon: Database,
     end: false,
+  },
+  {
+    to: "/applications",
+    label: "Applications",
+    icon: Boxes,
+    end: false,
+    children: [
+      {
+        to: "/applications?applicationStatus=draft",
+        label: "Draft",
+        icon: FileText,
+      },
+      {
+        to: "/applications?applicationStatus=live",
+        label: "Live",
+        icon: BadgeCheck,
+      },
+    ],
   },
 ];
 
