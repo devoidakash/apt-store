@@ -10,6 +10,7 @@ const sidebarLinks = [
     to: "/repositories",
     label: "Repositories",
     icon: Database,
+    end: false,
   },
 ];
 
@@ -52,7 +53,7 @@ export default function Repositories() {
       searchPlaceholder="Search repositories..."
     >
       <section className="w-full">
-        <header className="flex flex-wrap items-end justify-between gap-4 border-b border-slate-200 pb-5">
+        <header className="flex flex-wrap items-end justify-between gap-4 border border-slate-200 bg-white px-5 py-4 sm:px-6">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-emerald-700">
               Package management

@@ -30,6 +30,22 @@ export interface RepositoryDetail extends Repository {
   updatedAt: string;
 }
 
+export interface UpdateRepositoryRequest {
+  name: string;
+  packageName: string[];
+  uri: string;
+  suite: string;
+  component: string;
+  architecture: string;
+  signedBy: string;
+}
+
+export interface UpdateRepositoryResponse {
+  success: boolean;
+  message: string;
+  data: RepositoryDetail;
+}
+
 interface RepositoryListResponse {
   success: boolean;
   message: string;
@@ -58,6 +74,18 @@ export async function getRepositoryById(
   }>(`/admin/repositories/${repositoryId}`, { signal });
 
   return response.data.data;
+}
+
+export async function updateRepository(
+  repositoryId: string,
+  repository: UpdateRepositoryRequest,
+): Promise<UpdateRepositoryResponse> {
+  const response = await axiosClient.patch<UpdateRepositoryResponse>(
+    `/admin/repositories/${repositoryId}`,
+    repository,
+  );
+
+  return response.data;
 }
 
 export async function createRepository(

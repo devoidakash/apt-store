@@ -7,6 +7,7 @@ const sidebarLinks = [
     to: "/repositories",
     label: "Repositories",
     icon: Database,
+    end: false,
   },
 ];
 

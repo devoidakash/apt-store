@@ -6,6 +6,7 @@ interface SidebarLink {
   to: string;
   label: string;
   icon: LucideIcon;
+  end?: boolean;
   children?: SidebarLink[];
 }
 
@@ -82,13 +83,18 @@ function NavItem({
   const [isExpanded, setIsExpanded] = useState<boolean | null>(null);
   const MainIcon = link.icon;
 
-  const isRouteMatch = (to: string) => {
+  const isRouteMatch = (to: string, end = true) => {
     const url = new URL(to, "http://localhost");
     const currentParams = new URLSearchParams(currentSearch);
     const normalizedCurrentPath = currentPath.replace(/\/$/, "");
     const normalizedTargetPath = url.pathname.replace(/\/$/, "");
 
-    if (normalizedCurrentPath !== normalizedTargetPath) return false;
+    if (
+      normalizedCurrentPath !== normalizedTargetPath &&
+      (end || !normalizedCurrentPath.startsWith(`${normalizedTargetPath}/`))
+    ) {
+      return false;
+    }
     if (!url.search) return true;
 
     for (const [key, value] of url.searchParams.entries()) {
@@ -102,7 +108,7 @@ function NavItem({
     : false;
 
   const shouldShowChildren = isExpanded ?? hasActiveChild;
-  const isMainActive = isRouteMatch(link.to);
+  const isMainActive = isRouteMatch(link.to, link.end ?? true);
 
   if (hasChildren) {
     return (
@@ -183,7 +189,7 @@ function NavItem({
     <li>
       <NavLink
         to={link.to}
-        end
+        end={link.end ?? true}
         className={`group flex items-center rounded-xl transition-all duration-200 ${"px-4 py-3"} ${
           isMainActive
             ? "bg-indigo-50 text-indigo-700 shadow-sm ring-1 ring-indigo-200"
