@@ -1,5 +1,14 @@
 import type { PoolClient } from "pg";
 import toCamelCase from "../../../utils/to-camel-case";
+import pool from "../../../infra/database/db";
+
+export async function fetchRepositories() {
+  const result = await pool.query(`
+  SELECT id , name
+  FROM repositories
+  `);
+  return result.rows;
+}
 
 interface RepositoryData {
   name: string;

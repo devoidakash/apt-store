@@ -7,6 +7,10 @@ import * as repository from "./repository";
 import { gunzip } from "node:zlib";
 import { promisify } from "node:util";
 
+export async function getRepositories() {
+  return repository.fetchRepositories();
+}
+
 interface createRepositoryData {
   name: string;
   packageName: Array<string>;

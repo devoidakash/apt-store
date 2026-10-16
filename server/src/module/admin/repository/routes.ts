@@ -5,6 +5,8 @@ import * as controller from "./controller";
 
 const router = express.Router();
 
+router.get("/repositories", controller.getRepositories);
+
 router.post(
   "/repositories",
   validateSchema(schema.createRepository),
