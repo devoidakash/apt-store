@@ -1,4 +1,5 @@
 import pool from "../../../infra/database/db";
+import toCamelCase from "../../../utils/to-camel-case";
 
 export async function fetchApplications(applicationStatus: string) {
   const result = await pool.query(
@@ -9,5 +10,18 @@ export async function fetchApplications(applicationStatus: string) {
   `,
     [applicationStatus],
   );
-  return result.rows;
+  return result.rows.map(toCamelCase);
+}
+
+export async function fetchApplicationById(applicationId: string) {
+  const result = await pool.query(
+    `
+    SELECT *
+    FROM applications
+    WHERE id = $1
+  `,
+    [applicationId],
+  );
+
+  return toCamelCase(result.rows[0]);
 }

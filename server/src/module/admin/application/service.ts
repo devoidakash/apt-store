@@ -11,3 +11,13 @@ export async function getApplications(applicationStatus: string) {
 
   return applications;
 }
+
+export async function getApplicationById(applicationId: string) {
+  const application = await repository.fetchApplicationById(applicationId);
+
+  if (!application) {
+    throw new ApiError(ERROR_CODES.APPLICATION_NOT_FOUND);
+  }
+
+  return application;
+}

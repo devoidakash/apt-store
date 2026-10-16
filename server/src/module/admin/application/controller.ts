@@ -11,3 +11,16 @@ export async function getApplications(req: Request, res: Response) {
     data,
   });
 }
+
+export async function getApplicationById(req: Request, res: Response) {
+  const applicationId = Array.isArray(req.params.applicationId)
+    ? req.params.applicationId[0]
+    : req.params.applicationId;
+  const data = await service.getApplicationById(applicationId);
+
+  res.status(200).json({
+    success: true,
+    message: "Application fetched successfully",
+    data,
+  });
+}

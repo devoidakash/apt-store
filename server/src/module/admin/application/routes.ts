@@ -11,4 +11,10 @@ router.get(
   controller.getApplications,
 );
 
+router.get(
+  "/applications/:applicationId",
+  validateSchema(schema.applicationId, "params"),
+  controller.getApplicationById,
+);
+
 export default router;

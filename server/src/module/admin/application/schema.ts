@@ -5,3 +5,7 @@ export const applicationStatus = z.object({
     error: "Status must be either 'live' or 'draft'.",
   }),
 });
+
+export const applicationId = z.object({
+  applicationId: z.string().trim().uuid({ message: "Invalid application ID" }),
+});
