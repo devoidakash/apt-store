@@ -17,9 +17,12 @@ export interface CreateRepositoryResponse {
 export interface Repository {
   id: string;
   name: string;
+  icon: string | null;
+  maintainer: string | null;
 }
 
 export interface RepositoryDetail extends Repository {
+  applicationId: string | null;
   packageName: string[];
   uri: string;
   suite: string;

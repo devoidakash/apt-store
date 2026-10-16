@@ -6,6 +6,9 @@ export interface ApplicationSummary {
   id: string;
   packageName: string;
   displayName: string | null;
+  caption: string | null;
+  maintainer: string | null;
+  icon: string | null;
   version: string;
   category: string | null;
   status: ApplicationStatus;
@@ -14,12 +17,11 @@ export interface ApplicationSummary {
 export interface ApplicationDetail extends ApplicationSummary {
   repositoryId: string;
   description: string | null;
-  hasIcon: boolean | null;
+  iconUpdatedAt: string | null;
   images: string[];
   downloadSizeBytes: number | string;
   installedSizeBytes: number | string;
   homepage: string | null;
-  maintainer: string | null;
   missingSince: string | null;
   createdAt: string;
   updatedAt: string;
@@ -27,6 +29,7 @@ export interface ApplicationDetail extends ApplicationSummary {
 
 export interface UpdateApplicationInput {
   displayName: string | null;
+  caption: string | null;
   description: string | null;
   category: string | null;
   homepage: string | null;
@@ -42,6 +45,11 @@ interface ApplicationDetailResponse {
   success: boolean;
   message: string;
   data: ApplicationDetail;
+}
+
+interface ActionResponse {
+  success: boolean;
+  message: string;
 }
 
 export async function getApplications(
@@ -71,11 +79,15 @@ export async function getApplicationById(
   return response.data.data;
 }
 
+export function getApplicationicon(icon: string) {
+  return axiosClient.getUri({ url: icon });
+}
+
 export async function updateApplication(
   applicationId: string,
   data: UpdateApplicationInput,
-): Promise<ApplicationDetailResponse> {
-  const response = await axiosClient.patch<ApplicationDetailResponse>(
+): Promise<ActionResponse> {
+  const response = await axiosClient.patch<ActionResponse>(
     `/admin/applications/${applicationId}`,
     data,
   );
@@ -86,10 +98,44 @@ export async function updateApplication(
 export async function updateApplicationStatus(
   applicationId: string,
   status: ApplicationStatus,
-): Promise<ApplicationDetailResponse> {
-  const response = await axiosClient.patch<ApplicationDetailResponse>(
+): Promise<ActionResponse> {
+  const response = await axiosClient.patch<ActionResponse>(
     `/admin/applications/${applicationId}/status`,
     { status },
+  );
+
+  return response.data;
+}
+
+export async function updateApplicationIcon(
+  applicationId: string,
+  file: File,
+): Promise<ActionResponse> {
+  const formData = new FormData();
+  formData.append("icon", file);
+
+  const response = await axiosClient.patch<ActionResponse>(
+    `/admin/applications/${applicationId}/icon`,
+    formData,
+    { headers: { "Content-Type": "multipart/form-data" } },
+  );
+
+  return response.data;
+}
+
+export async function updateApplicationImages(
+  applicationId: string,
+  files: File[],
+): Promise<ActionResponse> {
+  const formData = new FormData();
+  for (const file of files) {
+    formData.append("images", file);
+  }
+
+  const response = await axiosClient.post<ActionResponse>(
+    `/admin/applications/${applicationId}/images`,
+    formData,
+    { headers: { "Content-Type": "multipart/form-data" } },
   );
 
   return response.data;

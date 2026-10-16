@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import axios from "axios";
 import {
+  ArrowRight,
   BadgeCheck,
   LayoutGrid,
   Check,
@@ -10,7 +11,7 @@ import {
   Pencil,
   X,
 } from "lucide-react";
-import { useParams } from "react-router";
+import { Link, useParams } from "react-router";
 import BackButton from "../../components/navigation/BackButton";
 import Layout from "../../components/dashboard/Layout";
 import {
@@ -264,18 +265,14 @@ export default function ManageRepository() {
                 {repository?.name ?? "Manage repository"}
               </h1>
             </div>
-            {!isLoading && !error && repository && !isEditing && (
-              <button
-                type="button"
-                onClick={() => {
-                  setSaveSuccess("");
-                  setIsEditing(true);
-                }}
-                className="inline-flex h-10 items-center gap-2 border border-rose-200 bg-rose-50 px-3 text-sm font-medium text-rose-700 hover:bg-rose-100"
+            {repository?.applicationId && (
+              <Link
+                to={`/applications/${repository.applicationId}`}
+                className="inline-flex h-10 items-center gap-2 border border-orange-200 bg-orange-50 px-3 text-sm font-medium text-orange-700 hover:bg-orange-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-700"
               >
-                <Pencil className="h-4 w-4" aria-hidden="true" />
-                Edit repository
-              </button>
+                View application
+                <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </Link>
             )}
           </div>
         </header>
@@ -516,13 +513,30 @@ export default function ManageRepository() {
                 {saveSuccess}
               </p>
             )}
-            <div className="border-b border-slate-200 py-4">
-              <h2 className="text-base font-semibold text-slate-900">
-                Repository details
-              </h2>
-              <p className="mt-1 text-sm text-slate-500">
-                Source location and package configuration
-              </p>
+            <div className="flex flex-wrap items-end justify-between gap-4 border-b border-slate-200 py-4">
+              <div>
+                <h2 className="text-base font-semibold text-slate-900">
+                  Repository details
+                </h2>
+                <p className="mt-1 text-sm text-slate-500">
+                  Source location and package configuration
+                </p>
+              </div>
+              {repository && (
+                <div className="flex flex-wrap items-center justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSaveSuccess("");
+                      setIsEditing(true);
+                    }}
+                    className="inline-flex h-10 items-center gap-2 border border-rose-200 bg-rose-50 px-3 text-sm font-medium text-rose-700 hover:bg-rose-100"
+                  >
+                    Edit repository
+                    <Pencil className="h-4 w-4" aria-hidden="true" />
+                  </button>
+                </div>
+              )}
             </div>
             <dl className="grid gap-x-8 sm:grid-cols-2">
               {details.map(({ label, value }) => (

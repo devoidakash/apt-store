@@ -6,8 +6,8 @@ import {
   Database,
   FileText,
   LoaderCircle,
-  Package,
   Plus,
+  ShieldCheck,
 } from "lucide-react";
 import { Link } from "react-router";
 import Layout from "../../components/dashboard/Layout";
@@ -149,11 +149,30 @@ export default function Repositories() {
                       className="flex h-12 w-12 shrink-0 items-center justify-center border border-slate-200 bg-slate-50 text-emerald-700"
                       aria-hidden="true"
                     >
-                      <Package className="h-6 w-6" />
+                      {repository.icon ? (
+                        <img
+                          src={repository.icon}
+                          alt=""
+                          className="h-full w-full object-contain p-1"
+                        />
+                      ) : (
+                        <LayoutGrid className="h-6 w-6" />
+                      )}
                     </div>
-                    <h2 className="min-w-0 wrap-break-word text-base font-semibold text-slate-900">
-                      {repository.name}
-                    </h2>
+                    <div className="min-w-0">
+                      <h2 className="wrap-break-word text-base font-semibold text-slate-900">
+                        {repository.name}
+                      </h2>
+                      {repository.maintainer && (
+                        <p className="mt-1 flex items-center gap-1 wrap-break-word text-sm text-slate-600">
+                          {repository.maintainer}
+                          <ShieldCheck
+                            className="h-4 w-4 shrink-0 text-emerald-600"
+                            aria-label="Maintainer"
+                          />
+                        </p>
+                      )}
+                    </div>
                   </article>
                 </Link>
               </li>
