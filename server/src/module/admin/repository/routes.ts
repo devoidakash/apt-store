@@ -7,6 +7,12 @@ const router = express.Router();
 
 router.get("/repositories", controller.getRepositories);
 
+router.get(
+  "/repositories/:repositoryId",
+  validateSchema(schema.repositoryId, "params"),
+  controller.getRepositoryById,
+);
+
 router.post(
   "/repositories",
   validateSchema(schema.createRepository),

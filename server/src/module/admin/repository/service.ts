@@ -11,6 +11,10 @@ export async function getRepositories() {
   return repository.fetchRepositories();
 }
 
+export async function getRepositoryById(repositoryId: string) {
+  return repository.fetchRepositoryById(repositoryId);
+}
+
 interface createRepositoryData {
   name: string;
   packageName: Array<string>;

@@ -10,6 +10,16 @@ export async function fetchRepositories() {
   return result.rows;
 }
 
+export async function fetchRepositoryById(repositoryId: string) {
+  const result = await pool.query(
+    `
+  SELECT * FROM repositories 
+  WHERE id = $1`,
+    [repositoryId],
+  );
+  return toCamelCase(result.rows[0]);
+}
+
 interface RepositoryData {
   name: string;
   packageName: Array<string>;

@@ -1,5 +1,9 @@
 import z from "zod";
 
+export const repositoryId = z.object({
+  repositoryId: z.string().trim().uuid({ message: "Invalid repository ID" }),
+});
+
 export const createRepository = z.object({
   name: z.string().trim(),
   packageName: z.array(z.string().trim().toLowerCase()),
