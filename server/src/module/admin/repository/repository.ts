@@ -4,19 +4,25 @@ import pool from "../../../infra/database/db";
 
 export async function fetchRepositories() {
   const result = await pool.query(`
-  SELECT id , name
-  FROM repositories
+  SELECT r.id , r.name, a.id AS application_id, a.icon_updated_at, a.maintainer
+  FROM repositories r
+  JOIN applications a ON r.id = a.repository_id
+  WHERE a.package_name = ANY(r.package_name)
   `);
-  return result.rows;
+  return result.rows.map(toCamelCase);
 }
 
 export async function fetchRepositoryById(repositoryId: string) {
   const result = await pool.query(
     `
-  SELECT * FROM repositories 
-  WHERE id = $1`,
+      SELECT r.*, a.id AS application_id
+      FROM repositories r
+      LEFT JOIN applications a ON r.id = a.repository_id
+      WHERE r.id = $1
+    `,
     [repositoryId],
   );
+
   return toCamelCase(result.rows[0]);
 }
 

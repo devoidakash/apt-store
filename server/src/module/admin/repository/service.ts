@@ -2,14 +2,30 @@ import compareDpkgVersions from "dpkg-compare-versions";
 import { promisify } from "node:util";
 import { gunzip } from "node:zlib";
 import { type PoolClient } from "pg";
+import env from "../../../config/env";
 import ApiError from "../../../err/api-error";
 import ERROR_CODES from "../../../err/error-code";
 import pool from "../../../infra/database/db";
 import withTransaction from "../../../utils/with-transaction";
 import * as repository from "./repository";
 
+function getIcon(applicationId: string, iconUpdatedAt: Date | null) {
+  return iconUpdatedAt
+    ? `${env.r2PublicUrl}/applications/${applicationId}/icon.webp?v=${iconUpdatedAt.getTime()}`
+    : null;
+}
+
 export async function getRepositories() {
-  return repository.fetchRepositories();
+  const repositories = await repository.fetchRepositories();
+  return repositories
+    .filter((repo) => repo !== null)
+    .map((repo) => ({
+      ...repo,
+      icon: getIcon(
+        String(repo.applicationId),
+        repo.iconUpdatedAt instanceof Date ? repo.iconUpdatedAt : null,
+      ),
+    }));
 }
 
 export async function getRepositoryById(repositoryId: string) {
@@ -198,3 +214,6 @@ export async function updateRepository(
     return newRepository;
   });
 }
+
+// 2026-10-16T17:58:36.150Z
+// 2026-10-16T17:58:36.150Z
