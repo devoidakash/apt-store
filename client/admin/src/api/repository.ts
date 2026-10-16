@@ -19,6 +19,17 @@ export interface Repository {
   name: string;
 }
 
+export interface RepositoryDetail extends Repository {
+  packageName: string[];
+  uri: string;
+  suite: string;
+  component: string;
+  architecture: string;
+  signedby: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 interface RepositoryListResponse {
   success: boolean;
   message: string;
@@ -32,6 +43,19 @@ export async function getRepositories(
     "/admin/repositories",
     { signal },
   );
+
+  return response.data.data;
+}
+
+export async function getRepositoryById(
+  repositoryId: string,
+  signal?: AbortSignal,
+): Promise<RepositoryDetail | null> {
+  const response = await axiosClient.get<{
+    success: boolean;
+    message: string;
+    data: RepositoryDetail | null;
+  }>(`/admin/repositories/${repositoryId}`, { signal });
 
   return response.data.data;
 }

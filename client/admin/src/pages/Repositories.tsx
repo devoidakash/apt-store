@@ -112,18 +112,23 @@ export default function Repositories() {
           ) : (
             repositories.map((repository) => (
               <li key={repository.id}>
-                <article className="flex min-h-24 items-center gap-4 border border-slate-200 bg-white p-5 shadow-sm">
-                  <div
-                    className="flex h-12 w-12 shrink-0 items-center justify-center border border-slate-200 bg-slate-50 text-emerald-700"
-                    aria-label="Repository icon placeholder"
-                    title="Repository icon will be added later"
-                  >
-                    <Package className="h-6 w-6" aria-hidden="true" />
-                  </div>
-                  <h2 className="min-w-0 wrap-break-word text-base font-semibold text-slate-900">
-                    {repository.name}
-                  </h2>
-                </article>
+                <Link
+                  to={`/repositories/${repository.id}`}
+                  className="block focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
+                  aria-label={`Manage ${repository.name}`}
+                >
+                  <article className="flex min-h-24 items-center gap-4 border border-slate-200 bg-white p-5 shadow-sm transition hover:border-emerald-600">
+                    <div
+                      className="flex h-12 w-12 shrink-0 items-center justify-center border border-slate-200 bg-slate-50 text-emerald-700"
+                      aria-hidden="true"
+                    >
+                      <Package className="h-6 w-6" />
+                    </div>
+                    <h2 className="min-w-0 wrap-break-word text-base font-semibold text-slate-900">
+                      {repository.name}
+                    </h2>
+                  </article>
+                </Link>
               </li>
             ))
           )}
