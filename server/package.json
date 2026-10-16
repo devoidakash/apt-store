@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "type": "module",
   "description": "A desktop application store for Ubuntu that discovers applications from configured APT repositories, displays app metadata, and simplifies package installation and management.",
-  "main": "server.ts",
+  "main": "src/server.ts",
   "scripts": {
-    "dev": "tsx watch server.ts"
+    "dev": "tsx watch src/server.ts"
   },
   "keywords": [],
   "author": "akash patel",
@@ -14,11 +14,16 @@
   "dependencies": {
     "cors": "^2.8.6",
     "dotenv": "^18.0.7",
-    "express": "^5.3.0"
+    "dpkg-compare-versions": "^1.0.3",
+    "express": "^5.3.0",
+    "pg": "^8.23.1",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
+    "@types/node": "^26.6.5",
+    "@types/pg": "^8.23.1",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2"
   }
