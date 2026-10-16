@@ -1,4 +1,4 @@
-import { BadgeCheck, Boxes, Database, FileText } from "lucide-react";
+import { BadgeCheck, LayoutGrid, Database, FileText } from "lucide-react";
 import Layout from "./components/dashboard/Layout";
 import Repository from "./pages/repository/CreateRepository";
 
@@ -12,7 +12,7 @@ const sidebarLinks = [
   {
     to: "/applications",
     label: "Applications",
-    icon: Boxes,
+    icon: LayoutGrid,
     end: false,
     children: [
       {

@@ -8,7 +8,7 @@ import {
   LoaderCircle,
   Package,
 } from "lucide-react";
-import { useSearchParams } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import Layout from "../../components/dashboard/Layout";
 import {
   getApplications,
@@ -124,20 +124,28 @@ export default function Applications() {
           <ul className="grid gap-4 py-6 sm:grid-cols-2 xl:grid-cols-3">
             {applications.map((application) => (
               <li key={application.id}>
-                <article className="flex min-h-24 items-center gap-4 border border-slate-200 bg-white p-5 shadow-sm">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center border border-slate-200 bg-slate-50 text-emerald-700">
-                    <Package className="h-6 w-6" aria-hidden="true" />
-                  </div>
-                  <div className="min-w-0">
-                    <h2 className="wrap-break-word text-base font-semibold text-slate-900">
-                      {application.display_name || application.package_name}
-                    </h2>
-                    <p className="mt-1 text-sm text-slate-600">
-                      Version {application.version}
-                      {application.category ? ` · ${application.category}` : ""}
-                    </p>
-                  </div>
-                </article>
+                <Link
+                  to={`/applications/${application.id}`}
+                  className="block focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
+                  aria-label={`View ${application.displayName || application.packageName}`}
+                >
+                  <article className="flex min-h-24 items-center gap-4 border border-slate-200 bg-white p-5 shadow-sm transition hover:border-emerald-600">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center border border-slate-200 bg-slate-50 text-emerald-700">
+                      <Package className="h-6 w-6" aria-hidden="true" />
+                    </div>
+                    <div className="min-w-0">
+                      <h2 className="wrap-break-word text-base font-semibold text-slate-900">
+                        {application.displayName || application.packageName}
+                      </h2>
+                      <p className="mt-1 text-sm text-slate-600">
+                        Version {application.version}
+                        {application.category
+                          ? ` · ${application.category}`
+                          : ""}
+                      </p>
+                    </div>
+                  </article>
+                </Link>
               </li>
             ))}
           </ul>

@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate } from "react-router";
 import App from "./App";
 import NotFound from "./components/error/NotFound";
 import Applications from "./pages/applications/Applications";
+import ManageApplication from "./pages/applications/ManageApplication";
 import ManageRepository from "./pages/repository/ManageRepository";
 import Repositories from "./pages/repository/Repositories";
 
@@ -17,6 +18,10 @@ export const router = createBrowserRouter([
   {
     path: "/applications",
     element: <Applications />,
+  },
+  {
+    path: "/applications/:applicationId",
+    element: <ManageApplication />,
   },
   {
     path: "/repositories/new",

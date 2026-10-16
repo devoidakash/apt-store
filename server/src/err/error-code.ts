@@ -29,6 +29,11 @@ const ERROR_CODES = {
     message: "No applications found",
     code: "APPLICATIONS_NOT_FOUND",
   },
+  APPLICATION_NOT_FOUND: {
+    statusCode: 404,
+    message: "Application not found",
+    code: "APPLICATION_NOT_FOUND",
+  },
 };
 
 export default ERROR_CODES;
