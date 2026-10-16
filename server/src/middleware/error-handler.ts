@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
-import ApiError from "../errors/api-error";
+import ApiError from "../err/api-error";
 
-export default function errorHandle(
+export default function errorHandler(
   err: unknown,
   req: Request,
   res: Response,
