@@ -34,6 +34,11 @@ const ERROR_CODES = {
     message: "Application not found",
     code: "APPLICATION_NOT_FOUND",
   },
+  APPLICATION_VALIDATION_FAILED: {
+    statusCode: 400,
+    message: "Application validation failed",
+    code: "APPLICATION_VALIDATION_FAILED",
+  },
 };
 
 export default ERROR_CODES;

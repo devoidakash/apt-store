@@ -17,4 +17,18 @@ router.get(
   controller.getApplicationById,
 );
 
+router.patch(
+  "/applications/:applicationId",
+  validateSchema(schema.applicationId, "params"),
+  validateSchema(schema.updateApplication),
+  controller.updateApplication,
+);
+
+router.patch(
+  "/applications/:applicationId/status",
+  validateSchema(schema.applicationId, "params"),
+  validateSchema(schema.updateApplicationStatus),
+  controller.updateApplicationStatus,
+);
+
 export default router;
