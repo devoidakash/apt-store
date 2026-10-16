@@ -15,7 +15,7 @@ export default function Header({
   const avatarLetter = emailName.charAt(0).toUpperCase();
 
   return (
-    <header className="sticky top-0 z-20 flex h-14 w-full items-center gap-2 border-b border-slate-200 bg-white px-4">
+    <header className="sticky top-0 z-20 flex h-14 w-full items-center gap-2  border-slate-200/90 bg-white shadow-sm ">
       {/* Search Input */}
       <div className="hidden min-w-0 flex-1 justify-center px-2 md:flex">
         <div className="relative w-full max-w-xl">

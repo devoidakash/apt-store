@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import axios from "axios";
-import { ArrowLeft, LoaderCircle, Plus } from "lucide-react";
-import { Link } from "react-router";
+import { LoaderCircle, Plus } from "lucide-react";
+import BackButton from "../../components/navigation/BackButton";
 import { createRepository } from "../../api/repository";
 
 interface RepositoryForm {
@@ -59,13 +59,12 @@ export default function ManageRepository() {
 
   return (
     <div className="w-full">
-      <Link
-        to="/repositories"
+      <BackButton
+        fallbackTo="/repositories"
         className="mb-4 inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-emerald-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
       >
-        <ArrowLeft className="h-4 w-4" aria-hidden="true" />
         Back to repositories
-      </Link>
+      </BackButton>
       <header className="border border-slate-200 bg-white px-5 py-4 sm:px-6">
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-emerald-700">
           Package management

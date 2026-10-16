@@ -25,6 +25,13 @@ export interface ApplicationDetail extends ApplicationSummary {
   updatedAt: string;
 }
 
+export interface UpdateApplicationInput {
+  displayName: string | null;
+  description: string | null;
+  category: string | null;
+  homepage: string | null;
+}
+
 interface ApplicationsResponse {
   success: boolean;
   message: string;
@@ -62,4 +69,28 @@ export async function getApplicationById(
   );
 
   return response.data.data;
+}
+
+export async function updateApplication(
+  applicationId: string,
+  data: UpdateApplicationInput,
+): Promise<ApplicationDetailResponse> {
+  const response = await axiosClient.patch<ApplicationDetailResponse>(
+    `/admin/applications/${applicationId}`,
+    data,
+  );
+
+  return response.data;
+}
+
+export async function updateApplicationStatus(
+  applicationId: string,
+  status: ApplicationStatus,
+): Promise<ApplicationDetailResponse> {
+  const response = await axiosClient.patch<ApplicationDetailResponse>(
+    `/admin/applications/${applicationId}/status`,
+    { status },
+  );
+
+  return response.data;
 }

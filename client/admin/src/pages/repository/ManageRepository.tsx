@@ -1,9 +1,8 @@
 import { useEffect, useState, type FormEvent } from "react";
 import axios from "axios";
 import {
-  ArrowLeft,
   BadgeCheck,
-  Boxes,
+  LayoutGrid,
   Check,
   Database,
   FileText,
@@ -11,7 +10,8 @@ import {
   Pencil,
   X,
 } from "lucide-react";
-import { Link, useParams } from "react-router";
+import { useParams } from "react-router";
+import BackButton from "../../components/navigation/BackButton";
 import Layout from "../../components/dashboard/Layout";
 import {
   getRepositoryById,
@@ -84,7 +84,7 @@ const sidebarLinks = [
   {
     to: "/applications",
     label: "Applications",
-    icon: Boxes,
+    icon: LayoutGrid,
     end: false,
     children: [
       {
@@ -247,21 +247,20 @@ export default function ManageRepository() {
       searchPlaceholder="Search repositories..."
     >
       <section className="w-full">
-        <Link
-          to="/repositories"
+        <BackButton
+          fallbackTo="/repositories"
           className="mb-4 inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-emerald-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
         >
-          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
           Back to repositories
-        </Link>
+        </BackButton>
 
         <header className="border border-slate-200 bg-white px-5 py-4 sm:px-6">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.14em] text-emerald-700">
-                Package management
+                Repository
               </p>
-              <h1 className="mt-2 wrap-break-word text-2xl font-semibold text-slate-950">
+              <h1 className="mt-1 wrap-break-word text-2xl font-semibold text-slate-950">
                 {repository?.name ?? "Manage repository"}
               </h1>
             </div>
@@ -282,18 +281,45 @@ export default function ManageRepository() {
         </header>
 
         {isLoading ? (
-          <div className="flex min-h-48 items-center text-sm text-slate-600">
-            <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-            Loading repository...
+          <div className="mt-6 border border-slate-200 bg-white p-5 sm:p-6">
+            <div className="flex items-center gap-3 text-sm text-slate-600">
+              <LoaderCircle className="h-4 w-4 animate-spin text-emerald-700" />
+              Loading repository...
+            </div>
+            <div className="mt-6 grid gap-4 sm:grid-cols-2">
+              {[1, 2, 3, 4].map((item) => (
+                <div key={item} className="space-y-2">
+                  <div className="h-3 w-24 animate-pulse bg-slate-100" />
+                  <div className="h-5 w-3/4 animate-pulse bg-slate-200" />
+                </div>
+              ))}
+            </div>
           </div>
         ) : error ? (
-          <p role="alert" className="py-8 text-sm text-rose-700">
+          <div
+            role="alert"
+            className="mt-6 border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800"
+          >
             {error}
-          </p>
+          </div>
         ) : isEditing ? (
-          <form onSubmit={handleSave} className="py-6">
+          <form
+            onSubmit={handleSave}
+            className="mt-6 border border-slate-200 bg-white px-5 py-5 sm:px-6 sm:py-6"
+          >
+            <div className="mb-6 border-b border-slate-200 pb-4">
+              <h2 className="text-base font-semibold text-slate-900">
+                Repository settings
+              </h2>
+              <p className="mt-1 text-sm text-slate-500">
+                Update the source and package configuration.
+              </p>
+            </div>
             {saveError && (
-              <p role="alert" className="mb-5 text-sm text-rose-700">
+              <p
+                role="alert"
+                className="mb-5 border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800"
+              >
                 {saveError}
               </p>
             )}
@@ -456,15 +482,11 @@ export default function ManageRepository() {
               </label>
             </div>
 
-            <div aria-live="polite" className="mt-5 min-h-6 text-sm">
-              {saveSuccess && <p className="text-emerald-700">{saveSuccess}</p>}
-            </div>
-
-            <div className="mt-3 flex flex-wrap gap-3">
+            <div className="mt-7 flex flex-wrap gap-3 border-t border-slate-200 pt-5">
               <button
                 type="submit"
                 disabled={isSaving}
-                className="inline-flex h-11 items-center gap-2 bg-emerald-700 px-4 text-sm font-semibold text-white hover:bg-emerald-800 disabled:cursor-wait disabled:opacity-70"
+                className="inline-flex h-11 items-center gap-2 bg-emerald-700 px-4 text-sm font-semibold text-white transition-colors hover:bg-emerald-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700 disabled:cursor-wait disabled:opacity-70"
               >
                 {isSaving ? (
                   <LoaderCircle className="h-4 w-4 animate-spin" />
@@ -477,7 +499,7 @@ export default function ManageRepository() {
                 type="button"
                 disabled={isSaving}
                 onClick={cancelEditing}
-                className="inline-flex h-11 items-center gap-2 border border-slate-300 bg-white px-4 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-70"
+                className="inline-flex h-11 items-center gap-2 border border-slate-300 bg-white px-4 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700 disabled:opacity-70"
               >
                 <X className="h-4 w-4" aria-hidden="true" />
                 Cancel
@@ -485,23 +507,39 @@ export default function ManageRepository() {
             </div>
           </form>
         ) : (
-          <>
+          <div className="mt-6 border border-slate-200 bg-white px-5 sm:px-6">
             {saveSuccess && (
-              <p aria-live="polite" className="py-4 text-sm text-emerald-700">
+              <p
+                aria-live="polite"
+                className="border-b border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800"
+              >
                 {saveSuccess}
               </p>
             )}
+            <div className="border-b border-slate-200 py-4">
+              <h2 className="text-base font-semibold text-slate-900">
+                Repository details
+              </h2>
+              <p className="mt-1 text-sm text-slate-500">
+                Source location and package configuration
+              </p>
+            </div>
             <dl className="grid gap-x-8 sm:grid-cols-2">
               {details.map(({ label, value }) => (
-                <div key={label} className="border-b border-slate-200 py-4">
-                  <dt className="text-sm text-slate-500">{label}</dt>
-                  <dd className="mt-1 wrap-break-word text-sm font-medium text-slate-900">
+                <div
+                  key={label}
+                  className="min-w-0 border-b border-slate-100 py-4"
+                >
+                  <dt className="text-xs font-semibold uppercase text-slate-500">
+                    {label}
+                  </dt>
+                  <dd className="mt-2 wrap-break-word text-sm font-medium text-slate-900">
                     {value || "-"}
                   </dd>
                 </div>
               ))}
             </dl>
-          </>
+          </div>
         )}
       </section>
     </Layout>

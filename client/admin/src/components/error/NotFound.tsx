@@ -1,18 +1,8 @@
-import { ArrowLeft, Database } from "lucide-react";
-import { Link, useNavigate } from "react-router";
+import { Database } from "lucide-react";
+import { Link } from "react-router";
+import BackButton from "../navigation/BackButton";
 
 export default function NotFound() {
-  const navigate = useNavigate();
-
-  const goBack = () => {
-    if (window.history.length > 1) {
-      navigate(-1);
-      return;
-    }
-
-    navigate("/");
-  };
-
   return (
     <main className="flex min-h-screen items-center justify-center bg-slate-50 px-6 text-slate-950">
       <section className="w-full max-w-md text-center">
@@ -33,14 +23,12 @@ export default function NotFound() {
             <Database aria-hidden="true" className="h-4 w-4" />
             Go to repository
           </Link>
-          <button
-            type="button"
+          <BackButton
+            fallbackTo="/"
             className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-slate-300 bg-white px-4 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100"
-            onClick={goBack}
           >
-            <ArrowLeft aria-hidden="true" className="h-4 w-4" />
             Go back
-          </button>
+          </BackButton>
         </div>
       </section>
     </main>

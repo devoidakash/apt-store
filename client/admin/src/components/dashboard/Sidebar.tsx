@@ -7,6 +7,7 @@ interface SidebarLink {
   label: string;
   icon: LucideIcon;
   end?: boolean;
+  active?: boolean;
   children?: SidebarLink[];
 }
 
@@ -104,11 +105,23 @@ function NavItem({
   };
 
   const hasActiveChild = hasChildren
-    ? children.some((child) => isRouteMatch(child.to))
+    ? children.some((child) => child.active ?? isRouteMatch(child.to))
     : false;
 
-  const shouldShowChildren = isExpanded ?? hasActiveChild;
+  const normalizedCurrentPath = currentPath.replace(/\/$/, "");
+  const normalizedLinkPath = new URL(
+    link.to,
+    "http://localhost",
+  ).pathname.replace(/\/$/, "");
+  const isNestedDetailRoute =
+    hasChildren &&
+    normalizedCurrentPath !== normalizedLinkPath &&
+    isRouteMatch(link.to, false);
+
+  const shouldShowChildren =
+    isExpanded ?? (hasActiveChild || isNestedDetailRoute);
   const isMainActive = isRouteMatch(link.to, link.end ?? true);
+  const isParentActive = hasActiveChild || isMainActive;
 
   if (hasChildren) {
     return (
@@ -116,7 +129,7 @@ function NavItem({
         <button
           onClick={() => setIsExpanded(!shouldShowChildren)}
           className={`group flex w-full items-center justify-between rounded-xl px-4 py-3 transition-all duration-200 ${
-            hasActiveChild
+            isParentActive
               ? "bg-indigo-50 text-indigo-700 ring-1 ring-indigo-200"
               : "text-slate-600 hover:bg-indigo-50/80 hover:text-indigo-700"
           }`}
@@ -124,7 +137,7 @@ function NavItem({
           <div className="flex items-center">
             <MainIcon
               className={`h-5 w-5 shrink-0 ${
-                hasActiveChild
+                isParentActive
                   ? "text-indigo-600"
                   : "text-slate-500 group-hover:text-indigo-600"
               }`}
@@ -133,7 +146,7 @@ function NavItem({
             <span className="ml-3 text-sm font-medium">{link.label}</span>
           </div>
           <div className="flex items-center gap-2">
-            {hasActiveChild && (
+            {isParentActive && (
               <span className="h-2 w-2 rounded-full bg-indigo-500" />
             )}
             <ChevronDown
@@ -149,7 +162,7 @@ function NavItem({
           <ul className="ml-6 space-y-1 border-l border-indigo-100">
             {children.map((child) => {
               const ChildIcon = child.icon;
-              const isChildActive = isRouteMatch(child.to);
+              const isChildActive = child.active ?? isRouteMatch(child.to);
 
               return (
                 <li key={child.to}>

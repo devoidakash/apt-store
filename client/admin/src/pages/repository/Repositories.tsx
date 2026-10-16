@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import {
   BadgeCheck,
-  Boxes,
+  LayoutGrid,
   Database,
   FileText,
   LoaderCircle,
@@ -23,7 +23,7 @@ const sidebarLinks = [
   {
     to: "/applications",
     label: "Applications",
-    icon: Boxes,
+    icon: LayoutGrid,
     end: false,
     children: [
       {
@@ -130,7 +130,7 @@ export default function Repositories() {
             </li>
           ) : repositories.length === 0 ? (
             <li className="flex min-h-24 items-center gap-3 text-sm text-slate-600">
-              <Boxes
+              <LayoutGrid
                 className="h-6 w-6 shrink-0 text-slate-400"
                 aria-hidden="true"
               />
