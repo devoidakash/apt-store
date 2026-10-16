@@ -24,6 +24,11 @@ const ERROR_CODES = {
     message: "Unable to determine file type.",
     code: "INVALID_FILE_CONTENT",
   },
+  APPLICATIONS_NOT_FOUND: {
+    statusCode: 404,
+    message: "No applications found",
+    code: "APPLICATIONS_NOT_FOUND",
+  },
 };
 
 export default ERROR_CODES;
