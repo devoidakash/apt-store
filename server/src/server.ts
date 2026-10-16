@@ -1,17 +1,8 @@
-import "dotenv/config";
+import env from "./config/env";
 import app from "./app";
 
-switch (true) {
-  case !process.env.PORT:
-    throw new Error("PORT missing from .env");
+console.log("Environment variables are configured");
 
-  case !process.env.DATABASE_URL:
-    throw new Error("DATABASE_URL missing from .env");
-
-  default:
-    console.log("Environment variables are configured");
-}
-
-app.listen(process.env.PORT, () => {
-  console.log(`server started at: http://localhost:${process.env.PORT}`);
+app.listen(env.port, () => {
+  console.log(`server started at: http://localhost:${env.port}`);
 });
