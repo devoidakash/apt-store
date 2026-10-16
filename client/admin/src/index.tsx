@@ -1,8 +1,8 @@
 import { createBrowserRouter, Navigate } from "react-router";
 import App from "./App";
 import NotFound from "./components/error/NotFound";
-import ManageRepository from "./pages/ManageRepository";
-import Repositories from "./pages/Repositories";
+import ManageRepository from "./pages/repository/ManageRepository";
+import Repositories from "./pages/repository/Repositories";
 
 export const router = createBrowserRouter([
   {

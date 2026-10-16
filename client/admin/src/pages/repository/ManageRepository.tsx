@@ -9,12 +9,12 @@ import {
   X,
 } from "lucide-react";
 import { Link, useParams } from "react-router";
-import Layout from "../components/dashboard/Layout";
+import Layout from "../../components/dashboard/Layout";
 import {
   getRepositoryById,
   type RepositoryDetail,
   updateRepository,
-} from "../api/repository";
+} from "../../api/repository";
 
 interface RepositoryForm {
   name: string;

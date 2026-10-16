@@ -2,7 +2,7 @@ import { useState, type FormEvent } from "react";
 import axios from "axios";
 import { ArrowLeft, LoaderCircle, Plus } from "lucide-react";
 import { Link } from "react-router";
-import { createRepository } from "../api/repository";
+import { createRepository } from "../../api/repository";
 
 interface RepositoryForm {
   package_name: string;
