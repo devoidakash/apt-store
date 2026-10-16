@@ -14,6 +14,28 @@ export interface CreateRepositoryResponse {
   message: string;
 }
 
+export interface Repository {
+  id: string;
+  name: string;
+}
+
+interface RepositoryListResponse {
+  success: boolean;
+  message: string;
+  data: Repository[];
+}
+
+export async function getRepositories(
+  signal?: AbortSignal,
+): Promise<Repository[]> {
+  const response = await axiosClient.get<RepositoryListResponse>(
+    "/admin/repositories",
+    { signal },
+  );
+
+  return response.data.data;
+}
+
 export async function createRepository(
   repository: CreateRepositoryRequest,
 ): Promise<CreateRepositoryResponse> {

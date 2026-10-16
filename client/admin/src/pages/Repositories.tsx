@@ -1,0 +1,134 @@
+import { useEffect, useState } from "react";
+import axios from "axios";
+import { Boxes, Database, LoaderCircle, Package, Plus } from "lucide-react";
+import { Link } from "react-router";
+import Layout from "../components/dashboard/Layout";
+import { getRepositories, type Repository } from "../api/repository";
+
+const sidebarLinks = [
+  {
+    to: "/repositories",
+    label: "Repositories",
+    icon: Database,
+  },
+];
+
+export default function Repositories() {
+  const [repositories, setRepositories] = useState<Repository[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [reloadKey, setReloadKey] = useState(0);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    async function loadRepositories() {
+      setIsLoading(true);
+      setError("");
+
+      try {
+        setRepositories(await getRepositories(controller.signal));
+      } catch (loadError) {
+        if (controller.signal.aborted) return;
+
+        const message = axios.isAxiosError<{ message?: string }>(loadError)
+          ? (loadError.response?.data?.message ?? loadError.message)
+          : loadError instanceof Error
+            ? loadError.message
+            : "Could not load repositories.";
+        setError(message);
+      } finally {
+        if (!controller.signal.aborted) setIsLoading(false);
+      }
+    }
+
+    void loadRepositories();
+    return () => controller.abort();
+  }, [reloadKey]);
+
+  return (
+    <Layout
+      sidebarLinks={sidebarLinks}
+      searchPlaceholder="Search repositories..."
+    >
+      <section className="w-full">
+        <header className="flex flex-wrap items-end justify-between gap-4 border-b border-slate-200 pb-5">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-emerald-700">
+              Package management
+            </p>
+            <h1 className="mt-2 text-2xl font-semibold text-slate-950">
+              Repositories
+            </h1>
+          </div>
+          {!isLoading && !error && (
+            <p className="text-sm text-slate-500">
+              {repositories.length}{" "}
+              {repositories.length === 1 ? "source" : "sources"}
+            </p>
+          )}
+        </header>
+
+        <ul className="grid gap-4 py-6 sm:grid-cols-2 xl:grid-cols-3">
+          <li>
+            <Link
+              to="/repositories/new"
+              className="flex min-h-24 items-center gap-4 border border-dashed border-emerald-700 bg-white p-5 text-emerald-800 transition hover:bg-emerald-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
+            >
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center border border-emerald-200 bg-emerald-50">
+                <Plus className="h-6 w-6" aria-hidden="true" />
+              </span>
+              <span className="text-base font-semibold">Add repositories</span>
+            </Link>
+          </li>
+
+          {isLoading ? (
+            <li className="flex min-h-24 items-center text-sm text-slate-600">
+              <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+              Loading repositories...
+            </li>
+          ) : error ? (
+            <li
+              role="alert"
+              className="flex flex-wrap items-center gap-4 text-sm sm:col-span-2 xl:col-span-3"
+            >
+              <p className="text-rose-700">{error}</p>
+              <button
+                type="button"
+                onClick={() => setReloadKey((key) => key + 1)}
+                className="border border-slate-300 bg-white px-3 py-2 font-medium text-slate-700 hover:bg-slate-50"
+              >
+                Try again
+              </button>
+            </li>
+          ) : repositories.length === 0 ? (
+            <li className="flex min-h-24 items-center gap-3 text-sm text-slate-600">
+              <Boxes
+                className="h-6 w-6 shrink-0 text-slate-400"
+                aria-hidden="true"
+              />
+              No repositories yet
+            </li>
+          ) : (
+            repositories.map((repository) => (
+              <li key={repository.id}>
+                <article className="flex min-h-24 items-center gap-4 border border-slate-200 bg-white p-5 shadow-sm">
+                  <div
+                    className="flex h-12 w-12 shrink-0 items-center justify-center border border-slate-200 bg-slate-50 text-emerald-700"
+                    aria-label="Repository icon placeholder"
+                    title="Repository icon will be added later"
+                  >
+                    <Package className="h-6 w-6" aria-hidden="true" />
+                  </div>
+                  <h2 className="min-w-0 wrap-break-word text-base font-semibold text-slate-900">
+                    {repository.name}
+                  </h2>
+                </article>
+              </li>
+            ))
+          )}
+        </ul>
+      </section>
+    </Layout>
+  );
+}

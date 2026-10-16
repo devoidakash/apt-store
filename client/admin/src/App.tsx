@@ -1,11 +1,11 @@
 import { Database } from "lucide-react";
 import Layout from "./components/dashboard/Layout";
-import Repository from "./pages/Repository";
+import Repository from "./pages/CreateRepository";
 
 const sidebarLinks = [
   {
-    to: "/repository",
-    label: "Repository",
+    to: "/repositories",
+    label: "Repositories",
     icon: Database,
   },
 ];

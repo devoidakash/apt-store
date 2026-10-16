@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import axios from "axios";
-import { LoaderCircle, Plus } from "lucide-react";
+import { ArrowLeft, LoaderCircle, Plus } from "lucide-react";
+import { Link } from "react-router";
 import { createRepository } from "../api/repository";
 
 interface RepositoryForm {
@@ -21,7 +22,7 @@ const initialForm: RepositoryForm = {
   signedBy: "",
 };
 
-export default function Repository() {
+export default function ManageRepository() {
   const [form, setForm] = useState(initialForm);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -57,7 +58,14 @@ export default function Repository() {
     "mt-2 h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/15";
 
   return (
-    <div className="mx-auto max-w-5xl">
+    <div className="w-full">
+      <Link
+        to="/repositories"
+        className="mb-4 inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-emerald-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
+      >
+        <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+        Back to repositories
+      </Link>
       <header className="border border-slate-200 bg-white px-5 py-4 sm:px-6">
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-emerald-700">
           Package management
@@ -70,7 +78,7 @@ export default function Repository() {
         </p>
       </header>
 
-      <form onSubmit={handleSubmit} className="max-w-3xl py-7">
+      <form onSubmit={handleSubmit} className="w-full py-7">
         <div className="grid gap-x-6 gap-y-5 sm:grid-cols-2">
           <label className="text-sm font-medium text-slate-800 sm:col-span-2">
             Package name

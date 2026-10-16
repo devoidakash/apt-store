@@ -25,7 +25,7 @@ export default function NotFound() {
         </p>
         <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
           <Link
-            to="/repository"
+            to="/repositories/new"
             className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md bg-slate-900 px-4 text-sm font-medium text-white transition-colors hover:bg-slate-800"
           >
             <Database aria-hidden="true" className="h-4 w-4" />
