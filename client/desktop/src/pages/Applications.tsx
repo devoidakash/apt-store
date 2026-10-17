@@ -1,9 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { getApplications, type ApplicationSummary } from "../api/application";
 
 function ApplicationCard({ application }: { application: ApplicationSummary }) {
   return (
-    <article className="application-card">
+    <Link
+      to={`/applications/${application.id}`}
+      className="application-card"
+      aria-label={`View ${application.displayName || application.packageName || "application"}`}
+    >
       <div className="application-card__topline">
         <span className="application-card__status">Available</span>
         <span className="application-card__version">
@@ -30,10 +35,10 @@ function ApplicationCard({ application }: { application: ApplicationSummary }) {
       <p className="application-card__caption">
         {application.caption || "A trusted application from the APT Store."}
       </p>
-      <button type="button" className="application-card__action">
+      <span className="application-card__action">
         View application <span aria-hidden="true">&#8594;</span>
-      </button>
-    </article>
+      </span>
+    </Link>
   );
 }
 

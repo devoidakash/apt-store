@@ -8,10 +8,25 @@ export interface ApplicationSummary {
   icon: string | null;
 }
 
+export interface ApplicationDetail extends ApplicationSummary {
+  downloadSizeBytes: number | string;
+  installedSizeBytes: number | string;
+  description: string | null;
+  images: string[];
+  homepage: string | null;
+  category: string | null;
+}
+
 interface ApplicationsResponse {
   success: boolean;
   message: string;
   data: ApplicationSummary[];
+}
+
+interface ApplicationDetailResponse {
+  success: boolean;
+  message: string;
+  data: ApplicationDetail;
 }
 
 const apiBaseUrl =
@@ -25,5 +40,21 @@ export async function getApplications(signal?: AbortSignal) {
   }
 
   const result = (await response.json()) as ApplicationsResponse;
+  return result.data;
+}
+
+export async function getApplicationById(
+  applicationId: string,
+  signal?: AbortSignal,
+) {
+  const response = await fetch(`${apiBaseUrl}/applications/${applicationId}`, {
+    signal,
+  });
+
+  if (!response.ok) {
+    throw new Error(`Could not load application (${response.status}).`);
+  }
+
+  const result = (await response.json()) as ApplicationDetailResponse;
   return result.data;
 }
