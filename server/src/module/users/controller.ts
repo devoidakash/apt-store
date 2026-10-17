@@ -13,3 +13,18 @@ export async function getApplications(
     data,
   });
 }
+
+export async function getAppllicationById(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  const applicationId = req.params.applicationId as string;
+  const data = await service.getApplicationById(applicationId);
+
+  res.status(200).json({
+    success: true,
+    message: "Application fetched successfully",
+    data,
+  });
+}
