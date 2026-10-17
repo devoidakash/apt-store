@@ -9,6 +9,7 @@ import {
   FileText,
   Image,
   ImagePlus,
+  Images,
   LoaderCircle,
   Pencil,
   Plus,
@@ -223,11 +224,11 @@ export default function ManageApplication() {
 
     try {
       const result = await updateApplication(application.id, {
-        displayName: form.displayName.trim() || null,
-        caption: form.caption.trim() || null,
-        description: form.description.trim() || null,
-        category: form.category.trim() || null,
-        homepage: form.homepage.trim() || null,
+        displayName: form.displayName.trim() || undefined,
+        caption: form.caption.trim() || undefined,
+        description: form.description.trim() || undefined,
+        category: form.category.trim() || undefined,
+        homepage: form.homepage.trim() || undefined,
       });
       const updatedApplication = await getApplicationById(application.id);
       setApplication(updatedApplication);
@@ -293,6 +294,8 @@ export default function ManageApplication() {
       setApplication(updatedApplication);
       setApplicationStatus(updatedApplication.status);
       setStatusSuccess(result.message);
+      setSaveSuccess(result.message);
+      setIsEditing(false);
     } catch (saveFailure) {
       if (axios.isAxiosError<ApiErrorResponse>(saveFailure)) {
         const errors = saveFailure.response?.data?.errors ?? [];
@@ -643,8 +646,8 @@ export default function ManageApplication() {
                     Display name
                     <input
                       type="text"
-                      minLength={2}
-                      maxLength={20}
+                      minLength={1}
+                      maxLength={100}
                       value={form.displayName}
                       onChange={(event) =>
                         updateField("displayName", event.target.value)
@@ -670,8 +673,7 @@ export default function ManageApplication() {
                     Caption
                     <input
                       type="text"
-                      minLength={5}
-                      maxLength={50}
+                      maxLength={120}
                       value={form.caption}
                       onChange={(event) =>
                         updateField("caption", event.target.value)
@@ -695,8 +697,8 @@ export default function ManageApplication() {
                     Category
                     <input
                       type="text"
-                      minLength={2}
-                      maxLength={10}
+                      minLength={1}
+                      maxLength={50}
                       value={form.category}
                       onChange={(event) =>
                         updateField("category", event.target.value)
@@ -744,8 +746,7 @@ export default function ManageApplication() {
                     Description
                     <textarea
                       rows={4}
-                      minLength={10}
-                      maxLength={500}
+                      maxLength={2000}
                       value={form.description}
                       onChange={(event) =>
                         updateField("description", event.target.value)
@@ -906,14 +907,18 @@ export default function ManageApplication() {
                           <img
                             key={image}
                             src={image}
-                            alt={`${application.displayName || application.packageName} screenshot ${index + 1}`}
+                            alt={`${application.displayName || application.packageName} image ${index + 1}`}
                             className="aspect-video w-full rounded-md border border-slate-200 object-cover"
                           />
                         ))}
                       </div>
                     ) : (
-                      <div className="mt-4 flex aspect-video items-center justify-center border border-dashed border-slate-300 text-sm text-slate-500">
-                        No screenshots uploaded
+                      <div className="mt-4 flex aspect-video flex-col items-center justify-center gap-3 border border-dashed border-slate-300 text-center text-xl font-semibold text-slate-500">
+                        <Images
+                          className="h-12 w-12 text-slate-300"
+                          aria-hidden="true"
+                        />
+                        <span>No images uploaded</span>
                       </div>
                     )}
                   </div>
@@ -930,7 +935,7 @@ export default function ManageApplication() {
                   Application media
                 </h2>
                 <p className="mt-1 text-sm text-slate-500">
-                  Update the icon and screenshots independently.
+                  Update the icon and images independently.
                 </p>
               </div>
               <button
@@ -969,7 +974,7 @@ export default function ManageApplication() {
                     <div key={`${image}-${index}`} className="relative">
                       <img
                         src={image}
-                        alt={`${application.displayName || application.packageName} screenshot ${index + 1}`}
+                        alt={`${application.displayName || application.packageName} image ${index + 1}`}
                         className="aspect-video w-full border border-slate-200 object-cover"
                       />
                       {imagePreviewUrls.length > 0 && (
@@ -986,7 +991,7 @@ export default function ManageApplication() {
                   ))}
                   <label
                     htmlFor="application-images-input"
-                    title="Browse for screenshots"
+                    title="Browse for images"
                     className="flex aspect-video cursor-pointer flex-col items-center justify-center gap-2 border border-dashed border-slate-300 bg-slate-50 text-slate-500 transition hover:border-emerald-500 hover:bg-emerald-50 hover:text-emerald-700 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-emerald-700"
                   >
                     <Plus className="h-7 w-7" aria-hidden="true" />

@@ -28,11 +28,11 @@ export interface ApplicationDetail extends ApplicationSummary {
 }
 
 export interface UpdateApplicationInput {
-  displayName: string | null;
-  caption: string | null;
-  description: string | null;
-  category: string | null;
-  homepage: string | null;
+  displayName?: string;
+  caption?: string;
+  description?: string;
+  category?: string;
+  homepage?: string;
 }
 
 interface ApplicationsResponse {

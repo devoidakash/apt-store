@@ -12,11 +12,11 @@ export const applicationId = z.object({
 
 export const updateApplication = z
   .object({
-    displayName: z.string().trim().min(2).max(20).optional(),
-    caption: z.string().trim().min(5).max(50).optional(),
-    description: z.string().trim().min(10).max(500).optional(),
-    category: z.string().trim().min(2).max(10).optional(),
-    homepage: z.url().optional(),
+    displayName: z.string().trim().min(1).max(100).optional(),
+    caption: z.string().trim().max(120).optional(),
+    description: z.string().trim().max(2000).optional(),
+    category: z.string().trim().min(1).max(50).optional(),
+    homepage: z.string().trim().url().optional(),
   })
   .strict()
   .refine((data) => Object.keys(data).length > 0, {

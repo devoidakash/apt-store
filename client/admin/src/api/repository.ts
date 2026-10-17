@@ -1,6 +1,7 @@
 import axiosClient from "../lib/axios-client";
 
 export interface CreateRepositoryRequest {
+  name: string;
   package_name: string;
   uri: string;
   suite: string;
@@ -94,12 +95,12 @@ export async function updateRepository(
 export async function createRepository(
   repository: CreateRepositoryRequest,
 ): Promise<CreateRepositoryResponse> {
-  const { package_name, ...repositoryData } = repository;
+  const { name, package_name, ...repositoryData } = repository;
   const response = await axiosClient.post<CreateRepositoryResponse>(
     "/admin/repositories",
     {
       ...repositoryData,
-      name: package_name,
+      name,
       packageName: [package_name],
     },
   );

@@ -5,6 +5,7 @@ import BackButton from "../../components/navigation/BackButton";
 import { createRepository } from "../../api/repository";
 
 interface RepositoryForm {
+  name: string;
   package_name: string;
   uri: string;
   suite: string;
@@ -14,6 +15,7 @@ interface RepositoryForm {
 }
 
 const initialForm: RepositoryForm = {
+  name: "",
   package_name: "",
   uri: "",
   suite: "",
@@ -79,7 +81,19 @@ export default function ManageRepository() {
 
       <form onSubmit={handleSubmit} className="w-full py-7">
         <div className="grid gap-x-6 gap-y-5 sm:grid-cols-2">
-          <label className="text-sm font-medium text-slate-800 sm:col-span-2">
+          <label className="text-sm font-medium text-slate-800">
+            Repository name
+            <input
+              required
+              name="name"
+              value={form.name}
+              onChange={(event) => updateField("name", event.target.value)}
+              placeholder="e.g. Mozilla Firefox"
+              className={inputClassName}
+            />
+          </label>
+
+          <label className="text-sm font-medium text-slate-800">
             Package name
             <input
               required
