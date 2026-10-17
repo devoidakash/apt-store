@@ -7,11 +7,13 @@ import {
   LayoutGrid,
   LoaderCircle,
   Package,
+  ShieldCheck,
 } from "lucide-react";
 import { Link, useSearchParams } from "react-router";
 import Layout from "../../components/dashboard/Layout";
 import {
   getApplications,
+  getApplicationicon,
   type ApplicationStatus,
   type ApplicationSummary,
 } from "../../api/application";
@@ -84,6 +86,12 @@ export default function Applications() {
     return () => controller.abort();
   }, [status]);
 
+  const StatusIcon = status === "live" ? BadgeCheck : FileText;
+  const statusPillClassName =
+    status === "live"
+      ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+      : "border-amber-200 bg-amber-50 text-amber-700";
+
   return (
     <Layout
       sidebarLinks={sidebarLinks}
@@ -93,16 +101,20 @@ export default function Applications() {
         <header className="flex flex-wrap items-end justify-between gap-4 border border-slate-200 bg-white px-5 py-4 sm:px-6">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-emerald-700">
-              Package management
+              Manage applications
             </p>
             <h1 className="mt-2 text-2xl font-semibold text-slate-950">
               Applications
             </h1>
           </div>
           {!isLoading && !error && (
-            <p className="text-sm text-slate-500">
-              {applications.length} {applications.length === 1 ? "app" : "apps"}
-            </p>
+            <span
+              className={`inline-flex items-center gap-2 border px-3 py-2 text-sm font-medium ${statusPillClassName}`}
+            >
+              <StatusIcon className="h-4 w-4" aria-hidden="true" />
+              <span>{applications.length}</span>
+              <span className="capitalize">{status}</span>
+            </span>
           )}
         </header>
 
@@ -116,9 +128,14 @@ export default function Applications() {
             {error}
           </p>
         ) : applications.length === 0 ? (
-          <div className="flex min-h-48 items-center gap-3 text-sm text-slate-600">
-            <LayoutGrid className="h-6 w-6 text-slate-400" aria-hidden="true" />
-            No {status} applications.
+          <div className="relative min-h-[calc(100vh-14rem)]">
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 text-center text-lg font-medium text-slate-600">
+              <LayoutGrid
+                className="h-16 w-16 text-slate-300"
+                aria-hidden="true"
+              />
+              <p>No {status} applications.</p>
+            </div>
           </div>
         ) : (
           <ul className="grid gap-4 py-6 sm:grid-cols-2 xl:grid-cols-3">
@@ -131,18 +148,34 @@ export default function Applications() {
                 >
                   <article className="flex min-h-24 items-center gap-4 border border-slate-200 bg-white p-5 shadow-sm transition hover:border-emerald-600">
                     <div className="flex h-12 w-12 shrink-0 items-center justify-center border border-slate-200 bg-slate-50 text-emerald-700">
-                      <Package className="h-6 w-6" aria-hidden="true" />
+                      {application.icon ? (
+                        <img
+                          src={getApplicationicon(application.icon)}
+                          alt=""
+                          className="h-full w-full object-contain p-1"
+                        />
+                      ) : (
+                        <Package className="h-6 w-6" aria-hidden="true" />
+                      )}
                     </div>
                     <div className="min-w-0">
                       <h2 className="wrap-break-word text-base font-semibold text-slate-900">
                         {application.displayName || application.packageName}
                       </h2>
-                      <p className="mt-1 text-sm text-slate-600">
-                        Version {application.version}
-                        {application.category
-                          ? ` · ${application.category}`
-                          : ""}
-                      </p>
+                      {application.maintainer && (
+                        <p className="mt-1 flex items-center gap-1 wrap-break-word text-sm text-slate-600">
+                          {application.maintainer}
+                          <ShieldCheck
+                            className="h-4 w-4 shrink-0 text-emerald-600"
+                            aria-label="Verified maintainer"
+                          />
+                        </p>
+                      )}
+                      {application.caption && (
+                        <p className="mt-1 wrap-break-word text-sm text-slate-600">
+                          {application.caption}
+                        </p>
+                      )}
                     </div>
                   </article>
                 </Link>

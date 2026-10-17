@@ -67,7 +67,7 @@ export default function ManageRepository() {
       </BackButton>
       <header className="border border-slate-200 bg-white px-5 py-4 sm:px-6">
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-emerald-700">
-          Package management
+          Manage repositories
         </p>
         <h1 className="mt-2 text-2xl font-semibold text-slate-950">
           Repository

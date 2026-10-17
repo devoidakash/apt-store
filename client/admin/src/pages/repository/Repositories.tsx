@@ -82,7 +82,7 @@ export default function Repositories() {
         <header className="flex flex-wrap items-end justify-between gap-4 border border-slate-200 bg-white px-5 py-4 sm:px-6">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-emerald-700">
-              Package management
+              Manage repositories
             </p>
             <h1 className="mt-2 text-2xl font-semibold text-slate-950">
               Repositories

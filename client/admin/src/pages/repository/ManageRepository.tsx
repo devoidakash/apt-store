@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { Link, useParams } from "react-router";
 import BackButton from "../../components/navigation/BackButton";
+import Heading from "../../components/cards/Heading";
 import Layout from "../../components/dashboard/Layout";
 import {
   getRepositoryById,
@@ -102,6 +103,31 @@ const sidebarLinks = [
   },
 ];
 
+const fields: {
+  key: RepositoryFormField;
+  label: string;
+  type?: string;
+  wide?: boolean;
+  hint?: string;
+}[] = [
+  { key: "name", label: "Repository name" },
+  {
+    key: "packageNames",
+    label: "Package names",
+    hint: "Separate multiple names with commas.",
+  },
+  { key: "uri", label: "Repository URL", type: "url", wide: true },
+  { key: "suite", label: "Suite" },
+  { key: "component", label: "Component" },
+  { key: "architecture", label: "Architecture" },
+  { key: "signedBy", label: "Signing key" },
+];
+
+const labelClassName =
+  "block text-xs font-semibold uppercase tracking-wide text-slate-500";
+const inputClassName =
+  "mt-2 h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/15";
+
 export default function ManageRepository() {
   const { repositoryId } = useParams();
   const [repository, setRepository] = useState<RepositoryDetail | null>(null);
@@ -154,7 +180,7 @@ export default function ManageRepository() {
     return () => controller.abort();
   }, [repositoryId]);
 
-  const updateField = (field: keyof RepositoryForm, value: string) => {
+  const updateField = (field: RepositoryFormField, value: string) => {
     setForm((current) => ({ ...current, [field]: value }));
     setFieldErrors((current) => ({ ...current, [field]: undefined }));
     setSaveError("");
@@ -162,7 +188,7 @@ export default function ManageRepository() {
 
   const handleSave = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!repositoryId) return;
+    if (!repositoryId || !isEditing) return;
 
     setIsSaving(true);
     setSaveError("");
@@ -210,6 +236,11 @@ export default function ManageRepository() {
     }
   };
 
+  const startEditing = () => {
+    setSaveSuccess("");
+    setIsEditing(true);
+  };
+
   const cancelEditing = () => {
     if (repository) setForm(toRepositoryForm(repository));
     setIsEditing(false);
@@ -218,19 +249,11 @@ export default function ManageRepository() {
     setFieldErrors({});
   };
 
-  const inputClassName =
-    "mt-2 h-11 w-full border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/15";
-  const getInputClassName = (field: RepositoryFormField) =>
-    `${inputClassName} ${fieldErrors[field] ? "border-rose-500 focus:border-rose-600 focus:ring-rose-600/15" : ""}`;
+  const readValue = (key: RepositoryFormField) =>
+    repository ? toRepositoryForm(repository)[key] : "";
 
-  const details = repository
+  const meta = repository
     ? [
-        { label: "Package names", value: repository.packageName.join(", ") },
-        { label: "Repository URL", value: repository.uri },
-        { label: "Suite", value: repository.suite },
-        { label: "Component", value: repository.component },
-        { label: "Architecture", value: repository.architecture },
-        { label: "Signing key", value: repository.signedby },
         {
           label: "Created",
           value: new Date(repository.createdAt).toLocaleString(),
@@ -255,27 +278,40 @@ export default function ManageRepository() {
           Back to repositories
         </BackButton>
 
-        <header className="border border-slate-200 bg-white px-5 py-4 sm:px-6">
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-emerald-700">
-                Repository
-              </p>
-              <h1 className="mt-1 wrap-break-word text-2xl font-semibold text-slate-950">
-                {repository?.name ?? "Manage repository"}
-              </h1>
-            </div>
-            {repository?.applicationId && (
+        <Heading
+          icon={
+            <span
+              className="flex h-12 w-12 shrink-0 items-center justify-center border border-emerald-200 bg-emerald-50 text-emerald-800"
+              aria-label={repository?.icon ? "Repository icon" : "Repository"}
+            >
+              {repository?.icon ? (
+                <img
+                  src={repository.icon}
+                  alt=""
+                  className="h-full w-full object-contain p-1"
+                />
+              ) : (
+                <Database
+                  className="h-6 w-6 text-emerald-700"
+                  aria-hidden="true"
+                />
+              )}
+            </span>
+          }
+          name={repository?.name ?? "Manage repository"}
+          info="Manage repository"
+          action={
+            repository?.applicationId ? (
               <Link
                 to={`/applications/${repository.applicationId}`}
-                className="inline-flex h-10 items-center gap-2 border border-orange-200 bg-orange-50 px-3 text-sm font-medium text-orange-700 hover:bg-orange-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-700"
+                className="inline-flex h-10 items-center gap-2 border border-yellow-200 bg-yellow-50 px-3 text-sm font-medium text-yellow-700 hover:bg-yellow-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-yellow-700"
               >
                 View application
                 <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </Link>
-            )}
-          </div>
-        </header>
+            ) : null
+          }
+        />
 
         {isLoading ? (
           <div className="mt-6 border border-slate-200 bg-white p-5 sm:p-6">
@@ -299,261 +335,163 @@ export default function ManageRepository() {
           >
             {error}
           </div>
-        ) : isEditing ? (
+        ) : (
+          /* One card, one grid: view and edit render in the same place. */
           <form
             onSubmit={handleSave}
-            className="mt-6 border border-slate-200 bg-white px-5 py-5 sm:px-6 sm:py-6"
+            className="mt-6 border border-slate-200 bg-white px-5 sm:px-6"
           >
-            <div className="mb-6 border-b border-slate-200 pb-4">
-              <h2 className="text-base font-semibold text-slate-900">
-                Repository settings
-              </h2>
-              <p className="mt-1 text-sm text-slate-500">
-                Update the source and package configuration.
-              </p>
-            </div>
-            {saveError && (
-              <p
-                role="alert"
-                className="mb-5 border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800"
-              >
-                {saveError}
-              </p>
-            )}
-            <div className="grid gap-x-6 gap-y-5 sm:grid-cols-2">
-              <label className="text-sm font-medium text-slate-800">
-                Repository name
-                <input
-                  required
-                  value={form.name}
-                  onChange={(event) => updateField("name", event.target.value)}
-                  className={getInputClassName("name")}
-                  aria-invalid={Boolean(fieldErrors.name)}
-                  aria-describedby={fieldErrors.name ? "name-error" : undefined}
-                />
-                {fieldErrors.name && (
-                  <span
-                    id="name-error"
-                    className="mt-1 block text-xs text-rose-700"
-                  >
-                    {fieldErrors.name}
-                  </span>
-                )}
-              </label>
-              <label className="text-sm font-medium text-slate-800">
-                Package names
-                <input
-                  required
-                  value={form.packageNames}
-                  onChange={(event) =>
-                    updateField("packageNames", event.target.value)
-                  }
-                  className={getInputClassName("packageNames")}
-                  aria-invalid={Boolean(fieldErrors.packageNames)}
-                  aria-describedby={`package-names-hint${fieldErrors.packageNames ? " package-names-error" : ""}`}
-                />
-                {fieldErrors.packageNames && (
-                  <span
-                    id="package-names-error"
-                    className="mt-1 block text-xs text-rose-700"
-                  >
-                    {fieldErrors.packageNames}
-                  </span>
-                )}
-                <span
-                  id="package-names-hint"
-                  className="mt-1 block text-xs font-normal text-slate-500"
-                >
-                  Separate multiple names with commas.
-                </span>
-              </label>
-              <label className="text-sm font-medium text-slate-800 sm:col-span-2">
-                Repository URL
-                <input
-                  required
-                  type="url"
-                  value={form.uri}
-                  onChange={(event) => updateField("uri", event.target.value)}
-                  className={getInputClassName("uri")}
-                  aria-invalid={Boolean(fieldErrors.uri)}
-                  aria-describedby={fieldErrors.uri ? "uri-error" : undefined}
-                />
-                {fieldErrors.uri && (
-                  <span
-                    id="uri-error"
-                    className="mt-1 block text-xs text-rose-700"
-                  >
-                    {fieldErrors.uri}
-                  </span>
-                )}
-              </label>
-              <label className="text-sm font-medium text-slate-800">
-                Suite
-                <input
-                  required
-                  value={form.suite}
-                  onChange={(event) => updateField("suite", event.target.value)}
-                  className={getInputClassName("suite")}
-                  aria-invalid={Boolean(fieldErrors.suite)}
-                  aria-describedby={
-                    fieldErrors.suite ? "suite-error" : undefined
-                  }
-                />
-                {fieldErrors.suite && (
-                  <span
-                    id="suite-error"
-                    className="mt-1 block text-xs text-rose-700"
-                  >
-                    {fieldErrors.suite}
-                  </span>
-                )}
-              </label>
-              <label className="text-sm font-medium text-slate-800">
-                Component
-                <input
-                  required
-                  value={form.component}
-                  onChange={(event) =>
-                    updateField("component", event.target.value)
-                  }
-                  className={getInputClassName("component")}
-                  aria-invalid={Boolean(fieldErrors.component)}
-                  aria-describedby={
-                    fieldErrors.component ? "component-error" : undefined
-                  }
-                />
-                {fieldErrors.component && (
-                  <span
-                    id="component-error"
-                    className="mt-1 block text-xs text-rose-700"
-                  >
-                    {fieldErrors.component}
-                  </span>
-                )}
-              </label>
-              <label className="text-sm font-medium text-slate-800">
-                Architecture
-                <input
-                  required
-                  value={form.architecture}
-                  onChange={(event) =>
-                    updateField("architecture", event.target.value)
-                  }
-                  className={getInputClassName("architecture")}
-                  aria-invalid={Boolean(fieldErrors.architecture)}
-                  aria-describedby={
-                    fieldErrors.architecture ? "architecture-error" : undefined
-                  }
-                />
-                {fieldErrors.architecture && (
-                  <span
-                    id="architecture-error"
-                    className="mt-1 block text-xs text-rose-700"
-                  >
-                    {fieldErrors.architecture}
-                  </span>
-                )}
-              </label>
-              <label className="text-sm font-medium text-slate-800">
-                Signing key
-                <input
-                  required
-                  value={form.signedBy}
-                  onChange={(event) =>
-                    updateField("signedBy", event.target.value)
-                  }
-                  className={getInputClassName("signedBy")}
-                  aria-invalid={Boolean(fieldErrors.signedBy)}
-                  aria-describedby={
-                    fieldErrors.signedBy ? "signed-by-error" : undefined
-                  }
-                />
-                {fieldErrors.signedBy && (
-                  <span
-                    id="signed-by-error"
-                    className="mt-1 block text-xs text-rose-700"
-                  >
-                    {fieldErrors.signedBy}
-                  </span>
-                )}
-              </label>
-            </div>
-
-            <div className="mt-7 flex flex-wrap gap-3 border-t border-slate-200 pt-5">
-              <button
-                type="submit"
-                disabled={isSaving}
-                className="inline-flex h-11 items-center gap-2 bg-emerald-700 px-4 text-sm font-semibold text-white transition-colors hover:bg-emerald-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700 disabled:cursor-wait disabled:opacity-70"
-              >
-                {isSaving ? (
-                  <LoaderCircle className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Check className="h-4 w-4" aria-hidden="true" />
-                )}
-                {isSaving ? "Saving..." : "Save changes"}
-              </button>
-              <button
-                type="button"
-                disabled={isSaving}
-                onClick={cancelEditing}
-                className="inline-flex h-11 items-center gap-2 border border-slate-300 bg-white px-4 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700 disabled:opacity-70"
-              >
-                <X className="h-4 w-4" aria-hidden="true" />
-                Cancel
-              </button>
-            </div>
-          </form>
-        ) : (
-          <div className="mt-6 border border-slate-200 bg-white px-5 sm:px-6">
-            {saveSuccess && (
-              <p
-                aria-live="polite"
-                className="border-b border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800"
-              >
-                {saveSuccess}
-              </p>
-            )}
-            <div className="flex flex-wrap items-end justify-between gap-4 border-b border-slate-200 py-4">
+            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 py-4">
               <div>
                 <h2 className="text-base font-semibold text-slate-900">
-                  Repository details
+                  {isEditing ? "Edit repository" : "Repository details"}
                 </h2>
                 <p className="mt-1 text-sm text-slate-500">
-                  Source location and package configuration
+                  {isEditing
+                    ? "Update the source and package configuration."
+                    : "Source location and package configuration"}
                 </p>
               </div>
-              {repository && (
-                <div className="flex flex-wrap items-center justify-end gap-3">
+
+              {isEditing ? (
+                <div className="flex items-center gap-2">
                   <button
                     type="button"
-                    onClick={() => {
-                      setSaveSuccess("");
-                      setIsEditing(true);
-                    }}
-                    className="inline-flex h-10 items-center gap-2 border border-rose-200 bg-rose-50 px-3 text-sm font-medium text-rose-700 hover:bg-rose-100"
+                    disabled={isSaving}
+                    onClick={cancelEditing}
+                    className="inline-flex h-10 items-center gap-2 rounded-md border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700 disabled:opacity-70"
                   >
-                    Edit repository
-                    <Pencil className="h-4 w-4" aria-hidden="true" />
+                    <X className="h-4 w-4" aria-hidden="true" />
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSaving}
+                    className="inline-flex h-10 items-center gap-2 rounded-md bg-emerald-700 px-3 text-sm font-semibold text-white transition hover:bg-emerald-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700 disabled:cursor-wait disabled:opacity-70"
+                  >
+                    {isSaving ? (
+                      <LoaderCircle className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Check className="h-4 w-4" aria-hidden="true" />
+                    )}
+                    {isSaving ? "Saving..." : "Save changes"}
                   </button>
                 </div>
+              ) : (
+                repository && (
+                  <button
+                    type="button"
+                    onClick={startEditing}
+                    className="inline-flex h-10 items-center gap-2 border border-rose-200 bg-rose-50 px-3 text-sm font-medium text-rose-700 hover:bg-rose-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-700"
+                  >
+                    <Pencil className="h-4 w-4" aria-hidden="true" />
+                    Edit repository
+                  </button>
+                )
               )}
             </div>
-            <dl className="grid gap-x-8 sm:grid-cols-2">
-              {details.map(({ label, value }) => (
-                <div
-                  key={label}
-                  className="min-w-0 border-b border-slate-100 py-4"
+
+            <div aria-live="polite">
+              {saveSuccess && (
+                <p className="mt-5 rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+                  {saveSuccess}
+                </p>
+              )}
+              {saveError && (
+                <p
+                  role="alert"
+                  className="mt-5 rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800"
                 >
-                  <dt className="text-xs font-semibold uppercase text-slate-500">
-                    {label}
-                  </dt>
-                  <dd className="mt-2 wrap-break-word text-sm font-medium text-slate-900">
-                    {value || "-"}
-                  </dd>
+                  {saveError}
+                </p>
+              )}
+            </div>
+
+            <div className="grid gap-x-6 gap-y-5 py-6 sm:grid-cols-2">
+              {fields.map(({ key, label, type, wide, hint }) => {
+                const cell = wide ? "sm:col-span-2" : "";
+                const errorId = `${key}-error`;
+
+                if (!isEditing) {
+                  return (
+                    <div
+                      key={key}
+                      className={`min-w-0 ${cell} ${!isEditing ? "border border-slate-200 bg-slate-50 p-4" : ""}`}
+                    >
+                      <dt className={labelClassName}>{label}</dt>
+                      <dd className="mt-2 flex min-h-11 items-start wrap-break-word text-sm font-medium text-slate-900">
+                        {readValue(key) || "-"}
+                      </dd>
+                    </div>
+                  );
+                }
+
+                return (
+                  <label key={key} className={`min-w-0 ${cell}`}>
+                    <span className={labelClassName}>{label}</span>
+                    {key === "architecture" ? (
+                      <select
+                        required
+                        value={form.architecture}
+                        onChange={(event) =>
+                          updateField("architecture", event.target.value)
+                        }
+                        className={`${inputClassName} ${fieldErrors[key] ? "border-rose-500" : ""}`}
+                        aria-invalid={Boolean(fieldErrors[key])}
+                        aria-describedby={
+                          fieldErrors[key] ? errorId : undefined
+                        }
+                      >
+                        {form.architecture !== "amd64" && (
+                          <option value={form.architecture}>
+                            {form.architecture}
+                          </option>
+                        )}
+                        <option value="amd64">amd64</option>
+                      </select>
+                    ) : (
+                      <input
+                        required
+                        type={type}
+                        value={form[key]}
+                        onChange={(event) =>
+                          updateField(key, event.target.value)
+                        }
+                        className={`${inputClassName} ${fieldErrors[key] ? "border-rose-500 focus:border-rose-600 focus:ring-rose-600/15" : ""}`}
+                        aria-invalid={Boolean(fieldErrors[key])}
+                        aria-describedby={
+                          fieldErrors[key] ? errorId : undefined
+                        }
+                      />
+                    )}
+                    {fieldErrors[key] && (
+                      <span
+                        id={errorId}
+                        className="mt-1 block text-xs text-rose-700"
+                      >
+                        {fieldErrors[key]}
+                      </span>
+                    )}
+                    {hint && !fieldErrors[key] && (
+                      <span className="mt-1 block text-xs font-normal normal-case text-slate-500">
+                        {hint}
+                      </span>
+                    )}
+                  </label>
+                );
+              })}
+            </div>
+
+            {/* Read-only metadata stays put in both modes */}
+            <dl className="grid gap-x-6 gap-y-4 border-t border-slate-100 py-5 sm:grid-cols-2">
+              {meta.map(({ label, value }) => (
+                <div key={label} className="min-w-0">
+                  <dt className={labelClassName}>{label}</dt>
+                  <dd className="mt-1 text-sm text-slate-600">{value}</dd>
                 </div>
               ))}
             </dl>
-          </div>
+          </form>
         )}
       </section>
     </Layout>
