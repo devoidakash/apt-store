@@ -1,22 +1,11 @@
 import env from "../../../config/env";
 import ApiError from "../../../err/api-error";
 import ERROR_CODES from "../../../err/error-code";
+import { getIcon, getImages } from "../../../utils/get-Images";
 import { uploadToR2 } from "../../../utils/r2-operations";
 import resizeImage from "../../../utils/resize-image";
 import * as repository from "./repository";
 import type { ApplicationStatus, UpdateApplicationData } from "./schema";
-
-function getIcon(applicationId: string, iconUpdatedAt: Date | null) {
-  if (!iconUpdatedAt) return null;
-
-  return `${env.r2PublicUrl}/applications/${applicationId}/icon.webp?v=${iconUpdatedAt.getTime()}`;
-}
-
-function getImageUrls(images: unknown): string[] {
-  if (!Array.isArray(images)) return [];
-
-  return images.map((image) => `${env.r2PublicUrl}/${image}`);
-}
 
 export async function getApplications(applicationStatus: string) {
   const applications = await repository.fetchApplications(applicationStatus);
@@ -43,6 +32,10 @@ export async function getApplicationById(applicationId: string) {
     throw new ApiError(ERROR_CODES.APPLICATION_NOT_FOUND);
   }
 
+  if (!Array.isArray(application.images)) {
+    throw new ApiError(ERROR_CODES.APPLICATION_IMAGES_NOT_ARRAY);
+  }
+
   return {
     ...application,
     icon: getIcon(
@@ -51,7 +44,7 @@ export async function getApplicationById(applicationId: string) {
         ? application.iconUpdatedAt
         : null,
     ),
-    images: getImageUrls(application.images),
+    images: getImages(application.images),
   };
 }
 

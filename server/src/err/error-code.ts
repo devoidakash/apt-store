@@ -50,6 +50,11 @@ const ERROR_CODES = {
     message: "Application icon not found",
     code: "APPLICATION_ICON_NOT_FOUND",
   },
+  APPLICATION_IMAGES_NOT_ARRAY: {
+    statusCode: 400,
+    message: "Application images should be an array",
+    code: "APPLICATION_IMAGES_NOT_ARRAY",
+  },
 };
 
 export default ERROR_CODES;

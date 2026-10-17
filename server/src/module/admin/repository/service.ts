@@ -2,19 +2,13 @@ import compareDpkgVersions from "dpkg-compare-versions";
 import { promisify } from "node:util";
 import { gunzip } from "node:zlib";
 import { type PoolClient } from "pg";
-import env from "../../../config/env";
 import ApiError from "../../../err/api-error";
 import ERROR_CODES from "../../../err/error-code";
 import pool from "../../../infra/database/db";
 import withTransaction from "../../../utils/with-transaction";
 import * as repository from "./repository";
 import { createRepositoryData } from "./schema";
-
-function getIcon(applicationId: string, iconUpdatedAt: Date | null) {
-  return iconUpdatedAt
-    ? `${env.r2PublicUrl}/applications/${applicationId}/icon.webp?v=${iconUpdatedAt.getTime()}`
-    : null;
-}
+import { getIcon } from "../../../utils/get-Images";
 
 export async function getRepositories() {
   const repositories = await repository.fetchRepositories();
