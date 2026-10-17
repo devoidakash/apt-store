@@ -22,7 +22,10 @@ export default function Sidebar({ links = [], onLogout }: SidebarProps) {
   return (
     <nav className="relative z-40 flex h-full w-60 shrink-0 flex-col border-r border-slate-200/90 bg-white shadow-sm">
       {/* Brand Logo */}
-      <div className="flex h-14 items-center border-b border-slate-200/80 px-6">
+      <NavLink
+        to="/repositories"
+        className="flex h-14 items-center border-b border-slate-200/80 px-6"
+      >
         <img
           src="/apt-store.png"
           alt="APT Store"
@@ -31,7 +34,7 @@ export default function Sidebar({ links = [], onLogout }: SidebarProps) {
         <span className="ml-3 text-xl font-bold tracking-tight text-slate-800">
           APT Store
         </span>
-      </div>
+      </NavLink>
 
       {/* Navigation */}
       <div className="custom-scrollbar flex-1 overflow-y-auto py-6">
