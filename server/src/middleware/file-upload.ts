@@ -4,16 +4,16 @@ import path from "node:path";
 import ApiError from "../err/api-error";
 import ERROR_CODES from "../err/error-code";
 
-const ALLOWED_EXTENSIONS = [".jpg", ".jpeg", ".png"];
-const ALLOWED_MIMETYPES = ["image/jpeg", "image/png"];
+const ALLOWED_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp"];
+const ALLOWED_MIMETYPES = ["image/jpeg", "image/png", "image/webp"];
 
-export function upload(files: number, fields: number) {
+export function upload(fields: number, files: number, fileSize: number) {
   return multer({
     storage: multer.memoryStorage(),
     limits: {
-      fileSize: 5 * 1024 * 1024,
-      files,
       fields,
+      fileSize,
+      files,
     },
     fileFilter: (
       req: Request,

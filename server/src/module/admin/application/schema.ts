@@ -13,7 +13,8 @@ export const applicationId = z.object({
 export const updateApplication = z
   .object({
     displayName: z.string().trim().min(2).max(20).optional(),
-    description: z.string().trim().min(10).max(200).optional(),
+    caption: z.string().trim().min(5).max(50).optional(),
+    description: z.string().trim().min(10).max(500).optional(),
     category: z.string().trim().min(2).max(10).optional(),
     homepage: z.url().optional(),
   })

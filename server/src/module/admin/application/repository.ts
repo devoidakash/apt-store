@@ -5,7 +5,7 @@ import type { ApplicationStatus, UpdateApplicationData } from "./schema";
 export async function fetchApplications(applicationStatus: string) {
   const result = await pool.query(
     `
-    SELECT id, package_name, display_name, version, category, status
+    SELECT id, package_name, display_name, maintainer, caption, icon_updated_at, status
     FROM applications
     WHERE status = $1
   `,
@@ -31,13 +31,14 @@ export async function updateApplication(
   applicationId: string,
   data: UpdateApplicationData,
 ) {
-  const result = await pool.query(
+  return await pool.query(
     `
       UPDATE applications
       SET display_name = $2,
-          description = $3,
-          category = $4,
-          homepage = $5,
+          caption = $3,
+          description = $4,
+          category = $5,
+          homepage = $6,
           updated_at = now()
       WHERE id = $1
       RETURNING *
@@ -45,28 +46,49 @@ export async function updateApplication(
     [
       applicationId,
       data.displayName,
+      data.caption,
       data.description,
       data.category,
       data.homepage,
     ],
   );
+}
 
-  return toCamelCase(result.rows[0]);
+export async function updateApplicationIcon(applicationId: string) {
+  return await pool.query(
+    `
+      UPDATE applications
+      SET icon_updated_at = now()
+      WHERE id = $1
+    `,
+    [applicationId],
+  );
+}
+
+export async function updateApplicationImages(
+  applicationId: string,
+  images: string[],
+) {
+  return await pool.query(
+    `
+      UPDATE applications
+      SET images = $2, updated_at = now()
+      WHERE id = $1
+    `,
+    [applicationId, images],
+  );
 }
 
 export async function updateApplicationStatus(
   applicationId: string,
   status: ApplicationStatus,
 ) {
-  const result = await pool.query(
+  return await pool.query(
     `
       UPDATE applications
       SET status = $2, updated_at = now()
       WHERE id = $1
-      RETURNING *
     `,
     [applicationId, status],
   );
-
-  return toCamelCase(result.rows[0]);
 }

@@ -1,9 +1,9 @@
-import type { NextFunction, Request, Response } from "express";
-import { fileTypeFromBuffer } from "file-type";
-import ApiError from "../err/api-error";
+import sharp from "sharp";
+import type { Request, Response, NextFunction } from "express";
 import ERROR_CODES from "../err/error-code";
+import ApiError from "../err/api-error";
 
-const ALLOWED_TYPES = ["image/jpeg", "image/png"];
+const ALLOWED_FORMATS = ["jpeg", "png", "webp"];
 
 export async function validateFileType(
   req: Request,
@@ -19,34 +19,38 @@ export async function validateFileType(
       await validateFileBuffer(req.file);
     }
 
-    if (req.files) {
-      if (Array.isArray(req.files)) {
-        for (const file of req.files) {
-          await validateFileBuffer(file);
-        }
-      } else {
-        for (const files of Object.values(req.files)) {
-          for (const file of files) {
-            await validateFileBuffer(file);
-          }
-        }
+    if (Array.isArray(req.files)) {
+      for (const file of req.files) {
+        await validateFileBuffer(file);
       }
     }
 
-    return next();
+    next();
   } catch (error) {
-    return next(error);
+    next(error);
   }
 }
 
 async function validateFileBuffer(file: Express.Multer.File): Promise<void> {
-  const type = await fileTypeFromBuffer(file.buffer);
+  try {
+    const image = sharp(file.buffer, {
+      failOn: "error",
+      limitInputPixels: 40_000_000,
+    });
 
-  if (!type) {
+    const metadata = await image.metadata();
+
+    if (!metadata.format || !ALLOWED_FORMATS.includes(metadata.format)) {
+      throw new ApiError(ERROR_CODES.FILE_TYPE_MISMATCH);
+    }
+
+    file.buffer = await image.webp().toBuffer();
+    file.mimetype = "image/webp";
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+
     throw new ApiError(ERROR_CODES.INVALID_FILE_CONTENT);
-  }
-
-  if (!ALLOWED_TYPES.includes(type.mime)) {
-    throw new ApiError(ERROR_CODES.FILE_TYPE_MISMATCH);
   }
 }

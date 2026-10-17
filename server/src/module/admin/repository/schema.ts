@@ -19,3 +19,5 @@ export const createRepository = z.object({
   architecture: z.string().trim().toLowerCase(),
   signedBy: z.string().trim(),
 });
+
+export type createRepositoryData = z.infer<typeof createRepository>;

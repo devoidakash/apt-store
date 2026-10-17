@@ -34,10 +34,21 @@ const ERROR_CODES = {
     message: "Application not found",
     code: "APPLICATION_NOT_FOUND",
   },
-  APPLICATION_VALIDATION_FAILED: {
+  FILE_VALIDATION_FAILED: {
     statusCode: 400,
-    message: "Application validation failed",
-    code: "APPLICATION_VALIDATION_FAILED",
+    message: "File validation failed",
+    code: "FILE_VALIDATION_FAILED",
+    errors: [{ field: "images", message: "Exactly 5 images are required" }],
+  },
+  ICON_REQUIRED: {
+    statusCode: 400,
+    message: "Icon file is required",
+    code: "ICON_REQUIRED",
+  },
+  APPLICATION_ICON_NOT_FOUND: {
+    statusCode: 404,
+    message: "Application icon not found",
+    code: "APPLICATION_ICON_NOT_FOUND",
   },
 };
 
