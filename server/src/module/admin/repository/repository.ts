@@ -15,7 +15,7 @@ export async function fetchRepositories() {
 export async function fetchRepositoryById(repositoryId: string) {
   const result = await pool.query(
     `
-      SELECT r.*, a.id AS application_id
+      SELECT r.*, a.id AS application_id, a.icon_updated_at
       FROM repositories r
       LEFT JOIN applications a ON r.id = a.repository_id
       WHERE r.id = $1

@@ -8,6 +8,7 @@ import ERROR_CODES from "../../../err/error-code";
 import pool from "../../../infra/database/db";
 import withTransaction from "../../../utils/with-transaction";
 import * as repository from "./repository";
+import { createRepositoryData } from "./schema";
 
 function getIcon(applicationId: string, iconUpdatedAt: Date | null) {
   return iconUpdatedAt
@@ -33,7 +34,13 @@ export async function getRepositoryById(repositoryId: string) {
   if (!result) {
     throw new ApiError(ERROR_CODES.REPOSITORY_NOT_FOUND);
   }
-  return result;
+  return {
+    ...result,
+    icon: getIcon(
+      String(result.applicationId),
+      result.iconUpdatedAt instanceof Date ? result.iconUpdatedAt : null,
+    ),
+  };
 }
 
 function getPackagesObject(text: string): Record<string, string>[] {
@@ -157,16 +164,6 @@ async function getRepositoryApplication(
   return application;
 }
 
-interface createRepositoryData {
-  name: string;
-  packageName: Array<string>;
-  uri: string;
-  suite: string;
-  component: string;
-  architecture: string;
-  signedBy: string;
-}
-
 export async function createRepository(data: createRepositoryData) {
   const application = await getRepositoryApplication(data);
 
@@ -214,6 +211,3 @@ export async function updateRepository(
     return newRepository;
   });
 }
-
-// 2026-10-16T17:58:36.150Z
-// 2026-10-16T17:58:36.150Z
