@@ -1,14 +1,42 @@
-// Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-#[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
-}
-
-#[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![greet])
+        .invoke_handler(tauri::generate_handler![check_package_status])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+use std::process::Command;
+
+#[tauri::command]
+fn check_package_status(package_name: &str, version: &str) -> String {
+    // Step 1: Ask Ubuntu for the installed version.
+    let output = Command::new("dpkg-query")
+        .args(["-W", "-f=${Version}", &package_name])
+        .output();
+
+    // Step 2: If the command fails, treat the package as not installed.
+    let output = match output {
+        Ok(output) if output.status.success() => output,
+        _ => return "not installed".to_string(),
+    };
+
+    // Step 3: Convert the command's output into a Rust string.
+    let installed_version = String::from_utf8_lossy(&output.stdout).trim().to_string();
+
+    if installed_version.is_empty() {
+        return "not installed".to_string();
+    }
+
+    // Step 4: Ask dpkg whether the installed version is older.
+    let comparison = Command::new("dpkg")
+        .args(["--compare-versions", &installed_version, "lt", &version])
+        .status();
+
+    // Step 5: Interpret the comparison result.
+    match comparison {
+        Ok(status) if status.success() => "update available".to_string(),
+        Ok(_) => "up to date".to_string(),
+        Err(_) => "comparison failed".to_string(),
+    }
 }

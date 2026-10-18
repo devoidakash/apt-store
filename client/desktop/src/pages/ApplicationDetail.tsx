@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { invoke } from "@tauri-apps/api/core";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import {
   getApplicationById,
   type ApplicationDetail as ApplicationDetailData,
@@ -14,9 +15,13 @@ function formatBytes(value: number | string) {
 
 export default function ApplicationDetail() {
   const { applicationId } = useParams();
+  const [searchParams] = useSearchParams();
+  const packageName = searchParams.get("packageName") || "";
+  const version = searchParams.get("version") || "";
   const [application, setApplication] = useState<ApplicationDetailData | null>(
     null,
   );
+  const [packageStatus, setPackageStatus] = useState<string | null>(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -31,12 +36,35 @@ export default function ApplicationDetail() {
         return;
       }
 
+      setIsLoading(true);
+      setError("");
+      setApplication(null);
+      setPackageStatus(null);
+
+      const detailRequest = getApplicationById(
+        applicationId,
+        controller.signal,
+      );
+      void (packageName && version
+        ? invoke<string>("check_package_status", {
+            packageName,
+            version,
+          })
+            .then((status) => {
+              if (!controller.signal.aborted) setPackageStatus(status);
+            })
+            .catch(() => {
+              if (!controller.signal.aborted)
+                setPackageStatus("status unavailable");
+            })
+        : Promise.resolve().then(() => {
+            if (!controller.signal.aborted) setPackageStatus("not installed");
+          }));
+
       try {
-        setIsLoading(true);
-        setError("");
-        setApplication(
-          await getApplicationById(applicationId, controller.signal),
-        );
+        const loadedApplication = await detailRequest;
+        if (controller.signal.aborted) return;
+        setApplication(loadedApplication);
         setSelectedImageIndex(0);
       } catch (loadError) {
         if (controller.signal.aborted) return;
@@ -52,7 +80,7 @@ export default function ApplicationDetail() {
 
     void loadApplication();
     return () => controller.abort();
-  }, [applicationId]);
+  }, [applicationId, packageName, version]);
 
   return (
     <main className="store-shell">
@@ -111,9 +139,33 @@ export default function ApplicationDetail() {
                   </p>
                 </div>
               </div>
-              <button type="button" className="detail-install">
-                Install <span aria-hidden="true">&#8594;</span>
-              </button>
+              <div className="detail-button-area" aria-live="polite">
+                {packageStatus === null ? (
+                  <span
+                    className="detail-status-loading"
+                    role="status"
+                    aria-label="Checking installation status"
+                  >
+                    <span className="loading-orbit" aria-hidden="true" />
+                  </span>
+                ) : packageStatus === "not installed" ? (
+                  <button type="button" className="detail-install">
+                    Install <span aria-hidden="true">&#8594;</span>
+                  </button>
+                ) : packageStatus === "update available" ? (
+                  <button type="button" className="detail-install">
+                    Update <span aria-hidden="true">&#8594;</span>
+                  </button>
+                ) : packageStatus === "up to date" ? (
+                  <button type="button" className="detail-install" disabled>
+                    Up to date
+                  </button>
+                ) : (
+                  <span className="detail-status-message">
+                    Status unavailable
+                  </span>
+                )}
+              </div>
             </div>
 
             <dl className="detail-stats">
