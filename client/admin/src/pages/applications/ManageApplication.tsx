@@ -106,6 +106,7 @@ export default function ManageApplication() {
   >([]);
   const [statusSuccess, setStatusSuccess] = useState("");
   const [iconFile, setIconFile] = useState<File | null>(null);
+  const [iconPreviewUrl, setIconPreviewUrl] = useState("");
   const [isUploadingIcon, setIsUploadingIcon] = useState(false);
   const [iconUploadError, setIconUploadError] = useState("");
   const [iconUploadSuccess, setIconUploadSuccess] = useState("");
@@ -134,6 +135,12 @@ export default function ManageApplication() {
       imagePreviewUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
     };
   }, []);
+
+  useEffect(() => {
+    return () => {
+      if (iconPreviewUrl) URL.revokeObjectURL(iconPreviewUrl);
+    };
+  }, [iconPreviewUrl]);
 
   const updateImagePreviews = (files: File[]) => {
     imagePreviewUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
@@ -335,6 +342,7 @@ export default function ManageApplication() {
       const result = await updateApplicationIcon(application.id, iconFile);
       setApplication(await getApplicationById(application.id));
       setIconFile(null);
+      setIconPreviewUrl("");
       if (iconFileInputRef.current) iconFileInputRef.current.value = "";
       setIconUploadSuccess(result.message);
     } catch (uploadFailure) {
@@ -383,6 +391,9 @@ export default function ManageApplication() {
 
   const cancelEditing = () => {
     if (application) setForm(toApplicationForm(application));
+    setIconFile(null);
+    setIconPreviewUrl("");
+    if (iconFileInputRef.current) iconFileInputRef.current.value = "";
     navigate(`/applications/${applicationId}`);
     setIsEditing(false);
     setSaveError("");
@@ -581,8 +592,14 @@ export default function ManageApplication() {
                 <div className="flex h-56 items-center justify-center border border-slate-200 bg-white">
                   {application?.icon ? (
                     <img
-                      src={getApplicationicon(application.icon)}
+                      src={iconPreviewUrl || getApplicationicon(application.icon)}
                       alt={`${application.displayName || application.packageName} icon preview`}
+                      className="h-40 w-40 object-contain"
+                    />
+                  ) : iconPreviewUrl ? (
+                    <img
+                      src={iconPreviewUrl}
+                      alt="Selected icon preview"
                       className="h-40 w-40 object-contain"
                     />
                   ) : (
@@ -598,7 +615,11 @@ export default function ManageApplication() {
                   type="file"
                   accept="image/webp,.webp"
                   onChange={(event) => {
-                    setIconFile(event.target.files?.[0] ?? null);
+                    const selectedFile = event.target.files?.[0] ?? null;
+                    setIconFile(selectedFile);
+                    setIconPreviewUrl(
+                      selectedFile ? URL.createObjectURL(selectedFile) : "",
+                    );
                     setIconUploadError("");
                     setIconUploadSuccess("");
                   }}
