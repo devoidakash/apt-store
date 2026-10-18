@@ -249,7 +249,6 @@ export default function ManageApplication() {
       setForm(toApplicationForm(updatedApplication));
       setApplicationStatus(updatedApplication.status);
       setSaveSuccess(result.message);
-      setIsEditing(false);
     } catch (saveFailure) {
       if (axios.isAxiosError<ApiErrorResponse>(saveFailure)) {
         const errors: Partial<Record<keyof ApplicationForm, string>> = {};
@@ -613,7 +612,7 @@ export default function ManageApplication() {
                   id="application-icon-input"
                   ref={iconFileInputRef}
                   type="file"
-                  accept="image/webp,.webp"
+                  accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
                   onChange={(event) => {
                     const selectedFile = event.target.files?.[0] ?? null;
                     setIconFile(selectedFile);
@@ -969,17 +968,28 @@ export default function ManageApplication() {
                 </p>
               </div>
               <button
-                type="submit"
+                type={imageFiles.length === 5 ? "submit" : "button"}
                 form="application-images-form"
                 disabled={isUploadingImages}
+                onClick={() => {
+                  if (imageFiles.length < 5) {
+                    imageFileInputRef.current?.click();
+                  }
+                }}
                 className="inline-flex h-10 items-center gap-2 bg-emerald-700 px-4 text-sm font-semibold text-white hover:bg-emerald-800 disabled:cursor-wait disabled:opacity-50"
               >
                 {isUploadingImages ? (
                   <LoaderCircle className="h-4 w-4 animate-spin" />
-                ) : (
+                ) : imageFiles.length === 5 ? (
                   <ImagePlus className="h-4 w-4" aria-hidden="true" />
+                ) : (
+                  <Plus className="h-4 w-4" aria-hidden="true" />
                 )}
-                {isUploadingImages ? "Uploading..." : "Upload images"}
+                {isUploadingImages
+                  ? "Uploading..."
+                  : imageFiles.length === 5
+                    ? "Upload images"
+                    : "Select images"}
               </button>
             </div>
             <div>
@@ -1032,7 +1042,7 @@ export default function ManageApplication() {
                     id="application-images-input"
                     ref={imageFileInputRef}
                     type="file"
-                    accept="image/jpeg,image/png,.jpg,.jpeg,.png"
+                    accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
                     multiple
                     onChange={(event) => {
                       const files = Array.from(event.target.files ?? []);
@@ -1045,7 +1055,8 @@ export default function ManageApplication() {
                   />
                 </div>
                 <p className="text-xs text-slate-500">
-                  {imageFiles.length} selected. JPEG and PNG, up to 5 MB each.
+                  {imageFiles.length} selected. JPG, PNG, and WebP, up to 5 MB
+                  each.
                 </p>
                 {imagesUploadError && (
                   <p role="alert" className="text-sm text-rose-700">
