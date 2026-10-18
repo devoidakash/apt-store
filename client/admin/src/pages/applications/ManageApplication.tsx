@@ -16,7 +16,7 @@ import {
   ShieldCheck,
   X,
 } from "lucide-react";
-import { useParams } from "react-router";
+import { useLocation, useNavigate, useParams } from "react-router";
 import Layout from "../../components/dashboard/Layout";
 import {
   getApplicationById,
@@ -82,6 +82,9 @@ function formatBytes(value: number | string) {
 
 export default function ManageApplication() {
   const { applicationId } = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const isEditRoute = location.pathname.endsWith("/edit");
   const [application, setApplication] = useState<ApplicationDetail | null>(
     null,
   );
@@ -114,6 +117,10 @@ export default function ManageApplication() {
   const [isUploadingImages, setIsUploadingImages] = useState(false);
   const [imagesUploadError, setImagesUploadError] = useState("");
   const [imagesUploadSuccess, setImagesUploadSuccess] = useState("");
+
+  useEffect(() => {
+    setIsEditing(isEditRoute);
+  }, [isEditRoute]);
   const [form, setForm] = useState<ApplicationForm>({
     displayName: "",
     caption: "",
@@ -376,6 +383,7 @@ export default function ManageApplication() {
 
   const cancelEditing = () => {
     if (application) setForm(toApplicationForm(application));
+    navigate(`/applications/${applicationId}`);
     setIsEditing(false);
     setSaveError("");
     setFieldErrors({});
@@ -826,6 +834,7 @@ export default function ManageApplication() {
                           setSaveError("");
                           setSaveSuccess("");
                           setFieldErrors({});
+                          navigate(`/applications/${application.id}/edit`);
                           setIsEditing(true);
                         }}
                         className="inline-flex h-11 items-center gap-2 bg-emerald-700 px-5 text-sm font-semibold text-white transition hover:bg-emerald-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"

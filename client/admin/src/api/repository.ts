@@ -13,6 +13,9 @@ export interface CreateRepositoryRequest {
 export interface CreateRepositoryResponse {
   success: boolean;
   message: string;
+  data: {
+    id: string;
+  };
 }
 
 export interface Repository {

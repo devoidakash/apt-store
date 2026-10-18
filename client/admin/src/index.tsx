@@ -24,11 +24,19 @@ export const router = createBrowserRouter([
     element: <ManageApplication />,
   },
   {
+    path: "/applications/:applicationId/edit",
+    element: <ManageApplication />,
+  },
+  {
     path: "/repositories/new",
     element: <App />,
   },
   {
     path: "/repositories/:repositoryId",
+    element: <ManageRepository />,
+  },
+  {
+    path: "/repositories/:repositoryId/edit",
     element: <ManageRepository />,
   },
   {

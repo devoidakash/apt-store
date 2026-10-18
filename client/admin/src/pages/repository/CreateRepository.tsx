@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import axios from "axios";
 import { LoaderCircle, Plus } from "lucide-react";
+import { useNavigate } from "react-router";
 import BackButton from "../../components/navigation/BackButton";
 import { createRepository } from "../../api/repository";
 
@@ -24,14 +25,65 @@ const initialForm: RepositoryForm = {
   signedBy: "",
 };
 
+function parseRepositoryDetails(value: string): Partial<RepositoryForm> {
+  const parsed: Partial<RepositoryForm> = {};
+  const fields: Record<string, keyof RepositoryForm> = {
+    name: "name",
+    "package-name": "package_name",
+    package_name: "package_name",
+    uris: "uri",
+    uri: "uri",
+    suites: "suite",
+    suite: "suite",
+    components: "component",
+    component: "component",
+    "signed-by": "signedBy",
+  };
+
+  value.split(/\r?\n/).forEach((line) => {
+    const separatorIndex = line.indexOf(":");
+    if (separatorIndex === -1) return;
+
+    const label = line.slice(0, separatorIndex).trim().toLowerCase();
+    const field = fields[label];
+    if (!field) return;
+
+    const fieldValue = line.slice(separatorIndex + 1).trim();
+    if (fieldValue) parsed[field] = fieldValue;
+  });
+
+  const architectures = value.match(/^\s*Architectures?\s*:\s*(.+)$/im)?.[1];
+  if (architectures) {
+    parsed.architecture = architectures.trim().split(/\s+/)[0];
+  }
+
+  if (parsed.name && !parsed.package_name) {
+    parsed.package_name = parsed.name
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+  }
+
+  return parsed;
+}
+
 export default function ManageRepository() {
+  const navigate = useNavigate();
   const [form, setForm] = useState(initialForm);
+  const [repositoryDetails, setRepositoryDetails] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
   const updateField = (field: keyof RepositoryForm, value: string) => {
     setForm((current) => ({ ...current, [field]: value }));
+  };
+
+  const handleRepositoryDetailsChange = (value: string) => {
+    setRepositoryDetails(value);
+    const parsedDetails = parseRepositoryDetails(value);
+    setForm((current) => ({ ...current, ...parsedDetails }));
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -42,8 +94,7 @@ export default function ManageRepository() {
 
     try {
       const result = await createRepository(form);
-      setSuccess(result.message);
-      setForm(initialForm);
+      navigate(`/repositories/${result.data.id}`);
     } catch (submitError) {
       const message = axios.isAxiosError<{ message?: string }>(submitError)
         ? (submitError.response?.data?.message ?? submitError.message)
@@ -80,115 +131,153 @@ export default function ManageRepository() {
       </header>
 
       <form onSubmit={handleSubmit} className="w-full py-7">
-        <div className="grid gap-x-6 gap-y-5 sm:grid-cols-2">
-          <label className="text-sm font-medium text-slate-800">
-            Repository name
-            <input
-              required
-              name="name"
-              value={form.name}
-              onChange={(event) => updateField("name", event.target.value)}
-              placeholder="e.g. Mozilla Firefox"
-              className={inputClassName}
-            />
-          </label>
+        <div className="grid gap-8 lg:grid-cols-2 lg:items-start">
+          <div className="border border-slate-200 bg-white p-5 sm:p-6">
+            <h2 className="text-lg font-semibold text-slate-950">
+              Add repository
+            </h2>
+            <div className="mt-5 grid gap-x-6 gap-y-5 sm:grid-cols-2">
+              <label className="text-sm font-medium text-slate-800">
+                Repository name
+                <input
+                  required
+                  name="name"
+                  value={form.name}
+                  onChange={(event) => updateField("name", event.target.value)}
+                  placeholder="e.g. Mozilla Firefox"
+                  className={inputClassName}
+                />
+              </label>
 
-          <label className="text-sm font-medium text-slate-800">
-            Package name
-            <input
-              required
-              name="package_name"
-              value={form.package_name}
-              onChange={(event) =>
-                updateField("package_name", event.target.value)
-              }
-              placeholder="e.g. firefox-esr"
-              className={inputClassName}
-            />
-          </label>
+              <label className="text-sm font-medium text-slate-800">
+                Package name
+                <input
+                  required
+                  name="package_name"
+                  value={form.package_name}
+                  onChange={(event) =>
+                    updateField("package_name", event.target.value)
+                  }
+                  placeholder="e.g. firefox-esr"
+                  className={inputClassName}
+                />
+              </label>
 
-          <label className="text-sm font-medium text-slate-800 sm:col-span-2">
-            Repository URL
-            <input
-              required
-              type="url"
-              name="uri"
-              value={form.uri}
-              onChange={(event) => updateField("uri", event.target.value)}
-              placeholder="https://packages.example.com/debian"
-              className={inputClassName}
-            />
-          </label>
+              <label className="text-sm font-medium text-slate-800 sm:col-span-2">
+                Repository URL
+                <input
+                  required
+                  type="url"
+                  name="uri"
+                  value={form.uri}
+                  onChange={(event) => updateField("uri", event.target.value)}
+                  placeholder="https://packages.example.com/debian"
+                  className={inputClassName}
+                />
+              </label>
 
-          <label className="text-sm font-medium text-slate-800">
-            Suite
-            <input
-              required
-              name="suite"
-              value={form.suite}
-              onChange={(event) => updateField("suite", event.target.value)}
-              placeholder="e.g. stable"
-              className={inputClassName}
-            />
-          </label>
+              <label className="text-sm font-medium text-slate-800">
+                Suite
+                <input
+                  required
+                  name="suite"
+                  value={form.suite}
+                  onChange={(event) => updateField("suite", event.target.value)}
+                  placeholder="e.g. stable"
+                  className={inputClassName}
+                />
+              </label>
 
-          <label className="text-sm font-medium text-slate-800">
-            Component
-            <input
-              required
-              name="component"
-              value={form.component}
-              onChange={(event) => updateField("component", event.target.value)}
-              placeholder="main"
-              className={inputClassName}
-            />
-          </label>
+              <label className="text-sm font-medium text-slate-800">
+                Component
+                <input
+                  required
+                  name="component"
+                  value={form.component}
+                  onChange={(event) =>
+                    updateField("component", event.target.value)
+                  }
+                  placeholder="main"
+                  className={inputClassName}
+                />
+              </label>
 
-          <label className="text-sm font-medium text-slate-800">
-            Architecture
-            <select
-              required
-              name="architecture"
-              value={form.architecture}
-              onChange={(event) =>
-                updateField("architecture", event.target.value)
-              }
-              className={inputClassName}
-            >
-              <option value="amd64">amd64</option>
-            </select>
-          </label>
+              <label className="text-sm font-medium text-slate-800">
+                Architecture
+                <select
+                  required
+                  name="architecture"
+                  value={form.architecture}
+                  onChange={(event) =>
+                    updateField("architecture", event.target.value)
+                  }
+                  className={inputClassName}
+                >
+                  <option value="amd64">amd64</option>
+                </select>
+              </label>
 
-          <label className="text-sm font-medium text-slate-800">
-            Signing key
-            <input
-              required
-              name="signedBy"
-              value={form.signedBy}
-              onChange={(event) => updateField("signedBy", event.target.value)}
-              placeholder="Key fingerprint or key data"
-              className={inputClassName}
-            />
-          </label>
+              <label className="text-sm font-medium text-slate-800">
+                Signing key
+                <input
+                  required
+                  name="signedBy"
+                  value={form.signedBy}
+                  onChange={(event) =>
+                    updateField("signedBy", event.target.value)
+                  }
+                  placeholder="Key fingerprint or key data"
+                  className={inputClassName}
+                />
+              </label>
+
+              <div aria-live="polite" className="min-h-6 text-sm sm:col-span-2">
+                {error && <p className="text-rose-700">{error}</p>}
+                {success && <p className="text-emerald-700">{success}</p>}
+              </div>
+
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-emerald-700 px-4 text-sm font-semibold text-white transition hover:bg-emerald-800 disabled:cursor-wait disabled:opacity-70 sm:col-span-2 sm:justify-self-start"
+              >
+                {isSubmitting ? (
+                  <LoaderCircle className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Plus className="h-4 w-4" />
+                )}
+                {isSubmitting ? "Adding repository..." : "Add repository"}
+              </button>
+            </div>
+          </div>
+
+          <div className="border border-slate-200 bg-white p-5 sm:p-6">
+            <h2 className="text-lg font-semibold text-slate-950">
+              Paste repository details
+            </h2>
+            <label className="mt-5 block text-sm font-medium text-slate-800">
+              APT metadata
+              <textarea
+                value={repositoryDetails}
+                onChange={(event) =>
+                  handleRepositoryDetailsChange(event.target.value)
+                }
+                rows={10}
+                placeholder={`name: Brave Browser
+package_name: brave-browser
+URIs: https://brave-browser-apt-release.s3.brave.com
+Suites: stable
+Components: main
+Architectures: amd64 arm64
+Signed-By: /usr/share/keyrings/brave-browser-archive-keyring.gpg`}
+                className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-3 font-mono text-sm text-slate-900 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/15"
+              />
+              <span className="mt-1 block text-xs font-normal text-slate-500">
+                Paste repository metadata to fill the fields automatically.
+              </span>
+            </label>
+          </div>
         </div>
-
-        <div aria-live="polite" className="mt-5 min-h-6 text-sm">
-          {error && <p className="text-rose-700">{error}</p>}
-          {success && <p className="text-emerald-700">{success}</p>}
-        </div>
-
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="mt-3 inline-flex h-11 items-center gap-2 rounded-md bg-emerald-700 px-4 text-sm font-semibold text-white transition hover:bg-emerald-800 disabled:cursor-wait disabled:opacity-70"
-        >
-          {isSubmitting ? (
-            <LoaderCircle className="h-4 w-4 animate-spin" />
-          ) : (
-            <Plus className="h-4 w-4" />
-          )}
-          {isSubmitting ? "Adding repository..." : "Add repository"}
-        </button>
       </form>
     </div>
   );

@@ -11,7 +11,7 @@ import {
   Pencil,
   X,
 } from "lucide-react";
-import { Link, useParams } from "react-router";
+import { Link, useLocation, useNavigate, useParams } from "react-router";
 import BackButton from "../../components/navigation/BackButton";
 import Heading from "../../components/cards/Heading";
 import Layout from "../../components/dashboard/Layout";
@@ -64,6 +64,40 @@ const emptyForm: RepositoryForm = {
   signedBy: "",
 };
 
+function parseRepositoryDetails(value: string): Partial<RepositoryForm> {
+  const parsed: Partial<RepositoryForm> = {};
+  const fields: Record<string, RepositoryFormField> = {
+    name: "name",
+    "package-name": "packageNames",
+    package_name: "packageNames",
+    "package-names": "packageNames",
+    uris: "uri",
+    uri: "uri",
+    suites: "suite",
+    suite: "suite",
+    components: "component",
+    component: "component",
+    "signed-by": "signedBy",
+    signedby: "signedBy",
+  };
+
+  value.split(/\r?\n/).forEach((line) => {
+    const separatorIndex = line.indexOf(":");
+    if (separatorIndex === -1) return;
+
+    const field = fields[line.slice(0, separatorIndex).trim().toLowerCase()];
+    const fieldValue = line.slice(separatorIndex + 1).trim();
+    if (field && fieldValue) parsed[field] = fieldValue;
+  });
+
+  const architectures = value.match(/^\s*Architectures?\s*:\s*(.+)$/im)?.[1];
+  if (architectures) {
+    parsed.architecture = architectures.trim().split(/\s+/)[0];
+  }
+
+  return parsed;
+}
+
 function toRepositoryForm(data: RepositoryDetail): RepositoryForm {
   return {
     name: data.name,
@@ -74,6 +108,34 @@ function toRepositoryForm(data: RepositoryDetail): RepositoryForm {
     architecture: data.architecture,
     signedBy: data.signedby,
   };
+}
+
+function formatRelativeTime(value: string) {
+  const timestamp = new Date(value).getTime();
+  if (!Number.isFinite(timestamp)) return "-";
+
+  const elapsedSeconds = Math.round((Date.now() - timestamp) / 1000);
+  const units = [
+    { limit: 60, divisor: 1, label: "second" },
+    { limit: 3600, divisor: 60, label: "minute" },
+    { limit: 86400, divisor: 3600, label: "hour" },
+    { limit: 604800, divisor: 86400, label: "day" },
+    { limit: 2592000, divisor: 604800, label: "week" },
+    { limit: 31536000, divisor: 2592000, label: "month" },
+    { limit: Infinity, divisor: 31536000, label: "year" },
+  ];
+  const unit = units.find(({ limit }) => Math.abs(elapsedSeconds) < limit);
+  if (!unit) return "-";
+
+  const amount = Math.round(elapsedSeconds / unit.divisor);
+  if (amount === 0) return "just now";
+
+  return `${Math.abs(amount)} ${unit.label}${Math.abs(amount) === 1 ? "" : "s"} ${amount < 0 ? "from now" : "ago"}`;
+}
+
+function formatExactTime(value: string) {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "-" : date.toLocaleString();
 }
 
 const sidebarLinks = [
@@ -130,6 +192,9 @@ const inputClassName =
 
 export default function ManageRepository() {
   const { repositoryId } = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const isEditRoute = location.pathname.endsWith("/edit");
   const [repository, setRepository] = useState<RepositoryDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -137,6 +202,7 @@ export default function ManageRepository() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [saveSuccess, setSaveSuccess] = useState("");
+  const [repositoryDetails, setRepositoryDetails] = useState("");
   const [fieldErrors, setFieldErrors] = useState<
     Partial<Record<RepositoryFormField, string>>
   >({});
@@ -238,15 +304,32 @@ export default function ManageRepository() {
 
   const startEditing = () => {
     setSaveSuccess("");
+    navigate(`/repositories/${repositoryId}/edit`);
     setIsEditing(true);
   };
 
   const cancelEditing = () => {
     if (repository) setForm(toRepositoryForm(repository));
+    navigate(`/repositories/${repositoryId}`);
     setIsEditing(false);
     setSaveError("");
     setSaveSuccess("");
     setFieldErrors({});
+    setRepositoryDetails("");
+  };
+
+  useEffect(() => {
+    setIsEditing(isEditRoute);
+  }, [isEditRoute]);
+
+  const handleRepositoryDetailsChange = (value: string) => {
+    setRepositoryDetails(value);
+    setForm((current) => ({
+      ...current,
+      ...parseRepositoryDetails(value),
+    }));
+    setFieldErrors({});
+    setSaveError("");
   };
 
   const readValue = (key: RepositoryFormField) =>
@@ -256,11 +339,13 @@ export default function ManageRepository() {
     ? [
         {
           label: "Created",
-          value: new Date(repository.createdAt).toLocaleString(),
+          value: formatExactTime(repository.createdAt),
+          exactValue: formatExactTime(repository.createdAt),
         },
         {
           label: "Last updated",
-          value: new Date(repository.updatedAt).toLocaleString(),
+          value: formatRelativeTime(repository.updatedAt),
+          exactValue: formatExactTime(repository.updatedAt),
         },
       ]
     : [];
@@ -407,16 +492,109 @@ export default function ManageRepository() {
               )}
             </div>
 
-            <div className="grid gap-x-6 gap-y-5 py-6 sm:grid-cols-2">
-              {fields.map(({ key, label, type, wide, hint }) => {
-                const cell = wide ? "sm:col-span-2" : "";
-                const errorId = `${key}-error`;
+            {isEditing ? (
+              <div className="grid gap-8 py-6 lg:grid-cols-2 lg:items-start">
+                <div className="border border-slate-200 bg-white p-5 sm:p-6">
+                  <h3 className="text-lg font-semibold text-slate-950">
+                    Edit repository
+                  </h3>
+                  <div className="mt-5 grid gap-x-6 gap-y-5 sm:grid-cols-2">
+                    {fields.map(({ key, label, type, wide, hint }) => {
+                      const errorId = `${key}-error`;
+                      const cell = wide ? "sm:col-span-2" : "";
 
-                if (!isEditing) {
+                      return (
+                        <label key={key} className={`min-w-0 ${cell}`}>
+                          <span className={labelClassName}>{label}</span>
+                          {key === "architecture" ? (
+                            <select
+                              required
+                              value={form.architecture}
+                              onChange={(event) =>
+                                updateField("architecture", event.target.value)
+                              }
+                              className={`${inputClassName} ${fieldErrors[key] ? "border-rose-500" : ""}`}
+                              aria-invalid={Boolean(fieldErrors[key])}
+                              aria-describedby={
+                                fieldErrors[key] ? errorId : undefined
+                              }
+                            >
+                              {form.architecture !== "amd64" && (
+                                <option value={form.architecture}>
+                                  {form.architecture}
+                                </option>
+                              )}
+                              <option value="amd64">amd64</option>
+                            </select>
+                          ) : (
+                            <input
+                              required
+                              type={type}
+                              value={form[key]}
+                              onChange={(event) =>
+                                updateField(key, event.target.value)
+                              }
+                              className={`${inputClassName} ${fieldErrors[key] ? "border-rose-500 focus:border-rose-600 focus:ring-rose-600/15" : ""}`}
+                              aria-invalid={Boolean(fieldErrors[key])}
+                              aria-describedby={
+                                fieldErrors[key] ? errorId : undefined
+                              }
+                            />
+                          )}
+                          {fieldErrors[key] && (
+                            <span
+                              id={errorId}
+                              className="mt-1 block text-xs text-rose-700"
+                            >
+                              {fieldErrors[key]}
+                            </span>
+                          )}
+                          {hint && !fieldErrors[key] && (
+                            <span className="mt-1 block text-xs font-normal normal-case text-slate-500">
+                              {hint}
+                            </span>
+                          )}
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="border border-slate-200 bg-white p-5 sm:p-6">
+                  <h3 className="text-lg font-semibold text-slate-950">
+                    Paste repository details
+                  </h3>
+                  <label className="mt-5 block text-sm font-medium text-slate-800">
+                    APT metadata
+                    <textarea
+                      value={repositoryDetails}
+                      onChange={(event) =>
+                        handleRepositoryDetailsChange(event.target.value)
+                      }
+                      rows={10}
+                      placeholder={`name: Brave Browser
+package_name: brave-browser
+URIs: https://brave-browser-apt-release.s3.brave.com
+Suites: stable
+Components: main
+Architectures: amd64 arm64
+Signed-By: /usr/share/keyrings/brave-browser-archive-keyring.gpg`}
+                      className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-3 font-mono text-sm text-slate-900 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/15"
+                    />
+                    <span className="mt-1 block text-xs font-normal text-slate-500">
+                      Paste repository metadata to fill the fields automatically.
+                    </span>
+                  </label>
+                </div>
+              </div>
+            ) : (
+              <div className="grid gap-x-6 gap-y-5 py-6 sm:grid-cols-2">
+                {fields.map(({ key, label, wide }) => {
+                  const cell = wide ? "sm:col-span-2" : "";
                   return (
                     <div
                       key={key}
-                      className={`min-w-0 ${cell} ${!isEditing ? "border border-slate-200 bg-slate-50 p-4" : ""}`}
+                      className={`min-w-0 ${cell} border border-slate-200 bg-slate-50 p-2`}
                     >
                       <dt className={labelClassName}>{label}</dt>
                       <dd className="mt-2 flex min-h-11 items-start wrap-break-word text-sm font-medium text-slate-900">
@@ -424,70 +602,21 @@ export default function ManageRepository() {
                       </dd>
                     </div>
                   );
-                }
-
-                return (
-                  <label key={key} className={`min-w-0 ${cell}`}>
-                    <span className={labelClassName}>{label}</span>
-                    {key === "architecture" ? (
-                      <select
-                        required
-                        value={form.architecture}
-                        onChange={(event) =>
-                          updateField("architecture", event.target.value)
-                        }
-                        className={`${inputClassName} ${fieldErrors[key] ? "border-rose-500" : ""}`}
-                        aria-invalid={Boolean(fieldErrors[key])}
-                        aria-describedby={
-                          fieldErrors[key] ? errorId : undefined
-                        }
-                      >
-                        {form.architecture !== "amd64" && (
-                          <option value={form.architecture}>
-                            {form.architecture}
-                          </option>
-                        )}
-                        <option value="amd64">amd64</option>
-                      </select>
-                    ) : (
-                      <input
-                        required
-                        type={type}
-                        value={form[key]}
-                        onChange={(event) =>
-                          updateField(key, event.target.value)
-                        }
-                        className={`${inputClassName} ${fieldErrors[key] ? "border-rose-500 focus:border-rose-600 focus:ring-rose-600/15" : ""}`}
-                        aria-invalid={Boolean(fieldErrors[key])}
-                        aria-describedby={
-                          fieldErrors[key] ? errorId : undefined
-                        }
-                      />
-                    )}
-                    {fieldErrors[key] && (
-                      <span
-                        id={errorId}
-                        className="mt-1 block text-xs text-rose-700"
-                      >
-                        {fieldErrors[key]}
-                      </span>
-                    )}
-                    {hint && !fieldErrors[key] && (
-                      <span className="mt-1 block text-xs font-normal normal-case text-slate-500">
-                        {hint}
-                      </span>
-                    )}
-                  </label>
-                );
-              })}
-            </div>
+                })}
+              </div>
+            )}
 
             {/* Read-only metadata stays put in both modes */}
             <dl className="grid gap-x-6 gap-y-4 border-t border-slate-100 py-5 sm:grid-cols-2">
-              {meta.map(({ label, value }) => (
+              {meta.map(({ label, value, exactValue }) => (
                 <div key={label} className="min-w-0">
                   <dt className={labelClassName}>{label}</dt>
-                  <dd className="mt-1 text-sm text-slate-600">{value}</dd>
+                  <dd
+                    className="mt-1 text-sm text-slate-600"
+                    title={exactValue}
+                  >
+                    {value}
+                  </dd>
                 </div>
               ))}
             </dl>
