@@ -148,17 +148,17 @@ export default function ApplicationDetail() {
                   >
                     <span className="loading-orbit" aria-hidden="true" />
                   </span>
-                ) : packageStatus === "not installed" ? (
+                ) : packageStatus === "not_installed" ? (
                   <button type="button" className="detail-install">
                     Install <span aria-hidden="true">&#8594;</span>
                   </button>
-                ) : packageStatus === "update available" ? (
+                ) : packageStatus === "update_available" ? (
                   <button type="button" className="detail-install">
                     Update <span aria-hidden="true">&#8594;</span>
                   </button>
-                ) : packageStatus === "up to date" ? (
+                ) : packageStatus === "up_to_date" ? (
                   <button type="button" className="detail-install" disabled>
-                    Up to date
+                    Open
                   </button>
                 ) : (
                   <span className="detail-status-message">
