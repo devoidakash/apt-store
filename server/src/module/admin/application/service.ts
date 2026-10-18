@@ -1,4 +1,3 @@
-import env from "../../../config/env";
 import ApiError from "../../../err/api-error";
 import ERROR_CODES from "../../../err/error-code";
 import { getIcon, getImages } from "../../../utils/get-Images";
@@ -170,6 +169,7 @@ function validateApplicationForStatusUpdate(
   if (errors.length > 0) {
     throw new ApiError({
       ...ERROR_CODES.FILE_VALIDATION_FAILED,
+      errors,
     });
   }
 }
@@ -178,13 +178,13 @@ export async function updateApplicationStatus(
   applicationId: string,
   status: ApplicationStatus,
 ) {
-  const application = (await repository.fetchApplicationById(
-    applicationId,
-  )) as ApplicationForStatusValidation | null;
+  const result = await repository.fetchApplicationById(applicationId);
 
-  if (!application) {
+  if (!result) {
     throw new ApiError(ERROR_CODES.APPLICATION_NOT_FOUND);
   }
+
+  const application = result as unknown as ApplicationForStatusValidation;
 
   validateApplicationForStatusUpdate(application);
 

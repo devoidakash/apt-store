@@ -38,7 +38,6 @@ const ERROR_CODES = {
     statusCode: 400,
     message: "File validation failed",
     code: "FILE_VALIDATION_FAILED",
-    errors: [{ field: "images", message: "Exactly 5 images are required" }],
   },
   ICON_REQUIRED: {
     statusCode: 400,
