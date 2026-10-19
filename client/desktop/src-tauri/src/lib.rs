@@ -37,6 +37,6 @@ fn check_package_status(package_name: &str, version: &str) -> String {
     match comparison {
         Ok(status) if status.success() => "update_available".to_string(),
         Ok(_) => "up_to_date".to_string(),
-        Err(_) => "comparison failed".to_string(),
+        Err(_) => "comparison_failed".to_string(),
     }
 }
