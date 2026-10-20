@@ -7,7 +7,7 @@ export interface CreateRepositoryRequest {
   suite: string;
   component: string;
   architecture: string;
-  signedBy: string;
+  keyUri: string;
 }
 
 export interface CreateRepositoryResponse {
@@ -32,7 +32,7 @@ export interface RepositoryDetail extends Repository {
   suite: string;
   component: string;
   architecture: string;
-  signedby: string;
+  keyUri: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -44,7 +44,7 @@ export interface UpdateRepositoryRequest {
   suite: string;
   component: string;
   architecture: string;
-  signedBy: string;
+  keyUri: string;
 }
 
 export interface UpdateRepositoryResponse {

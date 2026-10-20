@@ -12,7 +12,7 @@ interface RepositoryForm {
   suite: string;
   component: string;
   architecture: string;
-  signedBy: string;
+  keyUri: string;
 }
 
 const initialForm: RepositoryForm = {
@@ -22,7 +22,7 @@ const initialForm: RepositoryForm = {
   suite: "",
   component: "main",
   architecture: "amd64",
-  signedBy: "",
+  keyUri: "",
 };
 
 function parseRepositoryDetails(value: string): Partial<RepositoryForm> {
@@ -37,7 +37,8 @@ function parseRepositoryDetails(value: string): Partial<RepositoryForm> {
     suite: "suite",
     components: "component",
     component: "component",
-    "signed-by": "signedBy",
+    "key-uri": "keyUri",
+    key_uri: "keyUri",
   };
 
   value.split(/\r?\n/).forEach((line) => {
@@ -218,15 +219,16 @@ export default function ManageRepository() {
               </label>
 
               <label className="text-sm font-medium text-slate-800">
-                Signing key
+                Key URI
                 <input
                   required
-                  name="signedBy"
-                  value={form.signedBy}
+                  type="url"
+                  name="keyUri"
+                  value={form.keyUri}
                   onChange={(event) =>
-                    updateField("signedBy", event.target.value)
+                    updateField("keyUri", event.target.value)
                   }
-                  placeholder="Key fingerprint or key data"
+                  placeholder="https://packages.example.com/repository-key.gpg"
                   className={inputClassName}
                 />
               </label>
@@ -269,7 +271,7 @@ URIs: https://brave-browser-apt-release.s3.brave.com
 Suites: stable
 Components: main
 Architectures: amd64 arm64
-Signed-By: /usr/share/keyrings/brave-browser-archive-keyring.gpg`}
+Key-URI: https://packages.example.com/repository-key.gpg`}
                 className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-3 font-mono text-sm text-slate-900 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/15"
               />
               <span className="mt-1 block text-xs font-normal text-slate-500">

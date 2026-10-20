@@ -12,12 +12,12 @@ export const createRepository = z.object({
     .trim()
     .url({ protocol: /^https?$/ })
     .refine((uri) => !uri.endsWith("/"), {
-      error: "URI must not end with a slash",
+      error: "uri must not end with a slash",
     }),
   suite: z.string().trim().toLowerCase(),
   component: z.string().trim().toLowerCase(),
   architecture: z.string().trim().toLowerCase(),
-  signedBy: z.string().trim(),
+  keyUri: z.string().trim().url({ protocol: /^https$/ }),
 });
 
 export type createRepositoryData = z.infer<typeof createRepository>;
