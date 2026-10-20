@@ -16,8 +16,11 @@ export const createRepository = z.object({
     }),
   suite: z.string().trim().toLowerCase(),
   component: z.string().trim().toLowerCase(),
-  architecture: z.string().trim().toLowerCase(),
-  keyUri: z.string().trim().url({ protocol: /^https$/ }),
+  publicKey: z.string().trim().nullable().optional(),
+  fingerprint: z
+    .string()
+    .trim()
+    .transform((fingerprint) => fingerprint.replace(/\s+/g, "")),
 });
 
 export type createRepositoryData = z.infer<typeof createRepository>;

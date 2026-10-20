@@ -32,8 +32,8 @@ interface RepositoryData {
   uri: string;
   suite: string;
   component: string;
-  architecture: string;
-  keyUri: string;
+  publicKey?: string | null;
+  fingerprint: string;
 }
 
 interface ApplicationData {
@@ -54,7 +54,7 @@ export async function insertIntoRepository(
   const result = await client.query<{ id: string }>(
     `
       INSERT INTO repositories (
-        name, package_name, uri, suite, component, architecture, key_uri
+        name, package_name, uri, suite, component, public_key, fingerprint
       )
       VALUES ($1, $2::text[], $3, $4, $5, $6, $7)
       RETURNING *
@@ -65,8 +65,8 @@ export async function insertIntoRepository(
       data.uri,
       data.suite,
       data.component,
-      data.architecture,
-      data.keyUri,
+      data.publicKey ?? null,
+      data.fingerprint,
     ],
   );
 
@@ -87,8 +87,7 @@ export async function updateRepository(
         uri = $4,
         suite = $5,
         component = $6,
-        architecture = $7,
-        key_uri = $8,
+        fingerprint = $7,
         updated_at = now()
       WHERE id = $1
       RETURNING *
@@ -100,8 +99,7 @@ export async function updateRepository(
       data.uri,
       data.suite,
       data.component,
-      data.architecture,
-      data.keyUri,
+      data.fingerprint,
     ],
   );
 

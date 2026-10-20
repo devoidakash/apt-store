@@ -6,8 +6,7 @@ export interface CreateRepositoryRequest {
   uri: string;
   suite: string;
   component: string;
-  architecture: string;
-  keyUri: string;
+  fingerprint: string;
 }
 
 export interface CreateRepositoryResponse {
@@ -31,8 +30,8 @@ export interface RepositoryDetail extends Repository {
   uri: string;
   suite: string;
   component: string;
-  architecture: string;
-  keyUri: string;
+  publicKey: string | null;
+  fingerprint: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -43,8 +42,7 @@ export interface UpdateRepositoryRequest {
   uri: string;
   suite: string;
   component: string;
-  architecture: string;
-  keyUri: string;
+  fingerprint: string;
 }
 
 export interface UpdateRepositoryResponse {

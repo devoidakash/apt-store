@@ -27,8 +27,7 @@ interface RepositoryForm {
   uri: string;
   suite: string;
   component: string;
-  architecture: string;
-  keyUri: string;
+  fingerprint: string;
 }
 
 type RepositoryFormField = keyof RepositoryForm;
@@ -49,8 +48,7 @@ const apiFieldToFormField: Record<string, RepositoryFormField> = {
   uri: "uri",
   suite: "suite",
   component: "component",
-  architecture: "architecture",
-  keyUri: "keyUri",
+  fingerprint: "fingerprint",
 };
 
 const emptyForm: RepositoryForm = {
@@ -59,8 +57,7 @@ const emptyForm: RepositoryForm = {
   uri: "",
   suite: "",
   component: "",
-  architecture: "",
-  keyUri: "",
+  fingerprint: "",
 };
 
 function parseRepositoryDetails(value: string): Partial<RepositoryForm> {
@@ -76,8 +73,7 @@ function parseRepositoryDetails(value: string): Partial<RepositoryForm> {
     suite: "suite",
     components: "component",
     component: "component",
-    "key-uri": "keyUri",
-    key_uri: "keyUri",
+    fingerprint: "fingerprint",
   };
 
   value.split(/\r?\n/).forEach((line) => {
@@ -89,11 +85,6 @@ function parseRepositoryDetails(value: string): Partial<RepositoryForm> {
     if (field && fieldValue) parsed[field] = fieldValue;
   });
 
-  const architectures = value.match(/^\s*Architectures?\s*:\s*(.+)$/im)?.[1];
-  if (architectures) {
-    parsed.architecture = architectures.trim().split(/\s+/)[0];
-  }
-
   return parsed;
 }
 
@@ -104,8 +95,7 @@ function toRepositoryForm(data: RepositoryDetail): RepositoryForm {
     uri: data.uri,
     suite: data.suite,
     component: data.component,
-    architecture: data.architecture,
-    keyUri: data.keyUri,
+    fingerprint: data.fingerprint,
   };
 }
 
@@ -180,8 +170,7 @@ const fields: {
   { key: "uri", label: "Repository URL", type: "url", wide: true },
   { key: "suite", label: "Suite" },
   { key: "component", label: "Component" },
-  { key: "architecture", label: "Architecture" },
-  { key: "keyUri", label: "Key URI", type: "url" },
+  { key: "fingerprint", label: "Fingerprint" },
 ];
 
 const labelClassName =
@@ -270,8 +259,7 @@ export default function ManageRepository() {
         uri: form.uri.trim(),
         suite: form.suite.trim(),
         component: form.component.trim(),
-        architecture: form.architecture.trim(),
-        keyUri: form.keyUri.trim(),
+        fingerprint: form.fingerprint.trim(),
       });
       setRepository(result.data);
       setForm(toRepositoryForm(result.data));
@@ -505,41 +493,19 @@ export default function ManageRepository() {
                       return (
                         <label key={key} className={`min-w-0 ${cell}`}>
                           <span className={labelClassName}>{label}</span>
-                          {key === "architecture" ? (
-                            <select
-                              required
-                              value={form.architecture}
-                              onChange={(event) =>
-                                updateField("architecture", event.target.value)
-                              }
-                              className={`${inputClassName} ${fieldErrors[key] ? "border-rose-500" : ""}`}
-                              aria-invalid={Boolean(fieldErrors[key])}
-                              aria-describedby={
-                                fieldErrors[key] ? errorId : undefined
-                              }
-                            >
-                              {form.architecture !== "amd64" && (
-                                <option value={form.architecture}>
-                                  {form.architecture}
-                                </option>
-                              )}
-                              <option value="amd64">amd64</option>
-                            </select>
-                          ) : (
-                            <input
-                              required
-                              type={type}
-                              value={form[key]}
-                              onChange={(event) =>
-                                updateField(key, event.target.value)
-                              }
-                              className={`${inputClassName} ${fieldErrors[key] ? "border-rose-500 focus:border-rose-600 focus:ring-rose-600/15" : ""}`}
-                              aria-invalid={Boolean(fieldErrors[key])}
-                              aria-describedby={
-                                fieldErrors[key] ? errorId : undefined
-                              }
-                            />
-                          )}
+                          <input
+                            required
+                            type={type}
+                            value={form[key]}
+                            onChange={(event) =>
+                              updateField(key, event.target.value)
+                            }
+                            className={`${inputClassName} ${fieldErrors[key] ? "border-rose-500 focus:border-rose-600 focus:ring-rose-600/15" : ""}`}
+                            aria-invalid={Boolean(fieldErrors[key])}
+                            aria-describedby={
+                              fieldErrors[key] ? errorId : undefined
+                            }
+                          />
                           {fieldErrors[key] && (
                             <span
                               id={errorId}
@@ -576,8 +542,7 @@ package_name: brave-browser
 URIs: https://brave-browser-apt-release.s3.brave.com
 Suites: stable
 Components: main
-Architectures: amd64 arm64
-Key-URI: https://packages.example.com/repository-key.gpg`}
+Fingerprint: ABCD 1234 EF56 7890`}
                       className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-3 font-mono text-sm text-slate-900 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/15"
                     />
                     <span className="mt-1 block text-xs font-normal text-slate-500">

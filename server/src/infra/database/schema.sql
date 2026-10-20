@@ -15,20 +15,17 @@ create table repositories (
     uri           text        not null,
     suite         text        not null,
     component     text        not null,
-    architecture  text        not null default 'amd64',
-    key_uri       text        not null,
+    public_key    text,
+    fingerprint VARCHAR(64),
     created_at    timestamptz not null default now(),
     updated_at    timestamptz not null default now(),
 
-    unique (uri, suite, component, architecture),
-    check (uri ~ '^https?://' and uri !~ '/$'),
-    CONSTRAINT repositories_key_url_https_check
-      CHECK (key_uri LIKE 'https://%');
+    unique (uri, suite, component),
+    check (uri ~ '^https?://' and uri !~ '/$')
 );
 
 
 
-create type application_status as enum ('draft', 'live');
 
 create table applications (
     id             uuid        primary key default gen_random_uuid(),
@@ -45,7 +42,6 @@ create table applications (
     category       text,
     homepage       text,
     maintainer     text,
-    status         application_status not null default 'draft',
     missing_since  timestamptz,
     created_at     timestamptz not null default now(),
     updated_at     timestamptz not null default now(),
@@ -55,12 +51,10 @@ create table applications (
 
 create index applications_status_idx on applications (status);
 
-create type sync_status as enum ('running', 'success', 'failed');
 
 create table sync_logs (
     id              uuid        primary key default gen_random_uuid(),
     repository_id   uuid        not null references repositories(id) on delete cascade,
-    status          sync_status not null default 'running',
     started_at      timestamptz not null default now(),
     finished_at     timestamptz,
     packages_found  integer,

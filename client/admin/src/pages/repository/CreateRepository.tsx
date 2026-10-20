@@ -11,8 +11,7 @@ interface RepositoryForm {
   uri: string;
   suite: string;
   component: string;
-  architecture: string;
-  keyUri: string;
+  fingerprint: string;
 }
 
 const initialForm: RepositoryForm = {
@@ -21,8 +20,7 @@ const initialForm: RepositoryForm = {
   uri: "",
   suite: "",
   component: "main",
-  architecture: "amd64",
-  keyUri: "",
+  fingerprint: "",
 };
 
 function parseRepositoryDetails(value: string): Partial<RepositoryForm> {
@@ -37,8 +35,7 @@ function parseRepositoryDetails(value: string): Partial<RepositoryForm> {
     suite: "suite",
     components: "component",
     component: "component",
-    "key-uri": "keyUri",
-    key_uri: "keyUri",
+    fingerprint: "fingerprint",
   };
 
   value.split(/\r?\n/).forEach((line) => {
@@ -52,11 +49,6 @@ function parseRepositoryDetails(value: string): Partial<RepositoryForm> {
     const fieldValue = line.slice(separatorIndex + 1).trim();
     if (fieldValue) parsed[field] = fieldValue;
   });
-
-  const architectures = value.match(/^\s*Architectures?\s*:\s*(.+)$/im)?.[1];
-  if (architectures) {
-    parsed.architecture = architectures.trim().split(/\s+/)[0];
-  }
 
   if (parsed.name && !parsed.package_name) {
     parsed.package_name = parsed.name
@@ -204,31 +196,15 @@ export default function ManageRepository() {
               </label>
 
               <label className="text-sm font-medium text-slate-800">
-                Architecture
-                <select
-                  required
-                  name="architecture"
-                  value={form.architecture}
-                  onChange={(event) =>
-                    updateField("architecture", event.target.value)
-                  }
-                  className={inputClassName}
-                >
-                  <option value="amd64">amd64</option>
-                </select>
-              </label>
-
-              <label className="text-sm font-medium text-slate-800">
-                Key URI
+                Fingerprint
                 <input
                   required
-                  type="url"
-                  name="keyUri"
-                  value={form.keyUri}
+                  name="fingerprint"
+                  value={form.fingerprint}
                   onChange={(event) =>
-                    updateField("keyUri", event.target.value)
+                    updateField("fingerprint", event.target.value)
                   }
-                  placeholder="https://packages.example.com/repository-key.gpg"
+                  placeholder="ABCD 1234 EF56 7890"
                   className={inputClassName}
                 />
               </label>
@@ -270,8 +246,7 @@ package_name: brave-browser
 URIs: https://brave-browser-apt-release.s3.brave.com
 Suites: stable
 Components: main
-Architectures: amd64 arm64
-Key-URI: https://packages.example.com/repository-key.gpg`}
+Fingerprint: ABCD 1234 EF56 7890`}
                 className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-3 font-mono text-sm text-slate-900 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/15"
               />
               <span className="mt-1 block text-xs font-normal text-slate-500">

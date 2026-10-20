@@ -73,7 +73,7 @@ function getPackagesObject(text: string): Record<string, string>[] {
 async function getRepositoryMetadata(
   data: createRepositoryData,
 ): Promise<string> {
-  const url = `${data.uri}/dists/${encodeURIComponent(data.suite)}/${encodeURIComponent(data.component)}/binary-${encodeURIComponent(data.architecture)}/Packages.gz`;
+  const url = `${data.uri}/dists/${encodeURIComponent(data.suite)}/${encodeURIComponent(data.component)}/binary-amd64/Packages.gz`;
 
   const res = await fetch(url, { signal: AbortSignal.timeout(15000) });
 
