@@ -124,7 +124,7 @@ export default function ManageRepository() {
       </header>
 
       <form onSubmit={handleSubmit} className="w-full py-7">
-        <div className="grid gap-8 lg:grid-cols-2 lg:items-start">
+        <div className="grid gap-8 lg:grid-cols-[3fr_2fr] lg:items-start">
           <div className="border border-slate-200 bg-white p-5 sm:p-6">
             <h2 className="text-lg font-semibold text-slate-950">
               Add repository

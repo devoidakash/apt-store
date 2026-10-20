@@ -167,10 +167,10 @@ const fields: {
     label: "Package names",
     hint: "Separate multiple names with commas.",
   },
-  { key: "uri", label: "Repository URL", type: "url", wide: true },
+  { key: "uri", label: "Repository URL", type: "url" },
+  { key: "fingerprint", label: "Fingerprint" },
   { key: "suite", label: "Suite" },
   { key: "component", label: "Component" },
-  { key: "fingerprint", label: "Fingerprint" },
 ];
 
 const labelClassName =
@@ -480,7 +480,7 @@ export default function ManageRepository() {
             </div>
 
             {isEditing ? (
-              <div className="grid gap-8 py-6 lg:grid-cols-2 lg:items-start">
+              <div className="grid gap-8 py-6 lg:grid-cols-[3fr_2fr] lg:items-start">
                 <div className="border border-slate-200 bg-white p-5 sm:p-6">
                   <h3 className="text-lg font-semibold text-slate-950">
                     Edit repository
@@ -546,7 +546,8 @@ Fingerprint: ABCD 1234 EF56 7890`}
                       className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-3 font-mono text-sm text-slate-900 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/15"
                     />
                     <span className="mt-1 block text-xs font-normal text-slate-500">
-                      Paste repository metadata to fill the fields automatically.
+                      Paste repository metadata to fill the fields
+                      automatically.
                     </span>
                   </label>
                 </div>
@@ -567,23 +568,30 @@ Fingerprint: ABCD 1234 EF56 7890`}
                     </div>
                   );
                 })}
+                <div className="min-w-0 border border-slate-200 bg-slate-50 p-2 sm:col-span-2">
+                  <dt className={labelClassName}>Public key</dt>
+                  <dd className="mt-2 min-h-11 whitespace-pre-wrap wrap-break-word text-sm font-medium text-slate-900">
+                    {repository?.publicKey || "-"}
+                  </dd>
+                </div>
               </div>
             )}
 
-            {/* Read-only metadata stays put in both modes */}
-            <dl className="grid gap-x-6 gap-y-4 border-t border-slate-100 py-5 sm:grid-cols-2">
-              {meta.map(({ label, value, exactValue }) => (
-                <div key={label} className="min-w-0">
-                  <dt className={labelClassName}>{label}</dt>
-                  <dd
-                    className="mt-1 text-sm text-slate-600"
-                    title={exactValue}
-                  >
-                    {value}
-                  </dd>
-                </div>
-              ))}
-            </dl>
+            {!isEditing && (
+              <dl className="grid gap-x-6 gap-y-4 border-t border-slate-100 py-5 sm:grid-cols-2">
+                {meta.map(({ label, value, exactValue }) => (
+                  <div key={label} className="min-w-0">
+                    <dt className={labelClassName}>{label}</dt>
+                    <dd
+                      className="mt-1 text-sm text-slate-600"
+                      title={exactValue}
+                    >
+                      {value}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            )}
           </form>
         )}
       </section>
