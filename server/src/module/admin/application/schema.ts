@@ -12,10 +12,22 @@ export const applicationStatus = z.enum(["draft", "published"], {
   error: "Status must be either 'draft' or 'published'",
 });
 
+export const applicationStatusQuery = z.object({
+  applicationStatus,
+});
+
 export const applicationId = z
   .string()
   .trim()
   .pipe(z.uuid({ error: "Invalid application ID" }));
+
+export const applicationIdParams = z.object({
+  applicationId,
+});
+
+export const updateApplicationStatus = z.object({
+  status: applicationStatus,
+});
 
 export const updateApplication = z.object({
   displayName: z.string().trim().min(1).max(100),

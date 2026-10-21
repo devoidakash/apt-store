@@ -9,7 +9,7 @@ router.get("/repositories", controller.getRepositories);
 
 router.get(
   "/repositories/:repositoryId",
-  validateSchema(schema.repositoryId, "params"),
+  validateSchema(schema.repositoryIdParams, "params"),
   controller.getRepositoryById,
 );
 
@@ -21,7 +21,7 @@ router.post(
 
 router.patch(
   "/repositories/:repositoryId",
-  validateSchema(schema.repositoryId, "params"),
+  validateSchema(schema.repositoryIdParams, "params"),
   validateSchema(schema.createRepository),
   controller.updateRepository,
 );

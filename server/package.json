@@ -5,7 +5,8 @@
   "description": "A desktop application store for Ubuntu that discovers applications from configured APT repositories, displays app metadata, and simplifies package installation and management.",
   "main": "src/server.ts",
   "scripts": {
-    "dev": "tsx watch src/server.ts"
+    "dev": "tsx watch src/server.ts",
+    "typecheck": "tsc --noEmit"
   },
   "keywords": [],
   "author": "akash patel",

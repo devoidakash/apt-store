@@ -7,6 +7,10 @@ export const repositoryId = z
   .trim()
   .pipe(z.uuid({ error: "Invalid repository ID" }));
 
+export const repositoryIdParams = z.object({
+  repositoryId,
+});
+
 export const createRepository = z.object({
   displayName: z.string().trim(),
   packageName: z.string().trim().toLowerCase(),

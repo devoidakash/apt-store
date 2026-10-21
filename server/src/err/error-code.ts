@@ -19,6 +19,11 @@ const GLOBAL_ERROR = {
     message: "File validation failed",
     code: "FILE_VALIDATION_FAILED",
   },
+  APPLICATION_NOT_FOUND: {
+    statusCode: 404,
+    message: "Application not found",
+    code: "APPLICATION_NOT_FOUND",
+  },
 } as const;
 
 export default GLOBAL_ERROR;
