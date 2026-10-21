@@ -2,39 +2,45 @@ import { useState, type FormEvent } from "react";
 import axios from "axios";
 import { LoaderCircle, Plus } from "lucide-react";
 import { useNavigate } from "react-router";
-import BackButton from "../../components/navigation/BackButton";
 import { createRepository } from "../../api/repository";
 
 interface RepositoryForm {
-  name: string;
-  package_name: string;
+  displayName: string;
+  packageName: string;
   uri: string;
   suite: string;
   component: string;
+  key_uri: string;
   fingerprint: string;
 }
 
 const initialForm: RepositoryForm = {
-  name: "",
-  package_name: "",
+  displayName: "",
+  packageName: "",
   uri: "",
   suite: "",
-  component: "main",
+  component: "",
+  key_uri: "",
   fingerprint: "",
 };
 
 function parseRepositoryDetails(value: string): Partial<RepositoryForm> {
   const parsed: Partial<RepositoryForm> = {};
   const fields: Record<string, keyof RepositoryForm> = {
-    name: "name",
-    "package-name": "package_name",
-    package_name: "package_name",
+    name: "displayName",
+    application_name: "displayName",
+    "application-name": "displayName",
+    "display-name": "displayName",
+    "package-name": "packageName",
+    package_name: "packageName",
     uris: "uri",
     uri: "uri",
     suites: "suite",
     suite: "suite",
     components: "component",
     component: "component",
+    "key-uri": "key_uri",
+    key_uri: "key_uri",
     fingerprint: "fingerprint",
   };
 
@@ -50,8 +56,8 @@ function parseRepositoryDetails(value: string): Partial<RepositoryForm> {
     if (fieldValue) parsed[field] = fieldValue;
   });
 
-  if (parsed.name && !parsed.package_name) {
-    parsed.package_name = parsed.name
+  if (parsed.displayName && !parsed.packageName) {
+    parsed.packageName = parsed.displayName
       .toLowerCase()
       .trim()
       .replace(/[^a-z0-9]+/g, "-")
@@ -105,12 +111,6 @@ export default function ManageRepository() {
 
   return (
     <div className="w-full">
-      <BackButton
-        fallbackTo="/repositories"
-        className="mb-4 inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-emerald-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
-      >
-        Back to repositories
-      </BackButton>
       <header className="border border-slate-200 bg-white px-5 py-4 sm:px-6">
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-emerald-700">
           Manage repositories
@@ -131,12 +131,14 @@ export default function ManageRepository() {
             </h2>
             <div className="mt-5 grid gap-x-6 gap-y-5 sm:grid-cols-2">
               <label className="text-sm font-medium text-slate-800">
-                Repository name
+                Application name
                 <input
                   required
-                  name="name"
-                  value={form.name}
-                  onChange={(event) => updateField("name", event.target.value)}
+                  name="displayName"
+                  value={form.displayName}
+                  onChange={(event) =>
+                    updateField("displayName", event.target.value)
+                  }
                   placeholder="e.g. Mozilla Firefox"
                   className={inputClassName}
                 />
@@ -146,10 +148,10 @@ export default function ManageRepository() {
                 Package name
                 <input
                   required
-                  name="package_name"
-                  value={form.package_name}
+                  name="packageName"
+                  value={form.packageName}
                   onChange={(event) =>
-                    updateField("package_name", event.target.value)
+                    updateField("packageName", event.target.value)
                   }
                   placeholder="e.g. firefox-esr"
                   className={inputClassName}
@@ -191,6 +193,21 @@ export default function ManageRepository() {
                     updateField("component", event.target.value)
                   }
                   placeholder="main"
+                  className={inputClassName}
+                />
+              </label>
+
+              <label className="text-sm font-medium text-slate-800">
+                Key URI
+                <input
+                  required
+                  type="url"
+                  name="key_uri"
+                  value={form.key_uri}
+                  onChange={(event) =>
+                    updateField("key_uri", event.target.value)
+                  }
+                  placeholder="https://packages.example.com/repository-key.gpg"
                   className={inputClassName}
                 />
               </label>
@@ -241,11 +258,12 @@ export default function ManageRepository() {
                   handleRepositoryDetailsChange(event.target.value)
                 }
                 rows={10}
-                placeholder={`name: Brave Browser
+                placeholder={`application_name: Brave Browser
 package_name: brave-browser
 URIs: https://brave-browser-apt-release.s3.brave.com
 Suites: stable
 Components: main
+Key-URI: https://packages.example.com/repository-key.gpg
 Fingerprint: ABCD 1234 EF56 7890`}
                 className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-3 font-mono text-sm text-slate-900 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/15"
               />
