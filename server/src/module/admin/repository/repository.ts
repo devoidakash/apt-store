@@ -36,7 +36,7 @@ interface CreateRepositoryData extends CreateRepositoryType {
   keyContent: string;
 }
 
-interface UpdateApplicationData extends ApplicationData {
+interface UpdateApplication extends ApplicationData {
   applicationId: string;
   displayName: string;
 }
@@ -154,7 +154,7 @@ export async function insertIntoRepository(
 
 export async function updateApplicationById(
   client: PoolClient,
-  data: UpdateApplicationData,
+  data: UpdateApplication,
 ): Promise<void> {
   await client.query(
     `

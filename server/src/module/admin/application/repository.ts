@@ -1,12 +1,47 @@
 import pool from "../../../infra/database/db";
-import type { ApplicationStatus, UpdateApplicationData } from "./schema";
+import type {
+  ApplicationId,
+  ApplicationStatus,
+  UpdateApplication,
+} from "./schema";
 
-export async function fetchApplications(applicationStatus: string) {
-  const result = await pool.query(
+// Types and interfaces
+interface ApplicationCardData {
+  id: string;
+  displayName: string;
+  maintainer: string | null;
+  caption: string | null;
+  iconUpdatedAt: Date | null;
+  status: ApplicationStatus;
+}
+
+export interface ApplicationDetails {
+  id: string;
+  displayName: string;
+  sourceType: string;
+  version: string;
+  maintainer: string | null;
+  caption: string | null;
+  description: string | null;
+  iconUpdatedAt: Date | null;
+  images: string[];
+  category: string | null;
+  homepageUri: string | null;
+  downloadSizeInBytes: number;
+  installedSizeInBytes: number;
+  status: ApplicationStatus;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// Functions
+export async function fetchApplications(
+  applicationStatus: ApplicationStatus,
+): Promise<ApplicationCardData[]> {
+  const result = await pool.query<ApplicationCardData>(
     `
     SELECT
       id,
-      package_name AS "packageName",
       display_name AS "displayName",
       maintainer,
       caption,
@@ -20,8 +55,10 @@ export async function fetchApplications(applicationStatus: string) {
   return result.rows;
 }
 
-export async function fetchApplicationById(applicationId: string) {
-  const result = await pool.query(
+export async function fetchApplicationById(
+  applicationId: ApplicationId,
+): Promise<ApplicationDetails | undefined> {
+  const result = await pool.query<ApplicationDetails>(
     `
     SELECT
       id,
@@ -34,7 +71,7 @@ export async function fetchApplicationById(applicationId: string) {
       icon_updated_at AS "iconUpdatedAt",
       images,
       category,
-      homepage_uri AS homepage,
+      homepage_uri AS homepageUri,
       download_size_in_bytes AS "downloadSizeInBytes",
       installed_size_in_bytes AS "installedSizeInBytes",
       status,
@@ -51,19 +88,19 @@ export async function fetchApplicationById(applicationId: string) {
 
 export async function updateApplication(
   applicationId: string,
-  data: UpdateApplicationData,
+  data: UpdateApplication,
 ) {
-  return await pool.query(
+  const result = await pool.query(
     `
       UPDATE applications
       SET display_name = $2,
           caption = $3,
           description = $4,
           category = $5,
-          homepage = $6,
+          homepage_uri = $6,
           updated_at = now()
       WHERE id = $1
-      RETURNING *
+      RETURNING id
     `,
     [
       applicationId,
@@ -71,9 +108,10 @@ export async function updateApplication(
       data.caption,
       data.description,
       data.category,
-      data.homepage,
+      data.homepageUri,
     ],
   );
+  return result.rows[0];
 }
 
 export async function updateApplicationIcon(applicationId: string) {
@@ -88,10 +126,10 @@ export async function updateApplicationIcon(applicationId: string) {
 }
 
 export async function updateApplicationImages(
-  applicationId: string,
+  applicationId: ApplicationId,
   images: string[],
 ) {
-  return await pool.query(
+  return pool.query(
     `
       UPDATE applications
       SET images = $2, updated_at = now()
@@ -102,10 +140,10 @@ export async function updateApplicationImages(
 }
 
 export async function updateApplicationStatus(
-  applicationId: string,
+  applicationId: ApplicationId,
   status: ApplicationStatus,
 ) {
-  return await pool.query(
+  return pool.query(
     `
       UPDATE applications
       SET status = $2, updated_at = now()

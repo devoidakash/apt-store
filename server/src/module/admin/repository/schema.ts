@@ -1,11 +1,11 @@
 import z from "zod";
 
-export const repositoryId = z.object({
-  repositoryId: z
-    .string()
-    .trim()
-    .pipe(z.uuid({ error: "Invalid repository ID" })),
-});
+export type CreateRepositoryType = z.infer<typeof createRepository>;
+
+export const repositoryId = z
+  .string()
+  .trim()
+  .pipe(z.uuid({ error: "Invalid repository ID" }));
 
 export const createRepository = z.object({
   displayName: z.string().trim(),
@@ -31,5 +31,3 @@ export const createRepository = z.object({
     .trim()
     .transform((fingerprint) => fingerprint.replace(/\s+/g, "").toUpperCase()),
 });
-
-export type CreateRepositoryType = z.infer<typeof createRepository>;

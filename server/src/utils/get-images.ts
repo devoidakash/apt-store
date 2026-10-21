@@ -1,7 +1,8 @@
 import env from "../config/env";
+import { ApplicationId } from "../module/admin/application/schema";
 
 export function getIcon(
-  applicationId: string,
+  applicationId: ApplicationId,
   iconUpdatedAt: Date | null,
 ): string | null {
   if (!iconUpdatedAt) return null;
@@ -10,6 +11,5 @@ export function getIcon(
 }
 
 export function getImages(images: string[]): string[] {
-  if (!Array.isArray(images)) return [];
   return images.map((image) => `${env.r2PublicUrl}/${image}`);
 }

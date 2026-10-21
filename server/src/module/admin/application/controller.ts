@@ -1,12 +1,12 @@
 import { Request, Response } from "express";
 import * as service from "./service";
-import ApiError from "../../../err/api-error";
-import GLOBAL_ERROR from "../../../err/error-code";
+import { ApplicationId, ApplicationStatus, UpdateApplication } from "./schema";
 
-export async function getApplications(req: Request, res: Response) {
-  const data = await service.getApplications(
-    req.query.applicationStatus as string,
-  );
+export async function getApplications(
+  req: Request<{}, {}, {}, { applicationStatus: ApplicationStatus }>,
+  res: Response,
+) {
+  const data = await service.getApplications(req.query.applicationStatus);
   res.json({
     success: true,
     message: "Applications fetched successfully",
@@ -14,9 +14,11 @@ export async function getApplications(req: Request, res: Response) {
   });
 }
 
-export async function getApplicationById(req: Request, res: Response) {
-  const applicationId = req.params.applicationId as string;
-  const data = await service.getApplicationById(applicationId);
+export async function getApplicationById(
+  req: Request<{ applicationId: ApplicationId }>,
+  res: Response,
+) {
+  const data = await service.getApplicationById(req.params.applicationId);
 
   res.status(200).json({
     success: true,
@@ -25,9 +27,11 @@ export async function getApplicationById(req: Request, res: Response) {
   });
 }
 
-export async function updateApplication(req: Request, res: Response) {
-  const applicationId = req.params.applicationId as string;
-  await service.updateApplication(applicationId, req.body);
+export async function updateApplication(
+  req: Request<{ applicationId: ApplicationId }, {}, UpdateApplication>,
+  res: Response,
+) {
+  await service.updateApplication(req.params.applicationId, req.body);
 
   res.status(200).json({
     success: true,
@@ -35,9 +39,11 @@ export async function updateApplication(req: Request, res: Response) {
   });
 }
 
-export async function updateApplicationIcon(req: Request, res: Response) {
-  const applicationId = req.params.applicationId as string;
-  await service.updateApplicationIcon(applicationId, req.file!);
+export async function updateApplicationIcon(
+  req: Request<{ applicationId: ApplicationId }>,
+  res: Response,
+) {
+  await service.updateApplicationIcon(req.params.applicationId, req.file!);
 
   res.status(200).json({
     success: true,
@@ -45,10 +51,14 @@ export async function updateApplicationIcon(req: Request, res: Response) {
   });
 }
 
-export async function updateApplicationImages(req: Request, res: Response) {
-  const applicationId = req.params.applicationId as string;
-  const files = Array.isArray(req.files) ? req.files : [];
-  await service.updateApplicationImages(applicationId, files!);
+export async function updateApplicationImages(
+  req: Request<{ applicationId: ApplicationId }>,
+  res: Response,
+) {
+  await service.updateApplicationImages(
+    req.params.applicationId,
+    req.files as Express.Multer.File[],
+  );
 
   res.status(200).json({
     success: true,
@@ -56,9 +66,18 @@ export async function updateApplicationImages(req: Request, res: Response) {
   });
 }
 
-export async function updateApplicationStatus(req: Request, res: Response) {
-  const applicationId = req.params.applicationId as string;
-  await service.updateApplicationStatus(applicationId, req.body.status);
+export async function updateApplicationStatus(
+  req: Request<
+    { applicationId: ApplicationId },
+    {},
+    { status: ApplicationStatus }
+  >,
+  res: Response,
+) {
+  await service.updateApplicationStatus(
+    req.params.applicationId,
+    req.body.status,
+  );
 
   res.status(200).json({
     success: true,

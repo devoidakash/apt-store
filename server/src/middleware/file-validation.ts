@@ -1,11 +1,11 @@
+import type { NextFunction, Request, Response } from "express";
 import sharp from "sharp";
-import type { Request, Response, NextFunction } from "express";
-import GLOBAL_ERROR from "../err/error-code";
 import ApiError from "../err/api-error";
+import GLOBAL_ERROR from "../err/error-code";
 
 const ALLOWED_FORMATS = ["jpeg", "png", "webp"];
 
-export async function validateFileType(
+export default async function validateFileType(
   req: Request,
   res: Response,
   next: NextFunction,

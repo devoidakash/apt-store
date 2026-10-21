@@ -1,66 +1,63 @@
 import ApiError from "../../../err/api-error";
 import GLOBAL_ERROR from "../../../err/error-code";
-import { getIcon, getImages } from "../../../utils/get-images";
+import { getIcon } from "../../../utils/get-images";
 import { uploadToR2 } from "../../../utils/r2-operations";
 import resizeImage from "../../../utils/resize-image";
+import APPLICATION_ERRORS from "./error";
 import * as repository from "./repository";
-import type { ApplicationStatus, UpdateApplicationData } from "./schema";
+import type {
+  ApplicationId,
+  ApplicationStatus,
+  UpdateApplication,
+} from "./schema";
 
-export async function getApplications(applicationStatus: string) {
+// Functions
+export async function getApplications(applicationStatus: ApplicationStatus) {
   const applications = await repository.fetchApplications(applicationStatus);
 
-  if (!applications?.length) return [];
-
-  return applications
-    .filter((application) => application !== null)
-    .map((application) => ({
-      ...application,
-      icon: getIcon(
-        String(application.id),
-        application.iconUpdatedAt instanceof Date
-          ? application.iconUpdatedAt
-          : null,
-      ),
-    }));
+  return applications.map((application) => {
+    const { iconUpdatedAt, ...data } = application;
+    return {
+      ...data,
+      icon: getIcon(application.id, iconUpdatedAt),
+    };
+  });
 }
 
-export async function getApplicationById(applicationId: string) {
+export async function getApplicationById(applicationId: ApplicationId) {
   const application = await repository.fetchApplicationById(applicationId);
 
   if (!application) {
-    throw new ApiError(GLOBAL_ERROR.APPLICATION_NOT_FOUND);
+    throw new ApiError(APPLICATION_ERRORS.APPLICATION_NOT_FOUND);
   }
 
-  if (!Array.isArray(application.images)) {
-    throw new ApiError(GLOBAL_ERROR.APPLICATION_IMAGES_NOT_ARRAY);
-  }
-
+  const { iconUpdatedAt, ...data } = application;
   return {
-    ...application,
-    icon: getIcon(
-      applicationId,
-      application.iconUpdatedAt instanceof Date
-        ? application.iconUpdatedAt
-        : null,
-    ),
-    images: getImages(application.images),
+    ...data,
+    icon: getIcon(application.id, iconUpdatedAt),
   };
 }
 
 export async function updateApplication(
-  applicationId: string,
-  data: UpdateApplicationData,
+  applicationId: ApplicationId,
+  data: UpdateApplication,
 ) {
-  return await repository.updateApplication(applicationId, data);
+  const application = await repository.updateApplication(applicationId, data);
+
+  if (!application) {
+    throw new ApiError(APPLICATION_ERRORS.APPLICATION_NOT_FOUND);
+  }
+
+  return;
 }
 
 export async function updateApplicationIcon(
-  applicationId: string,
+  applicationId: ApplicationId,
   file: Express.Multer.File,
 ) {
   const application = await repository.fetchApplicationById(applicationId);
   if (!application) {
-    throw new ApiError(GLOBAL_ERROR.APPLICATION_NOT_FOUND);
+    throw new ApiError(APPLICATION_ERRORS.APPLICATION_NOT_FOUND);
   }
 
   const iconBuffer = await resizeImage(file.buffer, {
@@ -75,23 +72,21 @@ export async function updateApplicationIcon(
 }
 
 export async function updateApplicationImages(
-  applicationId: string,
+  applicationId: ApplicationId,
   files: Express.Multer.File[],
 ) {
   if (files.length !== 5) {
-    throw new ApiError({
-      ...GLOBAL_ERROR.FILE_VALIDATION_FAILED,
-    });
+    throw new ApiError(APPLICATION_ERRORS.APPLICATION_IMAGES_COUNT_INVALID);
   }
 
   const application = await getApplicationById(applicationId);
 
   if (!application) {
-    throw new ApiError(GLOBAL_ERROR.APPLICATION_NOT_FOUND);
+    throw new ApiError(APPLICATION_ERRORS.APPLICATION_NOT_FOUND);
   }
 
   const images = files.map(
-    (_, index) => `applications/${applicationId}/images/image-${index + 1}`,
+    (_, index) => `applications/${applicationId}/image-${index + 1}.webp`,
   );
 
   const imageBuffers = await Promise.all(
@@ -104,71 +99,44 @@ export async function updateApplicationImages(
   );
 
   await Promise.all(
-    imageBuffers.map((buffer, index) => uploadToR2(buffer, images[index]!)),
+    imageBuffers.map((buffer, index) => uploadToR2(buffer, images[index])),
   );
 
   return repository.updateApplicationImages(applicationId, images);
 }
 
-interface ApplicationForStatusValidation {
-  displayName: string | null;
-  packageName: string;
-  caption: string | null;
-  description: string | null;
-  version: string;
-  iconUpdatedAt: Date | string | null;
-  downloadSizeBytes: number;
-  installedSizeBytes: number;
-  category: string | null;
-  homepage: string | null;
-  maintainer: string;
-  status: string | null;
-  images: string[];
-}
-
 function validateApplicationForStatusUpdate(
-  data: ApplicationForStatusValidation,
+  data: repository.ApplicationDetails,
 ) {
   const errors: { field: string; message: string }[] = [];
 
-  if (!data.displayName)
-    errors.push({ field: "displayName", message: "Display name is required" });
-  if (!data.packageName)
-    errors.push({ field: "packageName", message: "Package name is required" });
-  if (!data.caption)
-    errors.push({ field: "caption", message: "Caption is requied" });
-  if (!data.description)
-    errors.push({ field: "description", message: "Description is required" });
-  if (!data.version)
-    errors.push({ field: "version", message: "Version is required" });
-  if (!data.iconUpdatedAt)
-    errors.push({ field: "hasIcon", message: "Icon is required" });
-  if (data.downloadSizeBytes == null)
-    errors.push({
-      field: "downloadSizeBytes",
-      message: "Download size is required",
-    });
-  if (data.installedSizeBytes == null)
-    errors.push({
-      field: "installedSizeBytes",
-      message: "Installed size is required",
-    });
-  if (!data.category)
-    errors.push({ field: "category", message: "Category is required" });
-  if (!data.homepage)
-    errors.push({ field: "homepage", message: "Homepage is required" });
   if (!data.maintainer)
     errors.push({ field: "maintainer", message: "Maintainer is required" });
-  if (!data.status)
-    errors.push({ field: "status", message: "Status is required" });
 
-  if (data.images.length !== 5) {
-    errors.push({ field: "images", message: "Exactly 5 images are required" });
-  }
+  if (!data.caption)
+    errors.push({ field: "caption", message: "Caption is required" });
+
+  if (!data.description)
+    errors.push({ field: "description", message: "Description is required" });
+
+  if (!data.category)
+    errors.push({ field: "category", message: "Category is required" });
+
+  if (!data.iconUpdatedAt)
+    errors.push({ field: "hasIcon", message: "Icon is required" });
+
+  if (!data.homepageUri)
+    errors.push({ field: "homepageUri", message: "Homepage is required" });
+
+  if (!data.images || data.images.length !== 5)
+    errors.push({
+      field: "images",
+      message: "Exactly 5 images are required",
+    });
 
   if (errors.length > 0) {
     throw new ApiError({
-      ...GLOBAL_ERROR.FILE_VALIDATION_FAILED,
+      ...APPLICATION_ERRORS.APPLICATION_STATUS_UPDATE_FAILED,
       errors,
     });
   }
@@ -178,15 +146,12 @@ export async function updateApplicationStatus(
   applicationId: string,
   status: ApplicationStatus,
 ) {
-  const result = await repository.fetchApplicationById(applicationId);
+  const application = await repository.fetchApplicationById(applicationId);
 
-  if (!result) {
-    throw new ApiError(GLOBAL_ERROR.APPLICATION_NOT_FOUND);
+  if (!application) {
+    throw new ApiError(APPLICATION_ERRORS.APPLICATION_NOT_FOUND);
   }
 
-  const application = result as unknown as ApplicationForStatusValidation;
-
   validateApplicationForStatusUpdate(application);
-
   return repository.updateApplicationStatus(applicationId, status);
 }

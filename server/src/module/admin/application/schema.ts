@@ -1,34 +1,32 @@
 import { z } from "zod";
 
-export const applicationStatus = z.object({
-  applicationStatus: z.enum(["live", "draft"], {
-    error: "Status must be either 'live' or 'draft'.",
-  }),
+// Types
+export type ApplicationStatus = z.infer<typeof applicationStatus>;
+
+export type ApplicationId = z.infer<typeof applicationId>;
+
+export type UpdateApplication = z.infer<typeof updateApplication>;
+
+// Schemas
+export const applicationStatus = z.enum(["draft", "published"], {
+  error: "Status must be either 'draft' or 'published'",
 });
 
-export const applicationId = z.object({
-  applicationId: z.string().trim().uuid({ message: "Invalid application ID" }),
+export const applicationId = z
+  .string()
+  .trim()
+  .pipe(z.uuid({ error: "Invalid application ID" }));
+
+export const updateApplication = z.object({
+  displayName: z.string().trim().min(1).max(100),
+  caption: z.string().trim().min(1).max(150),
+  description: z.string().trim().min(1).max(2000),
+  category: z.string().trim().min(1).max(50),
+  homepageUri: z
+    .string()
+    .trim()
+    .pipe(z.url({ protocol: /^https?$/ }))
+    .refine((uri) => !uri.endsWith("/"), {
+      error: "Homepage url must not end with a slash",
+    }),
 });
-
-export const updateApplication = z
-  .object({
-    displayName: z.string().trim().min(1).max(100).optional(),
-    caption: z.string().trim().max(120).optional(),
-    description: z.string().trim().max(2000).optional(),
-    category: z.string().trim().min(1).max(50).optional(),
-    homepage: z.string().trim().url().optional(),
-  })
-  .strict()
-  .refine((data) => Object.keys(data).length > 0, {
-    message: "At least one field must be provided",
-  });
-
-export type UpdateApplicationData = z.infer<typeof updateApplication>;
-
-export const updateApplicationStatus = z.object({
-  status: z.enum(["live", "draft"]),
-});
-
-export type ApplicationStatus = z.infer<
-  typeof updateApplicationStatus
->["status"];

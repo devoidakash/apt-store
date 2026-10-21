@@ -1,8 +1,8 @@
 import express from "express";
-import * as controller from "./controller";
-import { validateFileType } from "../../../middleware/file-validation";
-import { upload } from "../../../middleware/file-upload";
+import upload from "../../../middleware/file-upload";
+import validateFileType from "../../../middleware/file-validation";
 import validateSchema from "../../../middleware/validateSchema";
+import * as controller from "./controller";
 import * as schema from "./schema";
 
 const router = express.Router();
@@ -45,7 +45,7 @@ router.post(
 router.patch(
   "/applications/:applicationId/status",
   validateSchema(schema.applicationId, "params"),
-  validateSchema(schema.updateApplicationStatus),
+  validateSchema(schema.applicationStatus),
   controller.updateApplicationStatus,
 );
 

@@ -18,10 +18,15 @@ export default function errorHandler(
   }
 
   if (err instanceof multer.MulterError) {
-    const messages = {
+    const messages: Record<multer.MulterError["code"], string> = {
+      LIMIT_PART_COUNT: "Too many multipart parts",
       LIMIT_FILE_SIZE: "File size exceeds allowed limit",
       LIMIT_FILE_COUNT: "Too many files uploaded",
+      LIMIT_FIELD_KEY: "Field name is too long",
+      LIMIT_FIELD_VALUE: "Field value is too long",
+      LIMIT_FIELD_COUNT: "Too many fields submitted",
       LIMIT_UNEXPECTED_FILE: "Unexpected file field",
+      MISSING_FIELD_NAME: "Missing field name",
     };
 
     return res.status(400).json({

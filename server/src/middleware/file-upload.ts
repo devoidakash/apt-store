@@ -7,7 +7,11 @@ import GLOBAL_ERROR from "../err/error-code";
 const ALLOWED_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp"];
 const ALLOWED_MIMETYPES = ["image/jpeg", "image/png", "image/webp"];
 
-export function upload(fields: number, files: number, fileSize: number) {
+export default function upload(
+  fields: number,
+  files: number,
+  fileSize: number,
+) {
   return multer({
     storage: multer.memoryStorage(),
     limits: {
