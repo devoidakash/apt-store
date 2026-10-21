@@ -1,6 +1,6 @@
 import sharp from "sharp";
 import type { Request, Response, NextFunction } from "express";
-import ERROR_CODES from "../err/error-code";
+import GLOBAL_ERROR from "../err/error-code";
 import ApiError from "../err/api-error";
 
 const ALLOWED_FORMATS = ["jpeg", "png", "webp"];
@@ -12,7 +12,7 @@ export async function validateFileType(
 ): Promise<void> {
   try {
     if (!req.file && !req.files) {
-      throw new ApiError(ERROR_CODES.FILE_REQUIRED);
+      throw new ApiError(GLOBAL_ERROR.FILE_REQUIRED);
     }
 
     if (req.file) {
@@ -41,7 +41,7 @@ async function validateFileBuffer(file: Express.Multer.File): Promise<void> {
     const metadata = await image.metadata();
 
     if (!metadata.format || !ALLOWED_FORMATS.includes(metadata.format)) {
-      throw new ApiError(ERROR_CODES.FILE_TYPE_MISMATCH);
+      throw new ApiError(GLOBAL_ERROR.FILE_TYPE_MISMATCH);
     }
 
     file.buffer = await image.webp().toBuffer();
@@ -51,6 +51,6 @@ async function validateFileBuffer(file: Express.Multer.File): Promise<void> {
       throw error;
     }
 
-    throw new ApiError(ERROR_CODES.INVALID_FILE_CONTENT);
+    throw new ApiError(GLOBAL_ERROR.INVALID_FILE_CONTENT);
   }
 }

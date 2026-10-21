@@ -1,30 +1,52 @@
 import pool from "../../../infra/database/db";
-import toCamelCase from "../../../utils/to-camel-case";
 import type { ApplicationStatus, UpdateApplicationData } from "./schema";
 
 export async function fetchApplications(applicationStatus: string) {
   const result = await pool.query(
     `
-    SELECT id, package_name, display_name, maintainer, caption, icon_updated_at, status
+    SELECT
+      id,
+      package_name AS "packageName",
+      display_name AS "displayName",
+      maintainer,
+      caption,
+      icon_updated_at AS "iconUpdatedAt",
+      status
     FROM applications
     WHERE status = $1
   `,
     [applicationStatus],
   );
-  return result.rows.map(toCamelCase);
+  return result.rows;
 }
 
 export async function fetchApplicationById(applicationId: string) {
   const result = await pool.query(
     `
-    SELECT *
+    SELECT
+      id,
+      display_name AS "displayName",
+      source_type AS "sourceType",
+      version,
+      maintainer,
+      caption,
+      description,
+      icon_updated_at AS "iconUpdatedAt",
+      images,
+      category,
+      homepage_uri AS homepage,
+      download_size_in_bytes AS "downloadSizeInBytes",
+      installed_size_in_bytes AS "installedSizeInBytes",
+      status,
+      created_at AS "createdAt",
+      updated_at AS "updatedAt"
     FROM applications
     WHERE id = $1
   `,
     [applicationId],
   );
 
-  return toCamelCase(result.rows[0]);
+  return result.rows[0];
 }
 
 export async function updateApplication(

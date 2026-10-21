@@ -1,6 +1,6 @@
 import ApiError from "../../../err/api-error";
-import ERROR_CODES from "../../../err/error-code";
-import { getIcon, getImages } from "../../../utils/get-Images";
+import GLOBAL_ERROR from "../../../err/error-code";
+import { getIcon, getImages } from "../../../utils/get-images";
 import { uploadToR2 } from "../../../utils/r2-operations";
 import resizeImage from "../../../utils/resize-image";
 import * as repository from "./repository";
@@ -28,11 +28,11 @@ export async function getApplicationById(applicationId: string) {
   const application = await repository.fetchApplicationById(applicationId);
 
   if (!application) {
-    throw new ApiError(ERROR_CODES.APPLICATION_NOT_FOUND);
+    throw new ApiError(GLOBAL_ERROR.APPLICATION_NOT_FOUND);
   }
 
   if (!Array.isArray(application.images)) {
-    throw new ApiError(ERROR_CODES.APPLICATION_IMAGES_NOT_ARRAY);
+    throw new ApiError(GLOBAL_ERROR.APPLICATION_IMAGES_NOT_ARRAY);
   }
 
   return {
@@ -60,7 +60,7 @@ export async function updateApplicationIcon(
 ) {
   const application = await repository.fetchApplicationById(applicationId);
   if (!application) {
-    throw new ApiError(ERROR_CODES.APPLICATION_NOT_FOUND);
+    throw new ApiError(GLOBAL_ERROR.APPLICATION_NOT_FOUND);
   }
 
   const iconBuffer = await resizeImage(file.buffer, {
@@ -80,14 +80,14 @@ export async function updateApplicationImages(
 ) {
   if (files.length !== 5) {
     throw new ApiError({
-      ...ERROR_CODES.FILE_VALIDATION_FAILED,
+      ...GLOBAL_ERROR.FILE_VALIDATION_FAILED,
     });
   }
 
   const application = await getApplicationById(applicationId);
 
   if (!application) {
-    throw new ApiError(ERROR_CODES.APPLICATION_NOT_FOUND);
+    throw new ApiError(GLOBAL_ERROR.APPLICATION_NOT_FOUND);
   }
 
   const images = files.map(
@@ -168,7 +168,7 @@ function validateApplicationForStatusUpdate(
 
   if (errors.length > 0) {
     throw new ApiError({
-      ...ERROR_CODES.FILE_VALIDATION_FAILED,
+      ...GLOBAL_ERROR.FILE_VALIDATION_FAILED,
       errors,
     });
   }
@@ -181,7 +181,7 @@ export async function updateApplicationStatus(
   const result = await repository.fetchApplicationById(applicationId);
 
   if (!result) {
-    throw new ApiError(ERROR_CODES.APPLICATION_NOT_FOUND);
+    throw new ApiError(GLOBAL_ERROR.APPLICATION_NOT_FOUND);
   }
 
   const application = result as unknown as ApplicationForStatusValidation;

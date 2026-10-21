@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import * as service from "./service";
 import ApiError from "../../../err/api-error";
-import ERROR_CODES from "../../../err/error-code";
+import GLOBAL_ERROR from "../../../err/error-code";
 
 export async function getApplications(req: Request, res: Response) {
   const data = await service.getApplications(

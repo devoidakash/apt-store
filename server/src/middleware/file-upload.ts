@@ -2,7 +2,7 @@ import type { Request } from "express";
 import multer, { type FileFilterCallback } from "multer";
 import path from "node:path";
 import ApiError from "../err/api-error";
-import ERROR_CODES from "../err/error-code";
+import GLOBAL_ERROR from "../err/error-code";
 
 const ALLOWED_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp"];
 const ALLOWED_MIMETYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -28,7 +28,7 @@ export function upload(fields: number, files: number, fileSize: number) {
         return cb(null, true);
       }
 
-      cb(new ApiError(ERROR_CODES.FILE_TYPE_MISMATCH));
+      cb(new ApiError(GLOBAL_ERROR.FILE_TYPE_MISMATCH));
     },
   });
 }
