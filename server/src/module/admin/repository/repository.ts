@@ -1,145 +1,218 @@
 import type { PoolClient } from "pg";
-import toCamelCase from "../../../utils/to-camel-case";
 import pool from "../../../infra/database/db";
+import { LatestApplication } from "./helpers/apt-metadata";
+import { CreateRepositoryType } from "./schema";
 
-export async function fetchRepositories() {
-  const result = await pool.query(`
-  SELECT r.id , r.name, a.id AS application_id, a.icon_updated_at, a.maintainer
-  FROM repositories r
-  JOIN applications a ON r.id = a.repository_id
-  WHERE a.package_name = ANY(r.package_name)
-  `);
-  return result.rows.map(toCamelCase);
+// Types and interfaces
+interface RepositoryCardData {
+  id: string;
+  applicationId: string;
+  displayName: string;
+  iconUpdatedAt: Date | null;
+  maintainer: string | null;
 }
 
-export async function fetchRepositoryById(repositoryId: string) {
-  const result = await pool.query(
+interface RepositoryDetails {
+  id: string;
+  applicationId: string;
+  packageName: string;
+  uri: string;
+  suite: string;
+  component: string;
+  keyUri: string;
+  keyContent: string;
+  fingerprint: string;
+  createdAt: Date;
+  updatedAt: Date;
+  iconUpdatedAt: Date | null;
+}
+
+export interface ApplicationData extends LatestApplication {
+  displayName: string;
+}
+
+interface CreateRepositoryData extends CreateRepositoryType {
+  applicationId: string;
+  keyContent: string;
+}
+
+interface UpdateApplicationData extends ApplicationData {
+  applicationId: string;
+  displayName: string;
+}
+
+interface UpdateRepositoryData {
+  repositoryId: string;
+  data: CreateRepositoryType;
+  keyContent: string;
+}
+
+// Functions
+export async function fetchRepositories(): Promise<RepositoryCardData[]> {
+  const result = await pool.query<RepositoryCardData>(`
+    SELECT
+      r.id,
+      a.id AS "applicationId",
+      a.display_name AS "displayName",
+      a.icon_updated_at AS "iconUpdatedAt",
+      a.maintainer
+    FROM repositories r
+    JOIN applications a ON r.application_id = a.id
+  `);
+
+  return result.rows;
+}
+
+export async function fetchRepositoryById(
+  repositoryId: string,
+): Promise<RepositoryDetails | undefined> {
+  const result = await pool.query<RepositoryDetails>(
     `
-      SELECT r.*, a.id AS application_id, a.icon_updated_at
+      SELECT
+        a.display_name as "displayName",
+        a.icon_updated_at AS "iconUpdatedAt",
+        r.id,
+        r.application_id AS "applicationId",
+        r.package_name AS "packageName",
+        r.uri,
+        r.suite,
+        r.component,
+        r.key_uri AS "keyUri",
+        r.key_content AS "keyContent",
+        r.fingerprint,
+        r.created_at AS "createdAt",
+        r.updated_at AS "updatedAt"
       FROM repositories r
-      LEFT JOIN applications a ON r.id = a.repository_id
+      JOIN applications a ON r.application_id = a.id
       WHERE r.id = $1
     `,
     [repositoryId],
   );
 
-  return toCamelCase(result.rows[0]);
-}
-
-interface RepositoryData {
-  name: string;
-  packageName: Array<string>;
-  uri: string;
-  suite: string;
-  component: string;
-  publicKey?: string | null;
-  fingerprint: string;
-}
-
-interface ApplicationData {
-  repositoryId: string;
-  packageName: string;
-  description: string | null;
-  version: string;
-  downloadSizeBytes: number;
-  installedSizeBytes: number;
-  homepage: string | null;
-  maintainer: string | null;
-}
-
-export async function insertIntoRepository(
-  client: PoolClient,
-  data: RepositoryData,
-): Promise<Record<string, unknown> | null> {
-  const result = await client.query<{ id: string }>(
-    `
-      INSERT INTO repositories (
-        name, package_name, uri, suite, component, public_key, fingerprint
-      )
-      VALUES ($1, $2::text[], $3, $4, $5, $6, $7)
-      RETURNING *
-    `,
-    [
-      data.name,
-      data.packageName,
-      data.uri,
-      data.suite,
-      data.component,
-      data.publicKey ?? null,
-      data.fingerprint,
-    ],
-  );
-
-  return toCamelCase(result.rows[0]);
-}
-
-export async function updateRepository(
-  client: PoolClient,
-  repositoryId: string,
-  data: RepositoryData,
-): Promise<Record<string, unknown> | null> {
-  const result = await client.query(
-    `
-      UPDATE repositories
-      SET
-        name = $2,
-        package_name = $3::text[],
-        uri = $4,
-        suite = $5,
-        component = $6,
-        fingerprint = $7,
-        updated_at = now()
-      WHERE id = $1
-      RETURNING *
-    `,
-    [
-      repositoryId,
-      data.name,
-      data.packageName,
-      data.uri,
-      data.suite,
-      data.component,
-      data.fingerprint,
-    ],
-  );
-
-  return toCamelCase(result.rows[0]);
+  return result.rows[0];
 }
 
 export async function insertIntoApplications(
   client: PoolClient,
   data: ApplicationData,
+): Promise<string> {
+  const result = await client.query<{ id: string }>(
+    `
+      INSERT INTO applications (
+        display_name,
+        source_type,
+        version,
+        maintainer,
+        description,
+        download_size_in_bytes,
+        installed_size_in_bytes,
+        homepage_uri
+      )
+      VALUES ($1, 'third_party_repo', $2, $3, $4, $5, $6, $7)
+      RETURNING id
+    `,
+    [
+      data.displayName,
+      data.version,
+      data.maintainer,
+      data.description,
+      data.downloadSizeBytes,
+      data.installedSizeBytes,
+      data.homepageUri,
+    ],
+  );
+  return result.rows[0].id;
+}
+
+export async function insertIntoRepository(
+  client: PoolClient,
+  data: CreateRepositoryData,
+): Promise<{ id: string }> {
+  const result = await client.query<{ id: string }>(
+    `
+      INSERT INTO repositories (
+        application_id, package_name, uri, suite, component,
+        key_uri, key_content, fingerprint
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      RETURNING id
+    `,
+    [
+      data.applicationId,
+      data.packageName,
+      data.uri,
+      data.suite,
+      data.component,
+      data.key_uri,
+      data.keyContent,
+      data.fingerprint,
+    ],
+  );
+
+  return result.rows[0];
+}
+
+export async function updateApplicationById(
+  client: PoolClient,
+  data: UpdateApplicationData,
 ): Promise<void> {
   await client.query(
     `
-      INSERT INTO applications (
-        repository_id,
-        package_name,
-        description,
-        version,
-        download_size_bytes,
-        installed_size_bytes,
-        homepage,
-        maintainer
-      )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-      ON CONFLICT (repository_id, package_name)
-      DO UPDATE SET
-        version = EXCLUDED.version,
-        download_size_bytes = EXCLUDED.download_size_bytes,
-        installed_size_bytes = EXCLUDED.installed_size_bytes,
-        missing_since = NULL,
+      UPDATE applications
+      SET
+        display_name = $2,
+        version = $3,
+        maintainer = $4,
+        description = $5,
+        download_size_in_bytes = $6,
+        installed_size_in_bytes = $7,
+        homepage_uri = $8,
         updated_at = now()
+      WHERE id = $1
+    `,
+    [
+      data.applicationId,
+      data.displayName,
+      data.version,
+      data.maintainer,
+      data.description,
+      data.downloadSizeBytes,
+      data.installedSizeBytes,
+      data.homepageUri,
+    ],
+  );
+}
+
+export async function updateRepository(
+  client: PoolClient,
+  data: UpdateRepositoryData,
+): Promise<{ id: string }> {
+  const result = await client.query<{ id: string }>(
+    `
+      UPDATE repositories
+      SET
+        package_name = $2,
+        uri = $3,
+        suite = $4,
+        component = $5,
+        key_uri = $6,
+        key_content = $7,
+        fingerprint = $8,
+        updated_at = now()
+      WHERE id = $1
+      RETURNING id
     `,
     [
       data.repositoryId,
-      data.packageName,
-      data.description,
-      data.version,
-      data.downloadSizeBytes,
-      data.installedSizeBytes,
-      data.homepage,
-      data.maintainer,
+      data.data.packageName,
+      data.data.uri,
+      data.data.suite,
+      data.data.component,
+      data.data.key_uri,
+      data.keyContent,
+      data.data.fingerprint,
     ],
   );
+
+  return result.rows[0];
 }

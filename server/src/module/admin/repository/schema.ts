@@ -1,26 +1,35 @@
 import z from "zod";
 
 export const repositoryId = z.object({
-  repositoryId: z.string().trim().uuid({ message: "Invalid repository ID" }),
+  repositoryId: z
+    .string()
+    .trim()
+    .pipe(z.uuid({ error: "Invalid repository ID" })),
 });
 
 export const createRepository = z.object({
-  name: z.string().trim(),
-  packageName: z.array(z.string().trim().toLowerCase()),
+  displayName: z.string().trim(),
+  packageName: z.string().trim().toLowerCase(),
   uri: z
     .string()
     .trim()
-    .url({ protocol: /^https?$/ })
+    .pipe(z.url({ protocol: /^https?$/ }))
     .refine((uri) => !uri.endsWith("/"), {
-      error: "uri must not end with a slash",
+      error: "URIs must not end with a slash",
     }),
   suite: z.string().trim().toLowerCase(),
   component: z.string().trim().toLowerCase(),
-  publicKey: z.string().trim().nullable().optional(),
+  key_uri: z
+    .string()
+    .trim()
+    .pipe(z.url({ protocol: /^https?$/ }))
+    .refine((uri) => !uri.endsWith("/"), {
+      error: "Key url must not end with a slash",
+    }),
   fingerprint: z
     .string()
     .trim()
-    .transform((fingerprint) => fingerprint.replace(/\s+/g, "")),
+    .transform((fingerprint) => fingerprint.replace(/\s+/g, "").toUpperCase()),
 });
 
-export type createRepositoryData = z.infer<typeof createRepository>;
+export type CreateRepositoryType = z.infer<typeof createRepository>;

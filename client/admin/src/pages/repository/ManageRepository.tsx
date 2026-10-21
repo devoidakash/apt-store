@@ -7,12 +7,12 @@ import {
   Check,
   Database,
   FileText,
+  Copy,
   LoaderCircle,
   Pencil,
   X,
 } from "lucide-react";
 import { Link, useLocation, useNavigate, useParams } from "react-router";
-import BackButton from "../../components/navigation/BackButton";
 import Heading from "../../components/cards/Heading";
 import Layout from "../../components/dashboard/Layout";
 import {
@@ -23,10 +23,11 @@ import {
 
 interface RepositoryForm {
   name: string;
-  packageNames: string;
+  packageName: string;
   uri: string;
   suite: string;
   component: string;
+  key_uri: string;
   fingerprint: string;
 }
 
@@ -44,19 +45,22 @@ interface ApiErrorResponse {
 
 const apiFieldToFormField: Record<string, RepositoryFormField> = {
   name: "name",
-  packageName: "packageNames",
+  displayName: "name",
+  packageName: "packageName",
   uri: "uri",
   suite: "suite",
   component: "component",
+  key_uri: "key_uri",
   fingerprint: "fingerprint",
 };
 
 const emptyForm: RepositoryForm = {
   name: "",
-  packageNames: "",
+  packageName: "",
   uri: "",
   suite: "",
   component: "",
+  key_uri: "",
   fingerprint: "",
 };
 
@@ -64,15 +68,19 @@ function parseRepositoryDetails(value: string): Partial<RepositoryForm> {
   const parsed: Partial<RepositoryForm> = {};
   const fields: Record<string, RepositoryFormField> = {
     name: "name",
-    "package-name": "packageNames",
-    package_name: "packageNames",
-    "package-names": "packageNames",
+    application_name: "name",
+    "application-name": "name",
+    "display-name": "name",
+    "package-name": "packageName",
+    package_name: "packageName",
     uris: "uri",
     uri: "uri",
     suites: "suite",
     suite: "suite",
     components: "component",
     component: "component",
+    "key-uri": "key_uri",
+    key_uri: "key_uri",
     fingerprint: "fingerprint",
   };
 
@@ -90,11 +98,12 @@ function parseRepositoryDetails(value: string): Partial<RepositoryForm> {
 
 function toRepositoryForm(data: RepositoryDetail): RepositoryForm {
   return {
-    name: data.name,
-    packageNames: data.packageName.join(", "),
+    name: data.displayName,
+    packageName: data.packageName,
     uri: data.uri,
     suite: data.suite,
     component: data.component,
+    key_uri: data.keyUri,
     fingerprint: data.fingerprint,
   };
 }
@@ -160,21 +169,40 @@ const fields: {
   type?: string;
   wide?: boolean;
   hint?: string;
+  placeholder: string;
 }[] = [
-  { key: "name", label: "Repository name" },
   {
-    key: "packageNames",
-    label: "Package names",
-    hint: "Separate multiple names with commas.",
+    key: "name",
+    label: "Application name",
+    placeholder: "e.g. Mozilla Firefox",
   },
-  { key: "uri", label: "Repository URL", type: "url" },
-  { key: "fingerprint", label: "Fingerprint" },
-  { key: "suite", label: "Suite" },
-  { key: "component", label: "Component" },
+  {
+    key: "packageName",
+    label: "Package name",
+    placeholder: "e.g. firefox-esr",
+  },
+  {
+    key: "uri",
+    label: "Repository URL",
+    type: "url",
+    wide: true,
+    placeholder: "https://packages.example.com/debian",
+  },
+  { key: "suite", label: "Suite", placeholder: "e.g. stable" },
+  { key: "component", label: "Component", placeholder: "main" },
+  {
+    key: "key_uri",
+    label: "Key URI",
+    type: "url",
+    placeholder: "https://packages.example.com/repository-key.gpg",
+  },
+  {
+    key: "fingerprint",
+    label: "Fingerprint",
+    placeholder: "ABCD 1234 EF56 7890",
+  },
 ];
 
-const labelClassName =
-  "block text-xs font-semibold uppercase tracking-wide text-slate-500";
 const inputClassName =
   "mt-2 h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/15";
 
@@ -195,6 +223,7 @@ export default function ManageRepository() {
     Partial<Record<RepositoryFormField, string>>
   >({});
   const [form, setForm] = useState(emptyForm);
+  const [copyStatus, setCopyStatus] = useState("");
 
   useEffect(() => {
     const controller = new AbortController();
@@ -251,14 +280,12 @@ export default function ManageRepository() {
 
     try {
       const result = await updateRepository(repositoryId, {
-        name: form.name.trim(),
-        packageName: form.packageNames
-          .split(",")
-          .map((packageName) => packageName.trim())
-          .filter(Boolean),
+        displayName: form.name.trim(),
+        packageName: form.packageName.trim(),
         uri: form.uri.trim(),
         suite: form.suite.trim(),
         component: form.component.trim(),
+        key_uri: form.key_uri.trim(),
         fingerprint: form.fingerprint.trim(),
       });
       setRepository(result.data);
@@ -319,6 +346,18 @@ export default function ManageRepository() {
     setSaveError("");
   };
 
+  const copyKeyContent = async () => {
+    if (!repository?.keyContent) return;
+
+    try {
+      await navigator.clipboard.writeText(repository.keyContent);
+      setCopyStatus("Copied");
+    } catch {
+      setCopyStatus("Copy failed");
+    }
+    window.setTimeout(() => setCopyStatus(""), 2000);
+  };
+
   const readValue = (key: RepositoryFormField) =>
     repository ? toRepositoryForm(repository)[key] : "";
 
@@ -343,13 +382,6 @@ export default function ManageRepository() {
       searchPlaceholder="Search repositories..."
     >
       <section className="w-full">
-        <BackButton
-          fallbackTo="/repositories"
-          className="mb-4 inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-emerald-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
-        >
-          Back to repositories
-        </BackButton>
-
         <Heading
           icon={
             <span
@@ -370,7 +402,7 @@ export default function ManageRepository() {
               )}
             </span>
           }
-          name={repository?.name ?? "Manage repository"}
+          name={repository?.displayName ?? "Manage repository"}
           info="Manage repository"
           action={
             repository?.applicationId ? (
@@ -483,19 +515,24 @@ export default function ManageRepository() {
               <div className="grid gap-8 py-6 lg:grid-cols-[3fr_2fr] lg:items-start">
                 <div className="border border-slate-200 bg-white p-5 sm:p-6">
                   <h3 className="text-lg font-semibold text-slate-950">
-                    Edit repository
+                    Add repository
                   </h3>
                   <div className="mt-5 grid gap-x-6 gap-y-5 sm:grid-cols-2">
-                    {fields.map(({ key, label, type, wide, hint }) => {
+                    {fields.map(
+                      ({ key, label, type, wide, hint, placeholder }) => {
                       const errorId = `${key}-error`;
                       const cell = wide ? "sm:col-span-2" : "";
 
                       return (
-                        <label key={key} className={`min-w-0 ${cell}`}>
-                          <span className={labelClassName}>{label}</span>
+                        <label
+                          key={key}
+                          className={`text-sm font-medium text-slate-800 ${cell}`}
+                        >
+                          {label}
                           <input
                             required
                             type={type}
+                            placeholder={placeholder}
                             value={form[key]}
                             onChange={(event) =>
                               updateField(key, event.target.value)
@@ -521,7 +558,8 @@ export default function ManageRepository() {
                           )}
                         </label>
                       );
-                    })}
+                    },
+                    )}
                   </div>
                 </div>
 
@@ -537,11 +575,12 @@ export default function ManageRepository() {
                         handleRepositoryDetailsChange(event.target.value)
                       }
                       rows={10}
-                      placeholder={`name: Brave Browser
+                      placeholder={`application_name: Brave Browser
 package_name: brave-browser
 URIs: https://brave-browser-apt-release.s3.brave.com
 Suites: stable
 Components: main
+Key-URI: https://packages.example.com/repository-key.gpg
 Fingerprint: ABCD 1234 EF56 7890`}
                       className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-3 font-mono text-sm text-slate-900 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/15"
                     />
@@ -561,17 +600,35 @@ Fingerprint: ABCD 1234 EF56 7890`}
                       key={key}
                       className={`min-w-0 ${cell} border border-slate-200 bg-slate-50 p-2`}
                     >
-                      <dt className={labelClassName}>{label}</dt>
+                      <dt className="block text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        {label}
+                      </dt>
                       <dd className="mt-2 flex min-h-11 items-start wrap-break-word text-sm font-medium text-slate-900">
                         {readValue(key) || "-"}
                       </dd>
                     </div>
                   );
                 })}
-                <div className="min-w-0 border border-slate-200 bg-slate-50 p-2 sm:col-span-2">
-                  <dt className={labelClassName}>Public key</dt>
-                  <dd className="mt-2 min-h-11 whitespace-pre-wrap wrap-break-word text-sm font-medium text-slate-900">
-                    {repository?.publicKey || "-"}
+                <div className="min-w-0 border border-slate-200 bg-slate-50 p-2">
+                  <dt className="block text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Key content
+                  </dt>
+                  <dd className="mt-2 flex min-h-11 items-center justify-between gap-3 text-sm font-medium text-slate-900">
+                    <code className="min-w-0 truncate">
+                      {repository?.keyContent
+                        ? `${repository.keyContent.slice(0, 48)}...`
+                        : "-"}
+                    </code>
+                    {repository?.keyContent && (
+                      <button
+                        type="button"
+                        onClick={() => void copyKeyContent()}
+                        className="inline-flex shrink-0 items-center gap-1 rounded-md border border-slate-300 bg-white px-2 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+                      >
+                        <Copy className="h-3.5 w-3.5" aria-hidden="true" />
+                        {copyStatus || "Copy"}
+                      </button>
+                    )}
                   </dd>
                 </div>
               </div>
@@ -581,7 +638,9 @@ Fingerprint: ABCD 1234 EF56 7890`}
               <dl className="grid gap-x-6 gap-y-4 border-t border-slate-100 py-5 sm:grid-cols-2">
                 {meta.map(({ label, value, exactValue }) => (
                   <div key={label} className="min-w-0">
-                    <dt className={labelClassName}>{label}</dt>
+                    <dt className="block text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      {label}
+                    </dt>
                     <dd
                       className="mt-1 text-sm text-slate-600"
                       title={exactValue}

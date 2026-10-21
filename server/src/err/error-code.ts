@@ -1,14 +1,4 @@
-const ERROR_CODES = {
-  REPOSITORY_NOT_FOUND: {
-    statusCode: 404,
-    message: "Repository not found",
-    code: "REPOSITORY_NOT_FOUND",
-  },
-  PACKAGE_NOT_FOUND: {
-    statusCode: 404,
-    message: "At least one package name is required",
-    code: "PACKAGE_NAME_REQUIRED",
-  },
+const GLOBAL_ERROR = {
   FILE_TYPE_MISMATCH: {
     statusCode: 400,
     message: "Invalid file type. Only JPEG, JPG and PNG are allowed.",
@@ -56,4 +46,4 @@ const ERROR_CODES = {
   },
 };
 
-export default ERROR_CODES;
+export default GLOBAL_ERROR;

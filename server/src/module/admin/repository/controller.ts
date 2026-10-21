@@ -10,11 +10,12 @@ export async function getRepositories(req: Request, res: Response) {
   });
 }
 
-export async function getRepositoryById(req: Request, res: Response) {
-  const repositoryId = Array.isArray(req.params.repositoryId)
-    ? req.params.repositoryId[0]
-    : req.params.repositoryId;
-  const data = await service.getRepositoryById(repositoryId);
+export async function getRepositoryById(
+  req: Request<{ repositoryId: string }>,
+  res: Response,
+) {
+  const data = await service.getRepositoryById(req.params.repositoryId);
+
   res.status(200).json({
     success: true,
     message: "Repository fetched successfully",

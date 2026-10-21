@@ -1,11 +1,12 @@
 import axiosClient from "../lib/axios-client";
 
 export interface CreateRepositoryRequest {
-  name: string;
-  package_name: string;
+  displayName: string;
+  packageName: string;
   uri: string;
   suite: string;
   component: string;
+  key_uri: string;
   fingerprint: string;
 }
 
@@ -26,22 +27,25 @@ export interface Repository {
 
 export interface RepositoryDetail extends Repository {
   applicationId: string | null;
-  packageName: string[];
+  displayName: string;
+  packageName: string;
   uri: string;
   suite: string;
   component: string;
-  publicKey: string | null;
+  keyContent: string | null;
+  keyUri: string;
   fingerprint: string;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface UpdateRepositoryRequest {
-  name: string;
-  packageName: string[];
+  displayName: string;
+  packageName: string;
   uri: string;
   suite: string;
   component: string;
+  key_uri: string;
   fingerprint: string;
 }
 
@@ -96,14 +100,9 @@ export async function updateRepository(
 export async function createRepository(
   repository: CreateRepositoryRequest,
 ): Promise<CreateRepositoryResponse> {
-  const { name, package_name, ...repositoryData } = repository;
   const response = await axiosClient.post<CreateRepositoryResponse>(
     "/admin/repositories",
-    {
-      ...repositoryData,
-      name,
-      packageName: [package_name],
-    },
+    repository,
   );
 
   return response.data;

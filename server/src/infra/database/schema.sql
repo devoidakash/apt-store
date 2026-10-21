@@ -75,7 +75,6 @@ CREATE TABLE repositories (
     id             UUID          PRIMARY KEY DEFAULT gen_random_uuid(),
     application_id UUID          NOT NULL UNIQUE
                                  REFERENCES applications(id) ON DELETE CASCADE,
-    name           VARCHAR(100)  NOT NULL,
     package_name   VARCHAR(100)  NOT NULL,
     uri            VARCHAR(512) NOT NULL,
     suite          VARCHAR(100)  NOT NULL,
