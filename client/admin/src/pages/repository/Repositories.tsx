@@ -128,14 +128,6 @@ export default function Repositories() {
                 Try again
               </button>
             </li>
-          ) : repositories.length === 0 ? (
-            <li className="flex min-h-24 items-center gap-3 text-sm text-slate-600">
-              <LayoutGrid
-                className="h-6 w-6 shrink-0 text-slate-400"
-                aria-hidden="true"
-              />
-              No repositories yet
-            </li>
           ) : (
             repositories.map((repository) => (
               <li key={repository.id}>
