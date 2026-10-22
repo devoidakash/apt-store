@@ -24,6 +24,11 @@ const REPOSITORY_ERRORS = {
     message: "Package not found",
     code: "PACKAGE_NOT_FOUND",
   },
+  REPOSITORY_ALREADY_EXISTS: {
+    statusCode: 409,
+    message: "A repository with this details already exists.",
+    code: "REPOSITORY_ALREADY_EXISTS",
+  },
 };
 
 export default REPOSITORY_ERRORS;
