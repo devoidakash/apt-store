@@ -82,6 +82,8 @@ export default function ApplicationDetail() {
     return () => controller.abort();
   }, [applicationId, packageName, version]);
 
+  const images = application?.images ?? [];
+
   return (
     <main className="store-shell">
       <header className="store-header">
@@ -191,13 +193,13 @@ export default function ApplicationDetail() {
               <section>
                 <div className="detail-section-heading">
                   <p className="section-kicker">Images</p>
-                  <span>{application.images.length} images</span>
+                  <span>{images.length} images</span>
                 </div>
-                {application.images.length > 0 ? (
+                {images.length > 0 ? (
                   <div className="detail-gallery">
                     <div className="detail-image-frame">
                       <img
-                        src={application.images[selectedImageIndex]}
+                        src={images[selectedImageIndex]}
                         alt={`${application.displayName || "Application"} image ${selectedImageIndex + 1}`}
                       />
                     </div>
@@ -207,28 +209,28 @@ export default function ApplicationDetail() {
                         onClick={() =>
                           setSelectedImageIndex((currentIndex) =>
                             currentIndex === 0
-                              ? application.images.length - 1
+                              ? images.length - 1
                               : currentIndex - 1,
                           )
                         }
-                        disabled={application.images.length < 2}
+                        disabled={images.length < 2}
                         aria-label="Previous image"
                       >
                         &#8592; Previous
                       </button>
                       <span>
-                        {selectedImageIndex + 1} / {application.images.length}
+                        {selectedImageIndex + 1} / {images.length}
                       </span>
                       <button
                         type="button"
                         onClick={() =>
                           setSelectedImageIndex((currentIndex) =>
-                            currentIndex === application.images.length - 1
+                            currentIndex === images.length - 1
                               ? 0
                               : currentIndex + 1,
                           )
                         }
-                        disabled={application.images.length < 2}
+                        disabled={images.length < 2}
                         aria-label="Next image"
                       >
                         Next &#8594;

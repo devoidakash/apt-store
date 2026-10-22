@@ -116,7 +116,7 @@ export default function ManageRepository() {
           Manage repositories
         </p>
         <h1 className="mt-2 text-2xl font-semibold text-slate-950">
-          Repository
+          Add Repository
         </h1>
         <p className="mt-1 text-sm text-slate-600">
           Connect an APT source and register a package from its index.

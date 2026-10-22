@@ -96,6 +96,16 @@ function parseRepositoryDetails(value: string): Partial<RepositoryForm> {
   return parsed;
 }
 
+function formatRepositoryDetails(form: RepositoryForm) {
+  return `application_name: ${form.name}
+package_name: ${form.packageName}
+URIs: ${form.uri}
+Suites: ${form.suite}
+Components: ${form.component}
+Key-URI: ${form.key_uri}
+Fingerprint: ${form.fingerprint}`;
+}
+
 function toRepositoryForm(data: RepositoryDetail): RepositoryForm {
   return {
     name: data.displayName,
@@ -155,8 +165,8 @@ const sidebarLinks = [
         icon: FileText,
       },
       {
-        to: "/applications?applicationStatus=live",
-        label: "Live",
+        to: "/applications?applicationStatus=published",
+        label: "Published",
         icon: BadgeCheck,
       },
     ],
@@ -335,6 +345,12 @@ export default function ManageRepository() {
   useEffect(() => {
     setIsEditing(isEditRoute);
   }, [isEditRoute]);
+
+  useEffect(() => {
+    if (isEditing) {
+      setRepositoryDetails(formatRepositoryDetails(form));
+    }
+  }, [form, isEditing]);
 
   const handleRepositoryDetailsChange = (value: string) => {
     setRepositoryDetails(value);
@@ -520,45 +536,45 @@ export default function ManageRepository() {
                   <div className="mt-5 grid gap-x-6 gap-y-5 sm:grid-cols-2">
                     {fields.map(
                       ({ key, label, type, wide, hint, placeholder }) => {
-                      const errorId = `${key}-error`;
-                      const cell = wide ? "sm:col-span-2" : "";
+                        const errorId = `${key}-error`;
+                        const cell = wide ? "sm:col-span-2" : "";
 
-                      return (
-                        <label
-                          key={key}
-                          className={`text-sm font-medium text-slate-800 ${cell}`}
-                        >
-                          {label}
-                          <input
-                            required
-                            type={type}
-                            placeholder={placeholder}
-                            value={form[key]}
-                            onChange={(event) =>
-                              updateField(key, event.target.value)
-                            }
-                            className={`${inputClassName} ${fieldErrors[key] ? "border-rose-500 focus:border-rose-600 focus:ring-rose-600/15" : ""}`}
-                            aria-invalid={Boolean(fieldErrors[key])}
-                            aria-describedby={
-                              fieldErrors[key] ? errorId : undefined
-                            }
-                          />
-                          {fieldErrors[key] && (
-                            <span
-                              id={errorId}
-                              className="mt-1 block text-xs text-rose-700"
-                            >
-                              {fieldErrors[key]}
-                            </span>
-                          )}
-                          {hint && !fieldErrors[key] && (
-                            <span className="mt-1 block text-xs font-normal normal-case text-slate-500">
-                              {hint}
-                            </span>
-                          )}
-                        </label>
-                      );
-                    },
+                        return (
+                          <label
+                            key={key}
+                            className={`text-sm font-medium text-slate-800 ${cell}`}
+                          >
+                            {label}
+                            <input
+                              required
+                              type={type}
+                              placeholder={placeholder}
+                              value={form[key]}
+                              onChange={(event) =>
+                                updateField(key, event.target.value)
+                              }
+                              className={`${inputClassName} ${fieldErrors[key] ? "border-rose-500 focus:border-rose-600 focus:ring-rose-600/15" : ""}`}
+                              aria-invalid={Boolean(fieldErrors[key])}
+                              aria-describedby={
+                                fieldErrors[key] ? errorId : undefined
+                              }
+                            />
+                            {fieldErrors[key] && (
+                              <span
+                                id={errorId}
+                                className="mt-1 block text-xs text-rose-700"
+                              >
+                                {fieldErrors[key]}
+                              </span>
+                            )}
+                            {hint && !fieldErrors[key] && (
+                              <span className="mt-1 block text-xs font-normal normal-case text-slate-500">
+                                {hint}
+                              </span>
+                            )}
+                          </label>
+                        );
+                      },
                     )}
                   </div>
                 </div>

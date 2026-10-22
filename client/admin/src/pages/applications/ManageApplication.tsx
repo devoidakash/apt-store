@@ -129,6 +129,7 @@ export default function ManageApplication() {
     category: "",
     homepage: "",
   });
+  const images = application?.images ?? [];
 
   useEffect(() => {
     return () => {
@@ -179,11 +180,13 @@ export default function ManageApplication() {
             application === null ? undefined : application.status === "draft",
         },
         {
-          to: "/applications?applicationStatus=live",
-          label: "Live",
+          to: "/applications?applicationStatus=published",
+          label: "Published",
           icon: BadgeCheck,
           active:
-            application === null ? undefined : application.status === "live",
+            application === null
+              ? undefined
+              : application.status === "published",
         },
       ],
     },
@@ -927,12 +930,12 @@ export default function ManageApplication() {
                         Images
                       </h3>
                       <span className="text-xs text-slate-500">
-                        {application.images.length} images
+                        {images.length} images
                       </span>
                     </div>
-                    {application.images.length > 0 ? (
+                    {images.length > 0 ? (
                       <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
-                        {application.images.map((image, index) => (
+                        {images.map((image, index) => (
                           <img
                             key={image}
                             src={image}
@@ -1003,13 +1006,13 @@ export default function ManageApplication() {
                     Images
                   </h3>
                   <span className="text-xs font-medium text-slate-600">
-                    {application.images.length}/5 uploaded
+                    {images.length}/5 uploaded
                   </span>
                 </div>
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                   {(imagePreviewUrls.length > 0
                     ? imagePreviewUrls
-                    : application.images
+                    : images
                   ).map((image, index) => (
                     <div key={`${image}-${index}`} className="relative">
                       <img
@@ -1146,7 +1149,7 @@ export default function ManageApplication() {
                     className="mt-2 h-11 w-full border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/15"
                   >
                     <option value="draft">Draft</option>
-                    <option value="live">Live</option>
+                    <option value="published">Published</option>
                   </select>
                 </label>
               </div>

@@ -1,6 +1,6 @@
 import axiosClient from "../lib/axios-client";
 
-export type ApplicationStatus = "draft" | "live";
+export type ApplicationStatus = "draft" | "published";
 
 export interface ApplicationSummary {
   id: string;
@@ -18,7 +18,7 @@ export interface ApplicationDetail extends ApplicationSummary {
   repositoryId: string;
   description: string | null;
   iconUpdatedAt: string | null;
-  images: string[];
+  images: string[] | null;
   downloadSizeBytes: number | string;
   installedSizeBytes: number | string;
   homepage: string | null;
@@ -76,7 +76,10 @@ export async function getApplicationById(
     { signal },
   );
 
-  return response.data.data;
+  return {
+    ...response.data.data,
+    images: response.data.data.images ?? [],
+  };
 }
 
 export function getApplicationicon(icon: string) {
@@ -89,7 +92,13 @@ export async function updateApplication(
 ): Promise<ActionResponse> {
   const response = await axiosClient.patch<ActionResponse>(
     `/admin/applications/${applicationId}`,
-    data,
+    {
+      displayName: data.displayName ?? "",
+      caption: data.caption ?? "",
+      description: data.description ?? "",
+      category: data.category ?? "",
+      homepageUri: data.homepage ?? "",
+    },
   );
 
   return response.data;

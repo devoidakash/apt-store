@@ -21,8 +21,8 @@ const sidebarLinks = [
         icon: FileText,
       },
       {
-        to: "/applications?applicationStatus=live",
-        label: "Live",
+        to: "/applications?applicationStatus=published",
+        label: "Published",
         icon: BadgeCheck,
       },
     ],

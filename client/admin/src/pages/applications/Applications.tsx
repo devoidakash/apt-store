@@ -37,8 +37,8 @@ const sidebarLinks = [
         icon: FileText,
       },
       {
-        to: "/applications?applicationStatus=live",
-        label: "Live",
+        to: "/applications?applicationStatus=published",
+        label: "Published",
         icon: BadgeCheck,
       },
     ],
@@ -48,13 +48,14 @@ const sidebarLinks = [
 export default function Applications() {
   const [searchParams, setSearchParams] = useSearchParams();
   const rawStatus = searchParams.get("applicationStatus");
-  const status: ApplicationStatus = rawStatus === "live" ? "live" : "draft";
+  const status: ApplicationStatus =
+    rawStatus === "published" ? "published" : "draft";
   const [applications, setApplications] = useState<ApplicationSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (rawStatus !== "draft" && rawStatus !== "live") {
+    if (rawStatus !== "draft" && rawStatus !== "published") {
       setSearchParams({ applicationStatus: "draft" }, { replace: true });
     }
   }, [rawStatus, setSearchParams]);
@@ -86,9 +87,9 @@ export default function Applications() {
     return () => controller.abort();
   }, [status]);
 
-  const StatusIcon = status === "live" ? BadgeCheck : FileText;
+  const StatusIcon = status === "published" ? BadgeCheck : FileText;
   const statusPillClassName =
-    status === "live"
+    status === "published"
       ? "border-emerald-200 bg-emerald-50 text-emerald-700"
       : "border-amber-200 bg-amber-50 text-amber-700";
 

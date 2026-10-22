@@ -12,7 +12,7 @@ export interface ApplicationDetail extends ApplicationSummary {
   downloadSizeBytes: number | string;
   installedSizeBytes: number | string;
   description: string | null;
-  images: string[];
+  images: string[] | null;
   homepage: string | null;
   category: string | null;
 }
@@ -56,5 +56,8 @@ export async function getApplicationById(
   }
 
   const result = (await response.json()) as ApplicationDetailResponse;
-  return result.data;
+  return {
+    ...result.data,
+    images: result.data.images ?? [],
+  };
 }
