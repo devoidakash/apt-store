@@ -16,6 +16,7 @@ interface ApplicationCardData {
 }
 
 export interface ApplicationDetails {
+  repositoryId: string;
   id: string;
   displayName: string;
   sourceType: string;
@@ -61,24 +62,26 @@ export async function fetchApplicationById(
   const result = await pool.query<ApplicationDetails>(
     `
     SELECT
-      id,
-      display_name AS "displayName",
-      source_type AS "sourceType",
-      version,
-      maintainer,
-      caption,
-      description,
-      icon_updated_at AS "iconUpdatedAt",
-      images,
-      category,
-      homepage_uri AS "homepageUri",
-      download_size_in_bytes AS "downloadSizeInBytes",
-      installed_size_in_bytes AS "installedSizeInBytes",
-      status,
-      created_at AS "createdAt",
-      updated_at AS "updatedAt"
-    FROM applications
-    WHERE id = $1
+      r.id AS "repositoryId",
+      a.id,
+      a.display_name AS "displayName",
+      a.source_type AS "sourceType",
+      a.version,
+      a.maintainer,
+      a.caption,
+      a.description,
+      a.icon_updated_at AS "iconUpdatedAt",
+      a.images,
+      a.category,
+      a.homepage_uri AS "homepageUri",
+      a.download_size_in_bytes AS "downloadSizeInBytes",
+      a.installed_size_in_bytes AS "installedSizeInBytes",
+      a.status,
+      a.created_at AS "createdAt",
+      a.updated_at AS "updatedAt"
+    FROM applications a
+    JOIN repositories r ON a.id = r.application_id
+    WHERE a.id = $1
   `,
     [applicationId],
   );

@@ -72,7 +72,7 @@ export async function updateRepository(
       displayName: data.displayName,
       ...application,
     });
-    return await repository.updateRepository(client, {
+    return repository.updateRepository(client, {
       repositoryId,
       data,
       keyContent,
