@@ -6,6 +6,12 @@ import {
   type ApplicationDetail as ApplicationDetailData,
 } from "../api/application";
 
+type PackageStatus =
+  | "not_installed"
+  | "update_available"
+  | "up_to_date"
+  | "status_unavailable";
+
 function formatBytes(value: number | string) {
   const bytes = Number(value);
   return Number.isFinite(bytes)
@@ -21,7 +27,9 @@ export default function ApplicationDetail() {
   const [application, setApplication] = useState<ApplicationDetailData | null>(
     null,
   );
-  const [packageStatus, setPackageStatus] = useState<string | null>(null);
+  const [packageStatus, setPackageStatus] = useState<PackageStatus | null>(
+    null,
+  );
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -51,14 +59,27 @@ export default function ApplicationDetail() {
             version,
           })
             .then((status) => {
-              if (!controller.signal.aborted) setPackageStatus(status);
+              const normalizedStatus = status.trim().toLowerCase();
+              const validStatuses: PackageStatus[] = [
+                "not_installed",
+                "update_available",
+                "up_to_date",
+              ];
+              if (!controller.signal.aborted) {
+                setPackageStatus(
+                  validStatuses.includes(normalizedStatus as PackageStatus)
+                    ? (normalizedStatus as PackageStatus)
+                    : "status_unavailable",
+                );
+              }
             })
-            .catch(() => {
+            .catch((statusError) => {
+              console.error("Could not check package status.", statusError);
               if (!controller.signal.aborted)
-                setPackageStatus("status unavailable");
+                setPackageStatus("not_installed");
             })
         : Promise.resolve().then(() => {
-            if (!controller.signal.aborted) setPackageStatus("not installed");
+            if (!controller.signal.aborted) setPackageStatus("not_installed");
           }));
 
       try {

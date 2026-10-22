@@ -17,6 +17,7 @@ build/
 .cache/
 .vite/
 *.tsbuildinfo
+.vscode
 
 # Logs
 logs/
