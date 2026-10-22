@@ -67,6 +67,13 @@ const repositoryFields: {
 const inputClassName =
   "mt-2 h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/15";
 
+export function formatFingerprint(value: string) {
+  return value
+    .replace(/\s+/g, "")
+    .replace(/(.{4})/g, "$1 ")
+    .trim();
+}
+
 export default function CreateRepo({
   form,
   fieldErrors,
@@ -80,7 +87,9 @@ export default function CreateRepo({
   return (
     <>
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 py-4">
-        <h3 className="text-lg font-semibold text-slate-950">Add repository</h3>
+        <h2 className="text-base font-semibold text-slate-900">
+          Add repository
+        </h2>
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
@@ -107,9 +116,9 @@ export default function CreateRepo({
       </div>
       <div className="grid gap-8 py-6 lg:grid-cols-[3fr_2fr] lg:items-start">
         <div className="border border-slate-200 bg-white p-5 sm:p-6">
-          <h3 className="text-lg font-semibold text-slate-950">
+          <h2 className="text-base font-semibold text-slate-900">
             Repository details
-          </h3>
+          </h2>
           <div className="mt-5 grid gap-x-6 gap-y-5 sm:grid-cols-2">
             {repositoryFields.map(
               ({ key, label, type, wide, hint, placeholder }) => {
@@ -126,15 +135,17 @@ export default function CreateRepo({
                       required
                       type={type}
                       placeholder={placeholder}
-                      value={form[key]}
+                      value={
+                        key === "fingerprint"
+                          ? formatFingerprint(form[key])
+                          : form[key]
+                      }
                       onChange={(event) =>
                         onFieldChange(key, event.target.value)
                       }
                       className={`${inputClassName} ${fieldErrors[key] ? "border-rose-500 focus:border-rose-600 focus:ring-rose-600/15" : ""}`}
                       aria-invalid={Boolean(fieldErrors[key])}
-                      aria-describedby={
-                        fieldErrors[key] ? errorId : undefined
-                      }
+                      aria-describedby={fieldErrors[key] ? errorId : undefined}
                     />
                     {fieldErrors[key] && (
                       <span
@@ -160,9 +171,9 @@ export default function CreateRepo({
         </div>
 
         <div className="border border-slate-200 bg-white p-5 sm:p-6">
-          <h3 className="text-lg font-semibold text-slate-950">
+          <h2 className="text-base font-semibold text-slate-900">
             Paste repository details
-          </h3>
+          </h2>
           <label className="mt-5 block text-sm font-medium text-slate-800">
             APT metadata
             <textarea

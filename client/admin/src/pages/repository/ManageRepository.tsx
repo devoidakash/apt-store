@@ -14,6 +14,7 @@ import { Link, useLocation, useNavigate, useParams } from "react-router";
 import Heading from "../../components/cards/Heading";
 import Layout from "../../components/dashboard/Layout";
 import CreateRepo, {
+  formatFingerprint,
   type RepositoryForm,
   type RepositoryFormField,
 } from "../../components/repository/CreateRepo";
@@ -107,7 +108,7 @@ URIs: ${form.uri}
 Suites: ${form.suite}
 Components: ${form.component}
 Key-URI: ${form.key_uri}
-Fingerprint: ${form.fingerprint}`;
+Fingerprint: ${formatFingerprint(form.fingerprint)}`;
 }
 
 function toRepositoryForm(data: RepositoryDetail): RepositoryForm {
@@ -472,6 +473,7 @@ export default function ManageRepository() {
               <div className="grid gap-x-6 gap-y-5 py-6 sm:grid-cols-2">
                 {viewFields.map(({ key, label, wide }) => {
                   const cell = wide ? "sm:col-span-2" : "";
+                  const value = readValue(key);
                   return (
                     <div
                       key={key}
@@ -481,7 +483,9 @@ export default function ManageRepository() {
                         {label}
                       </dt>
                       <dd className="mt-2 flex min-h-11 items-start wrap-break-word text-sm font-medium text-slate-900">
-                        {readValue(key) || "-"}
+                        {key === "fingerprint"
+                          ? formatFingerprint(value) || "-"
+                          : value || "-"}
                       </dd>
                     </div>
                   );
