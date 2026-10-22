@@ -164,7 +164,7 @@ export default function Applications() {
                         {application.displayName || application.packageName}
                       </h2>
                       {application.maintainer && (
-                        <p className="mt-1 flex items-center gap-1 wrap-break-word text-sm text-slate-600">
+                        <p className="mt-0.5 flex items-center gap-1 wrap-break-word text-xs text-slate-600">
                           {application.maintainer}
                           <ShieldCheck
                             className="h-4 w-4 shrink-0 text-emerald-600"

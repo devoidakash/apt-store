@@ -20,7 +20,7 @@ export interface CreateRepositoryResponse {
 
 export interface Repository {
   id: string;
-  name: string;
+  displayName: string;
   icon: string | null;
   maintainer: string | null;
 }

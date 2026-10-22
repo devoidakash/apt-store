@@ -134,7 +134,7 @@ export default function Repositories() {
                 <Link
                   to={`/repositories/${repository.id}`}
                   className="block focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
-                  aria-label={`Manage ${repository.name}`}
+                  aria-label={`Manage ${repository.displayName}`}
                 >
                   <article className="flex min-h-24 items-center gap-4 border border-slate-200 bg-white p-5 shadow-sm transition hover:border-emerald-600">
                     <div
@@ -153,10 +153,10 @@ export default function Repositories() {
                     </div>
                     <div className="min-w-0">
                       <h2 className="wrap-break-word text-base font-semibold text-slate-900">
-                        {repository.name}
+                        {repository.displayName}
                       </h2>
                       {repository.maintainer && (
-                        <p className="mt-1 flex items-center gap-1 wrap-break-word text-sm text-slate-600">
+                        <p className="mt-0.5 flex items-center gap-1 wrap-break-word text-xs text-slate-600">
                           {repository.maintainer}
                           <ShieldCheck
                             className="h-4 w-4 shrink-0 text-emerald-600"
