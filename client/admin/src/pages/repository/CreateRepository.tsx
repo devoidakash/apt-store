@@ -4,10 +4,11 @@ import { Database } from "lucide-react";
 import { useNavigate } from "react-router";
 import { createRepository } from "../../api/repository";
 import Heading from "../../components/cards/Heading";
-import CreateRepo, {
-  type RepositoryForm,
-  type RepositoryFormField,
-} from "../../components/repository/CreateRepo";
+import CreateRepo from "../../components/repository/CreateRepo";
+import type {
+  RepositoryForm,
+  RepositoryFormField,
+} from "../../components/repository/repository-form";
 
 const initialForm: RepositoryForm = {
   name: "",

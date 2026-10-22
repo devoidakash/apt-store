@@ -359,6 +359,15 @@ export default function ManageApplication() {
     }
   };
 
+  const removeSelectedIcon = () => {
+    if (iconPreviewUrl) URL.revokeObjectURL(iconPreviewUrl);
+    setIconFile(null);
+    setIconPreviewUrl("");
+    if (iconFileInputRef.current) iconFileInputRef.current.value = "";
+    setIconUploadError("");
+    setIconUploadSuccess("");
+  };
+
   const handleImagesUpload = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!application) return;
@@ -591,7 +600,7 @@ export default function ManageApplication() {
                     </div>
                   </div>
                 </div>
-                <div className="flex h-56 items-center justify-center border border-slate-200 bg-white">
+                <div className="relative flex h-56 items-center justify-center border border-slate-200 bg-white">
                   {application?.icon ? (
                     <img
                       src={iconPreviewUrl || getApplicationicon(application.icon)}
@@ -610,6 +619,18 @@ export default function ManageApplication() {
                       aria-hidden="true"
                     />
                   )}
+                  {iconFile && (
+                    <button
+                      type="button"
+                      onClick={removeSelectedIcon}
+                      disabled={isUploadingIcon}
+                      aria-label="Remove selected icon"
+                      title="Remove selected icon"
+                      className="absolute right-2 top-2 inline-flex h-8 w-8 items-center justify-center rounded-full border border-rose-200 bg-white text-rose-700 shadow-sm transition hover:bg-rose-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <X className="h-4 w-4" aria-hidden="true" />
+                    </button>
+                  )}
                 </div>
                 <input
                   id="application-icon-input"
@@ -618,6 +639,7 @@ export default function ManageApplication() {
                   accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
                   onChange={(event) => {
                     const selectedFile = event.target.files?.[0] ?? null;
+                    if (iconPreviewUrl) URL.revokeObjectURL(iconPreviewUrl);
                     setIconFile(selectedFile);
                     setIconPreviewUrl(
                       selectedFile ? URL.createObjectURL(selectedFile) : "",

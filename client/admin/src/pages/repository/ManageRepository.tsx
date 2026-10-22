@@ -13,11 +13,12 @@ import {
 import { Link, useLocation, useNavigate, useParams } from "react-router";
 import Heading from "../../components/cards/Heading";
 import Layout from "../../components/dashboard/Layout";
-import CreateRepo, {
+import CreateRepo from "../../components/repository/CreateRepo";
+import {
   formatFingerprint,
   type RepositoryForm,
   type RepositoryFormField,
-} from "../../components/repository/CreateRepo";
+} from "../../components/repository/repository-form";
 import {
   getRepositoryById,
   type RepositoryDetail,

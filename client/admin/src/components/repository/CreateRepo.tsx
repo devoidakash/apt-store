@@ -1,16 +1,9 @@
 import { Check, LoaderCircle, X } from "lucide-react";
-
-export interface RepositoryForm {
-  name: string;
-  packageName: string;
-  uri: string;
-  suite: string;
-  component: string;
-  key_uri: string;
-  fingerprint: string;
-}
-
-export type RepositoryFormField = keyof RepositoryForm;
+import { formatFingerprint } from "./repository-form";
+import type {
+  RepositoryForm,
+  RepositoryFormField,
+} from "./repository-form";
 
 interface CreateRepoProps {
   form: RepositoryForm;
@@ -66,13 +59,6 @@ const repositoryFields: {
 
 const inputClassName =
   "mt-2 h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/15";
-
-export function formatFingerprint(value: string) {
-  return value
-    .replace(/\s+/g, "")
-    .replace(/(.{4})/g, "$1 ")
-    .trim();
-}
 
 export default function CreateRepo({
   form,
