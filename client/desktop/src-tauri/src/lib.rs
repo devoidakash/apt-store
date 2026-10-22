@@ -10,33 +10,36 @@ use std::process::Command;
 
 #[tauri::command]
 fn check_package_status(package_name: &str, version: &str) -> String {
-    // Step 1: Ask Ubuntu for the installed version.
-    let output = Command::new("dpkg-query")
-        .args(["-W", "-f=${Version}", &package_name])
-        .output();
-
-    // Step 2: If the command fails, treat the package as not installed.
-    let output = match output {
+    // Query the installed package status and version
+    let output = match Command::new("dpkg-query")
+        .args(["-W", "-f=${Status}\t${Version}", package_name])
+        .output()
+    {
         Ok(output) if output.status.success() => output,
-        _ => return "not_installed".to_string(),
+        Ok(_) => return "not_installed".to_string(),
+        Err(_) => return "check_failed".to_string(),
     };
 
-    // Step 3: Convert the command's output into a Rust string.
-    let installed_version = String::from_utf8_lossy(&output.stdout).trim().to_string();
-
+    // Parse dpkg-query output
+    let output_text = String::from_utf8_lossy(&output.stdout).trim().to_string();
+    let (status, installed_version) = match output_text.split_once('\t') {
+        Some((status, installed_version)) => (status, installed_version),
+        None => return "not_installed".to_string(),
+    };
+    if status != "install ok installed" {
+        return "not_installed".to_string();
+    }
     if installed_version.is_empty() {
         return "not_installed".to_string();
     }
 
-    // Step 4: Ask dpkg whether the installed version is older.
-    let comparison = Command::new("dpkg")
-        .args(["--compare-versions", &installed_version, "lt", &version])
-        .status();
-
-    // Step 5: Interpret the comparison result.
-    match comparison {
+    // Compare installed and requested versions
+    match Command::new("dpkg")
+        .args(["--compare-versions", installed_version, "lt", version])
+        .status()
+    {
         Ok(status) if status.success() => "update_available".to_string(),
-        Ok(_) => "up_to_date".to_string(),
-        Err(_) => "comparison_failed".to_string(),
+        Ok(status) if status.code() == Some(1) => "up_to_date".to_string(),
+        _ => "comparison_failed".to_string(),
     }
 }
