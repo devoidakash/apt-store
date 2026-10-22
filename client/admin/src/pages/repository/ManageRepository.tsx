@@ -4,34 +4,24 @@ import {
   ArrowRight,
   BadgeCheck,
   LayoutGrid,
-  Check,
   Database,
   FileText,
   Copy,
   LoaderCircle,
   Pencil,
-  X,
 } from "lucide-react";
 import { Link, useLocation, useNavigate, useParams } from "react-router";
 import Heading from "../../components/cards/Heading";
 import Layout from "../../components/dashboard/Layout";
+import CreateRepo, {
+  type RepositoryForm,
+  type RepositoryFormField,
+} from "../../components/repository/CreateRepo";
 import {
   getRepositoryById,
   type RepositoryDetail,
   updateRepository,
 } from "../../api/repository";
-
-interface RepositoryForm {
-  name: string;
-  packageName: string;
-  uri: string;
-  suite: string;
-  component: string;
-  key_uri: string;
-  fingerprint: string;
-}
-
-type RepositoryFormField = keyof RepositoryForm;
 
 interface ValidationError {
   field: string;
@@ -63,6 +53,20 @@ const emptyForm: RepositoryForm = {
   key_uri: "",
   fingerprint: "",
 };
+
+const viewFields: {
+  key: RepositoryFormField;
+  label: string;
+  wide?: boolean;
+}[] = [
+  { key: "name", label: "Application name" },
+  { key: "packageName", label: "Package name" },
+  { key: "uri", label: "Repository URL", wide: true },
+  { key: "suite", label: "Suite" },
+  { key: "component", label: "Component" },
+  { key: "key_uri", label: "Key URL", wide: true },
+  { key: "fingerprint", label: "Fingerprint" },
+];
 
 function parseRepositoryDetails(value: string): Partial<RepositoryForm> {
   const parsed: Partial<RepositoryForm> = {};
@@ -173,49 +177,6 @@ const sidebarLinks = [
   },
 ];
 
-const fields: {
-  key: RepositoryFormField;
-  label: string;
-  type?: string;
-  wide?: boolean;
-  hint?: string;
-  placeholder: string;
-}[] = [
-  {
-    key: "name",
-    label: "Application name",
-    placeholder: "e.g. Mozilla Firefox",
-  },
-  {
-    key: "packageName",
-    label: "Package name",
-    placeholder: "e.g. firefox-esr",
-  },
-  {
-    key: "uri",
-    label: "Repository URL",
-    type: "url",
-    wide: true,
-    placeholder: "https://packages.example.com/debian",
-  },
-  { key: "suite", label: "Suite", placeholder: "e.g. stable" },
-  { key: "component", label: "Component", placeholder: "main" },
-  {
-    key: "key_uri",
-    label: "Key URI",
-    type: "url",
-    placeholder: "https://packages.example.com/repository-key.gpg",
-  },
-  {
-    key: "fingerprint",
-    label: "Fingerprint",
-    placeholder: "ABCD 1234 EF56 7890",
-  },
-];
-
-const inputClassName =
-  "mt-2 h-11 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/15";
-
 export default function ManageRepository() {
   const { repositoryId } = useParams();
   const location = useLocation();
@@ -254,7 +215,10 @@ export default function ManageRepository() {
         }
         setRepository(result);
         setForm(toRepositoryForm(result));
-        if (isEditRoute) setRepositoryDetails(formatRepositoryDetails(toRepositoryForm(result)));
+        if (isEditRoute)
+          setRepositoryDetails(
+            formatRepositoryDetails(toRepositoryForm(result)),
+          );
       } catch (loadError) {
         if (controller.signal.aborted) return;
 
@@ -386,54 +350,44 @@ export default function ManageRepository() {
       searchPlaceholder="Search repositories..."
     >
       <section className="w-full">
-        {isEditRoute ? (
-          <header className="border border-slate-200 bg-white px-5 py-4 sm:px-6">
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-emerald-700">
-              Manage repositories
-            </p>
-            <h1 className="mt-2 text-2xl font-semibold text-slate-950">
-              Edit Repository
-            </h1>
-            <p className="mt-1 text-sm text-slate-600">
-              Update the source and package configuration.
-            </p>
-          </header>
-        ) : (
-          <Heading
-            icon={
-              <span
-                className="flex h-12 w-12 shrink-0 items-center justify-center border border-emerald-200 bg-emerald-50 text-emerald-800"
-                aria-label={repository?.icon ? "Repository icon" : "Repository"}
-              >
-                {repository?.icon ? (
-                  <img
-                    src={repository.icon}
-                    alt=""
-                    className="h-full w-full object-contain p-1"
-                  />
-                ) : (
-                  <Database
-                    className="h-6 w-6 text-emerald-700"
-                    aria-hidden="true"
-                  />
+        <Heading
+          icon={
+            <span
+              className="flex h-12 w-12 shrink-0 items-center justify-center border border-emerald-200 bg-emerald-50 text-emerald-800"
+              aria-label={repository?.icon ? "Repository icon" : "Repository"}
+            >
+              {repository?.icon ? (
+                <img
+                  src={repository.icon}
+                  alt=""
+                  className="h-full w-full object-contain p-1"
+                />
+              ) : (
+                <Database
+                  className="h-6 w-6 text-emerald-700"
+                  aria-hidden="true"
+                />
+              )}
+            </span>
+          }
+          name={repository?.displayName ?? "Manage repository"}
+          info={isEditRoute ? "Edit repository" : "Manage repository"}
+          action={
+            !isLoading && !error ? (
+              <div className="flex flex-wrap gap-2">
+                {repository?.applicationId && (
+                  <Link
+                    to={`/applications/${repository.applicationId}`}
+                    className="inline-flex h-10 items-center gap-2 border border-yellow-200 bg-yellow-50 px-3 text-sm font-medium text-yellow-700 hover:bg-yellow-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-yellow-700"
+                  >
+                    View application
+                    <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                  </Link>
                 )}
-              </span>
-            }
-            name={repository?.displayName ?? "Manage repository"}
-            info="Manage repository"
-            action={
-              repository?.applicationId ? (
-                <Link
-                  to={`/applications/${repository.applicationId}`}
-                  className="inline-flex h-10 items-center gap-2 border border-yellow-200 bg-yellow-50 px-3 text-sm font-medium text-yellow-700 hover:bg-yellow-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-yellow-700"
-                >
-                  View application
-                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
-                </Link>
-              ) : null
-            }
-          />
-        )}
+              </div>
+            ) : null
+          }
+        />
 
         {isLoading ? (
           <div className="mt-6 border border-slate-200 bg-white p-5 sm:p-6">
@@ -460,12 +414,9 @@ export default function ManageRepository() {
         ) : (
           /* One card, one grid: view and edit render in the same place. */
           <form
+            id="repository-form"
             onSubmit={handleSave}
-            className={
-              isEditRoute
-                ? "w-full py-7"
-                : "mt-6 border border-slate-200 bg-white px-5 sm:px-6"
-            }
+            className="mt-6 border border-slate-200 bg-white px-5 sm:px-6"
           >
             {!isEditRoute && (
               <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 py-4">
@@ -507,117 +458,19 @@ export default function ManageRepository() {
             </div>
 
             {isEditRoute ? (
-              <div className="grid gap-8 py-6 lg:grid-cols-[3fr_2fr] lg:items-start">
-                <div className="border border-slate-200 bg-white p-5 sm:p-6">
-                  <h3 className="text-lg font-semibold text-slate-950">
-                    Add repository
-                  </h3>
-                  <div className="mt-5 grid gap-x-6 gap-y-5 sm:grid-cols-2">
-                    {fields.map(
-                      ({ key, label, type, wide, hint, placeholder }) => {
-                        const errorId = `${key}-error`;
-                        const cell = wide ? "sm:col-span-2" : "";
-
-                        return (
-                          <label
-                            key={key}
-                            className={`text-sm font-medium text-slate-800 ${cell}`}
-                          >
-                            {label}
-                            <input
-                              required
-                              type={type}
-                              placeholder={placeholder}
-                              value={form[key]}
-                              onChange={(event) =>
-                                updateField(key, event.target.value)
-                              }
-                              className={`${inputClassName} ${fieldErrors[key] ? "border-rose-500 focus:border-rose-600 focus:ring-rose-600/15" : ""}`}
-                              aria-invalid={Boolean(fieldErrors[key])}
-                              aria-describedby={
-                                fieldErrors[key] ? errorId : undefined
-                              }
-                            />
-                            {fieldErrors[key] && (
-                              <span
-                                id={errorId}
-                                className="mt-1 block text-xs text-rose-700"
-                              >
-                                {fieldErrors[key]}
-                              </span>
-                            )}
-                            {hint && !fieldErrors[key] && (
-                              <span className="mt-1 block text-xs font-normal normal-case text-slate-500">
-                                {hint}
-                              </span>
-                            )}
-                          </label>
-                        );
-                      },
-                    )}
-                    <div
-                      aria-live="polite"
-                      className="min-h-6 text-sm sm:col-span-2"
-                    >
-                      {saveError && <p className="text-rose-700">{saveError}</p>}
-                    </div>
-                    <div className="flex flex-wrap gap-2 sm:col-span-2">
-                      <button
-                        type="button"
-                        disabled={isSaving}
-                        onClick={cancelEditing}
-                        className="inline-flex h-11 items-center gap-2 rounded-md border border-slate-300 bg-white px-4 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700 disabled:opacity-70"
-                      >
-                        <X className="h-4 w-4" aria-hidden="true" />
-                        Cancel
-                      </button>
-                      <button
-                        type="submit"
-                        disabled={isSaving}
-                        className="inline-flex h-11 items-center gap-2 rounded-md bg-emerald-700 px-4 text-sm font-semibold text-white transition hover:bg-emerald-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700 disabled:cursor-wait disabled:opacity-70"
-                      >
-                        {isSaving ? (
-                          <LoaderCircle className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Check className="h-4 w-4" aria-hidden="true" />
-                        )}
-                        {isSaving ? "Saving..." : "Save changes"}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="border border-slate-200 bg-white p-5 sm:p-6">
-                  <h3 className="text-lg font-semibold text-slate-950">
-                    Paste repository details
-                  </h3>
-                  <label className="mt-5 block text-sm font-medium text-slate-800">
-                    APT metadata
-                    <textarea
-                      value={repositoryDetails}
-                      onChange={(event) =>
-                        handleRepositoryDetailsChange(event.target.value)
-                      }
-                      rows={10}
-                      placeholder={`application_name: Brave Browser
-package_name: brave-browser
-URIs: https://brave-browser-apt-release.s3.brave.com
-Suites: stable
-Components: main
-Key-URI: https://packages.example.com/repository-key.gpg
-Fingerprint: ABCD 1234 EF56 7890`}
-                      className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-3 font-mono text-sm text-slate-900 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/15"
-                    />
-                    <span className="mt-1 block text-xs font-normal text-slate-500">
-                      Paste repository metadata to fill the fields
-                      automatically.
-                    </span>
-                  </label>
-                </div>
-              </div>
+              <CreateRepo
+                form={form}
+                fieldErrors={fieldErrors}
+                isSaving={isSaving}
+                saveError={saveError}
+                repositoryDetails={repositoryDetails}
+                onCancel={cancelEditing}
+                onFieldChange={updateField}
+                onRepositoryDetailsChange={handleRepositoryDetailsChange}
+              />
             ) : (
               <div className="grid gap-x-6 gap-y-5 py-6 sm:grid-cols-2">
-                {fields.map(({ key, label, wide }) => {
+                {viewFields.map(({ key, label, wide }) => {
                   const cell = wide ? "sm:col-span-2" : "";
                   return (
                     <div
