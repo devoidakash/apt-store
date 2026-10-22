@@ -16,7 +16,7 @@ CREATE TABLE if not exists admins (
     created_at    TIMESTAMPTZ  NOT NULL DEFAULT now()
 );
 
-CREATE TYPE application_source_type AS ENUM ('third_party_repo');
+CREATE TYPE application_source_type AS ENUM ('repository');
 CREATE TYPE application_status      AS ENUM ('draft', 'published');
 
 

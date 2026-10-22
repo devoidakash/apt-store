@@ -23,10 +23,17 @@ export async function getApplicationById(applicationId: ApplicationId) {
     throw new ApiError(GLOBAL_ERROR.APPLICATION_NOT_FOUND);
   }
 
-  const { iconUpdatedAt, images, ...data } = application;
-  return {
-    ...data,
-    icon: getIcon(applicationId, iconUpdatedAt),
-    images: getImages(images),
-  };
+  if (application.sourceType === "repository") {
+    const repoData = await repository.fetchApplicationById(applicationId);
+    const { iconUpdatedAt, ...data } = application;
+
+    return {
+      application: {
+        ...application,
+        icon: getIcon(applicationId, iconUpdatedAt),
+        images: getImages(application.images),
+      },
+      repository: repoData,
+    };
+  }
 }

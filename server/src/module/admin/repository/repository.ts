@@ -108,7 +108,7 @@ export async function insertIntoApplications(
         installed_size_in_bytes,
         homepage_uri
       )
-      VALUES ($1, 'third_party_repo', $2, $3, $4, $5, $6, $7)
+      VALUES ($1, 'repository', $2, $3, $4, $5, $6, $7)
       RETURNING id
     `,
     [

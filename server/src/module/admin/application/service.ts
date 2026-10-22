@@ -1,6 +1,5 @@
 import ApiError from "../../../err/api-error";
-import GLOBAL_ERROR from "../../../err/error-code";
-import { getIcon } from "../../../utils/get-images";
+import { getIcon, getImages } from "../../../utils/get-images";
 import { uploadToR2 } from "../../../utils/r2-operations";
 import resizeImage from "../../../utils/resize-image";
 import APPLICATION_ERRORS from "./error";
@@ -35,6 +34,7 @@ export async function getApplicationById(applicationId: ApplicationId) {
   return {
     ...data,
     icon: getIcon(application.id, iconUpdatedAt),
+    images: getImages(application.images),
   };
 }
 

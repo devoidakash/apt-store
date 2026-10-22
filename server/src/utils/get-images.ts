@@ -10,6 +10,6 @@ export function getIcon(
   return `${env.r2PublicUrl}/applications/${applicationId}/icon.webp?v=${iconUpdatedAt.getTime()}`;
 }
 
-export function getImages(images: string[]): string[] {
-  return images.map((image) => `${env.r2PublicUrl}/${image}`);
+export function getImages(images: string[] | null): string[] {
+  return (images ?? []).map((image) => `${env.r2PublicUrl}/${image}`);
 }
