@@ -71,7 +71,7 @@ export async function fetchApplicationById(
       icon_updated_at AS "iconUpdatedAt",
       images,
       category,
-      homepage_uri AS homepageUri,
+      homepage_uri AS "homepageUri",
       download_size_in_bytes AS "downloadSizeInBytes",
       installed_size_in_bytes AS "installedSizeInBytes",
       status,

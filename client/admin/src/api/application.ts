@@ -21,7 +21,7 @@ export interface ApplicationDetail extends ApplicationSummary {
   images: string[] | null;
   downloadSizeBytes: number | string;
   installedSizeBytes: number | string;
-  homepage: string | null;
+  homepageUri: string | null;
   missingSince: string | null;
   createdAt: string;
   updatedAt: string;
@@ -44,7 +44,10 @@ interface ApplicationsResponse {
 interface ApplicationDetailResponse {
   success: boolean;
   message: string;
-  data: ApplicationDetail;
+  data: ApplicationDetail & {
+    homepage?: string | null;
+    homepageuri?: string | null;
+  };
 }
 
 interface ActionResponse {
@@ -78,6 +81,11 @@ export async function getApplicationById(
 
   return {
     ...response.data.data,
+    homepageUri:
+      response.data.data.homepageUri ??
+      response.data.data.homepageuri ??
+      response.data.data.homepage ??
+      null,
     images: response.data.data.images ?? [],
   };
 }

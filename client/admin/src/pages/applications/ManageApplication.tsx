@@ -65,7 +65,7 @@ function toApplicationForm(application: ApplicationDetail): ApplicationForm {
     caption: application.caption ?? "",
     description: application.description ?? "",
     category: application.category ?? "",
-    homepage: application.homepage ?? "",
+    homepage: application.homepageUri ?? "",
   };
 }
 
@@ -262,21 +262,33 @@ export default function ManageApplication() {
           "category",
           "homepage",
         ];
+        const apiFieldToFormField: Record<string, keyof ApplicationForm> = {
+          displayName: "displayName",
+          display_name: "displayName",
+          caption: "caption",
+          description: "description",
+          category: "category",
+          homepage: "homepage",
+          homepageUri: "homepage",
+          homepage_uri: "homepage",
+        };
 
         for (const validationError of saveFailure.response?.data.errors ?? []) {
           const field = validationError.field.split(".").at(-1);
+          const formField = field ? apiFieldToFormField[field] : undefined;
           if (
-            field &&
-            formFields.includes(field as keyof ApplicationForm) &&
-            !errors[field as keyof ApplicationForm]
+            formField &&
+            formFields.includes(formField) &&
+            !errors[formField]
           ) {
-            errors[field as keyof ApplicationForm] = validationError.message;
+            errors[formField] = validationError.message;
           }
         }
 
         setFieldErrors(errors);
         setSaveError(
-          Object.keys(errors).length === 0
+          Object.keys(errors).length !==
+            (saveFailure.response?.data.errors?.length ?? 0)
             ? (saveFailure.response?.data.message ?? saveFailure.message)
             : "",
         );
@@ -894,9 +906,9 @@ export default function ManageApplication() {
                         <Pencil className="h-4 w-4" aria-hidden="true" />
                         Manage application
                       </button>
-                      {application.homepage && (
+                      {application.homepageUri && (
                         <a
-                          href={application.homepage}
+                          href={application.homepageUri}
                           target="_blank"
                           rel="noreferrer"
                           aria-label="Open application website"
