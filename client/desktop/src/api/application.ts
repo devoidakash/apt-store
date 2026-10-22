@@ -17,6 +17,14 @@ export interface ApplicationDetail extends ApplicationSummary {
   category: string | null;
 }
 
+interface RepositoryData {
+  packageName: string;
+  uri: string;
+  suite: string;
+  component: string;
+  keyContent: string;
+}
+
 interface ApplicationsResponse {
   success: boolean;
   message: string;
@@ -26,7 +34,10 @@ interface ApplicationsResponse {
 interface ApplicationDetailResponse {
   success: boolean;
   message: string;
-  data: ApplicationDetail;
+  data: {
+    application: ApplicationDetail;
+    repository: RepositoryData;
+  };
 }
 
 const apiBaseUrl =
@@ -57,7 +68,8 @@ export async function getApplicationById(
 
   const result = (await response.json()) as ApplicationDetailResponse;
   return {
-    ...result.data,
-    images: result.data.images ?? [],
+    ...result.data.application,
+    packageName: result.data.repository.packageName,
+    images: result.data.application.images ?? [],
   };
 }

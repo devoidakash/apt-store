@@ -29,7 +29,7 @@ CREATE TABLE applications (
     caption                 VARCHAR(150),
     description             TEXT,
     icon_updated_at         TIMESTAMPTZ,
-    images                  TEXT[],
+    images                  TEXT[]                  NOT NULL DEFAULT '{}'::TEXT[],
     category                VARCHAR(50),
     homepage_uri            VARCHAR(512),
     download_size_in_bytes  BIGINT                  NOT NULL,
@@ -44,9 +44,12 @@ CREATE TABLE applications (
         CHECK (installed_size_in_bytes >= 0),
 
     CONSTRAINT applications_images_count
-        CHECK (images IS NULL OR cardinality(images) = 5),
+        CHECK (
+            cardinality(images) = 0
+            OR cardinality(images) = 5
+        );,
 
-    -- Drafts may be incomplete; live applications must have publishable metadata.
+    -- Drafts may be incomplete; published applications must have publishable metadata.
     CONSTRAINT applications_live_requires_complete
         CHECK (
             status = 'draft'

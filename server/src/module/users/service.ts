@@ -24,7 +24,7 @@ export async function getApplicationById(applicationId: ApplicationId) {
   }
 
   if (application.sourceType === "repository") {
-    const repoData = await repository.fetchApplicationById(applicationId);
+    const repoData = await repository.fetchRepositoryByAppId(applicationId);
     const { iconUpdatedAt, ...data } = application;
 
     return {

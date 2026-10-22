@@ -56,7 +56,7 @@ export async function fetchApplicationById(
       id,
       icon_updated_at AS "iconUpdatedAt",
       display_name AS "displayName",
-      source_type AS sourceType
+      source_type AS "sourceType",
       maintainer,
       version,
       download_size_in_bytes AS "downloadSizeInBytes",
@@ -80,12 +80,13 @@ export async function fetchRepositoryByAppId(
   const result = await pool.query<RepositoryData>(
     `
   SELECT
-  package_name AS packageName,
-  uri,
-  suite,
-  component,
-  key_content AS keyContent
-  WHERE applicationId = $1`,
+    package_name AS "packageName",
+    uri,
+    suite,
+    component,
+    key_content AS "keyContent"
+  FROM repositories
+  WHERE application_id = $1`,
     [applicationId],
   );
   return result.rows[0];
