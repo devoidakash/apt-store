@@ -90,7 +90,6 @@ export default function ManageApplication() {
   );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
-  const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [saveSuccess, setSaveSuccess] = useState("");
@@ -119,9 +118,6 @@ export default function ManageApplication() {
   const [imagesUploadError, setImagesUploadError] = useState("");
   const [imagesUploadSuccess, setImagesUploadSuccess] = useState("");
 
-  useEffect(() => {
-    setIsEditing(isEditRoute);
-  }, [isEditRoute]);
   const [form, setForm] = useState<ApplicationForm>({
     displayName: "",
     caption: "",
@@ -323,7 +319,7 @@ export default function ManageApplication() {
       setApplicationStatus(updatedApplication.status);
       setStatusSuccess(result.message);
       setSaveSuccess(result.message);
-      setIsEditing(false);
+      navigate(`/applications/${application.id}`);
     } catch (saveFailure) {
       if (axios.isAxiosError<ApiErrorResponse>(saveFailure)) {
         const errors = saveFailure.response?.data?.errors ?? [];
@@ -418,7 +414,6 @@ export default function ManageApplication() {
     setIconPreviewUrl("");
     if (iconFileInputRef.current) iconFileInputRef.current.value = "";
     navigate(`/applications/${applicationId}`);
-    setIsEditing(false);
     setSaveError("");
     setFieldErrors({});
   };
@@ -482,7 +477,7 @@ export default function ManageApplication() {
           </div>
           {application && (
             <div className="flex flex-wrap items-center gap-3">
-              {!isEditing && (
+              {!isEditRoute && (
                 <Link
                   to={`/repositories/${application.repositoryId}`}
                   className="inline-flex h-10 items-center gap-2 border border-orange-200 bg-orange-50 px-3 text-sm font-medium text-orange-700 hover:bg-orange-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-700"
@@ -517,7 +512,7 @@ export default function ManageApplication() {
           >
             {error}
           </p>
-        ) : isEditing ? (
+        ) : isEditRoute ? (
           <form
             onSubmit={handleSave}
             className=" overflow-hidden border border-slate-200 bg-white"
@@ -899,7 +894,6 @@ export default function ManageApplication() {
                           setSaveSuccess("");
                           setFieldErrors({});
                           navigate(`/applications/${application.id}/edit`);
-                          setIsEditing(true);
                         }}
                         className="inline-flex h-11 items-center gap-2 bg-emerald-700 px-5 text-sm font-semibold text-white transition hover:bg-emerald-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
                       >
@@ -1000,7 +994,7 @@ export default function ManageApplication() {
             )}
           </>
         )}
-        {!isLoading && !error && application && isEditing && (
+        {!isLoading && !error && application && isEditRoute && (
           <section className="mt-6 border border-slate-200 bg-white px-5 sm:px-6">
             <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 py-4">
               <div>
@@ -1116,7 +1110,7 @@ export default function ManageApplication() {
             </div>
           </section>
         )}
-        {!isLoading && !error && application && isEditing && (
+        {!isLoading && !error && application && isEditRoute && (
           <div className="mt-6 grid gap-6 lg:grid-cols-2">
             <form
               onSubmit={handleStatusSave}
