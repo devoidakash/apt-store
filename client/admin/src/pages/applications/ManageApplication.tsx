@@ -603,7 +603,9 @@ export default function ManageApplication() {
                 <div className="relative flex h-56 items-center justify-center border border-slate-200 bg-white">
                   {application?.icon ? (
                     <img
-                      src={iconPreviewUrl || getApplicationicon(application.icon)}
+                      src={
+                        iconPreviewUrl || getApplicationicon(application.icon)
+                      }
                       alt={`${application.displayName || application.packageName} icon preview`}
                       className="h-40 w-40 object-contain"
                     />
@@ -614,10 +616,15 @@ export default function ManageApplication() {
                       className="h-40 w-40 object-contain"
                     />
                   ) : (
-                    <ImagePlus
-                      className="h-10 w-10 text-emerald-700"
-                      aria-hidden="true"
-                    />
+                    <button
+                      type="button"
+                      onClick={() => iconFileInputRef.current?.click()}
+                      disabled={isUploadingIcon}
+                      aria-label="Add application icon"
+                      className="inline-flex h-full w-full items-center justify-center text-emerald-700 transition hover:bg-emerald-50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <ImagePlus className="h-10 w-10" aria-hidden="true" />
+                    </button>
                   )}
                   {iconFile && (
                     <button
