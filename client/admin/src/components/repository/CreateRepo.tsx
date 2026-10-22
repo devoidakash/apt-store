@@ -87,9 +87,16 @@ export default function CreateRepo({
   return (
     <>
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 py-4">
-        <h2 className="text-base font-semibold text-slate-900">
-          Add repository
-        </h2>
+        <div>
+          <h2 className="text-base font-semibold text-slate-900">
+            Add repository
+          </h2>
+          {saveError && (
+            <p role="alert" className="mt-1 text-sm text-rose-700">
+              {saveError}
+            </p>
+          )}
+        </div>
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
@@ -164,9 +171,6 @@ export default function CreateRepo({
                 );
               },
             )}
-            <div aria-live="polite" className="min-h-6 text-sm sm:col-span-2">
-              {saveError && <p className="text-rose-700">{saveError}</p>}
-            </div>
           </div>
         </div>
 
