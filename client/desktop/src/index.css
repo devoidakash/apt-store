@@ -444,6 +444,20 @@ button {
     justify-content: center;
 }
 
+.detail-actions,
+.detail-status-error {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.detail-status-error {
+    color: #b42318;
+    font-size: 13px;
+    text-align: right;
+}
+
 .detail-status-loading {
     display: grid;
     width: 32px;
@@ -481,6 +495,20 @@ button {
     color: #087f5b;
     background: #d9f3e3;
     cursor: default;
+}
+
+.detail-action {
+    padding: 11px 14px;
+    color: #087f5b;
+    font-size: 13px;
+    font-weight: 700;
+    background: #fff;
+    border: 1px solid #b7d9c4;
+    border-radius: 7px;
+}
+
+.detail-action:hover {
+    background: #f0faf3;
 }
 
 .detail-stats {

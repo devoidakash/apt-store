@@ -40,6 +40,6 @@ fn check_package_status(package_name: &str, version: &str) -> String {
     {
         Ok(status) if status.success() => "update_available".to_string(),
         Ok(status) if status.code() == Some(1) => "up_to_date".to_string(),
-        _ => "comparison_failed".to_string(),
+        _ => "check_failed".to_string(),
     }
 }

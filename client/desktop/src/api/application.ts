@@ -1,20 +1,20 @@
 export interface ApplicationSummary {
   id: string;
-  displayName: string | null;
-  packageName?: string | null;
-  maintainer: string | null;
-  caption: string | null;
-  version: string | null;
-  icon: string | null;
+  displayName: string;
+  packageName: string;
+  maintainer: string;
+  caption: string;
+  version: string;
+  icon: string;
 }
 
 export interface ApplicationDetail extends ApplicationSummary {
-  downloadSizeInBytes: number | string;
-  installedSizeInBytes: number | string;
-  description: string | null;
-  images: string[] | null;
-  homepage: string | null;
-  category: string | null;
+  downloadSizeInBytes: number;
+  installedSizeInBytes: number;
+  description: string;
+  images: string[];
+  homepage: string;
+  category: string;
 }
 
 interface RepositoryData {

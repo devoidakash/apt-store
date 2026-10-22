@@ -10,7 +10,7 @@ type PackageStatus =
   | "not_installed"
   | "update_available"
   | "up_to_date"
-  | "status_unavailable";
+  | "check_failed";
 
 function formatBytes(value: number | string) {
   const bytes = Number(value);
@@ -32,6 +32,8 @@ export default function ApplicationDetail() {
   );
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [isCheckingStatus, setIsCheckingStatus] = useState(true);
+  const [statusRetryCount, setStatusRetryCount] = useState(0);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -47,43 +49,11 @@ export default function ApplicationDetail() {
       setIsLoading(true);
       setError("");
       setApplication(null);
-      setPackageStatus(null);
-
-      const detailRequest = getApplicationById(
-        applicationId,
-        controller.signal,
-      );
-      void (packageName && version
-        ? invoke<string>("check_package_status", {
-            packageName,
-            version,
-          })
-            .then((status) => {
-              const normalizedStatus = status.trim().toLowerCase();
-              const validStatuses: PackageStatus[] = [
-                "not_installed",
-                "update_available",
-                "up_to_date",
-              ];
-              if (!controller.signal.aborted) {
-                setPackageStatus(
-                  validStatuses.includes(normalizedStatus as PackageStatus)
-                    ? (normalizedStatus as PackageStatus)
-                    : "status_unavailable",
-                );
-              }
-            })
-            .catch((statusError) => {
-              console.error("Could not check package status.", statusError);
-              if (!controller.signal.aborted)
-                setPackageStatus("not_installed");
-            })
-        : Promise.resolve().then(() => {
-            if (!controller.signal.aborted) setPackageStatus("not_installed");
-          }));
-
       try {
-        const loadedApplication = await detailRequest;
+        const loadedApplication = await getApplicationById(
+          applicationId,
+          controller.signal,
+        );
         if (controller.signal.aborted) return;
         setApplication(loadedApplication);
         setSelectedImageIndex(0);
@@ -101,7 +71,50 @@ export default function ApplicationDetail() {
 
     void loadApplication();
     return () => controller.abort();
-  }, [applicationId, packageName, version]);
+  }, [applicationId]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    setPackageStatus(null);
+    setIsCheckingStatus(true);
+
+    async function checkPackageStatus() {
+      if (!packageName || !version) {
+        setPackageStatus("check_failed");
+        setIsCheckingStatus(false);
+        return;
+      }
+
+      try {
+        const status = await invoke<string>("check_package_status", {
+          packageName,
+          version,
+        });
+        const normalizedStatus = status.trim().toLowerCase();
+        const validStatuses: PackageStatus[] = [
+          "not_installed",
+          "update_available",
+          "up_to_date",
+        ];
+
+        if (!controller.signal.aborted) {
+          setPackageStatus(
+            validStatuses.includes(normalizedStatus as PackageStatus)
+              ? (normalizedStatus as PackageStatus)
+              : "check_failed",
+          );
+        }
+      } catch (statusError) {
+        console.error("Could not check package status.", statusError);
+        if (!controller.signal.aborted) setPackageStatus("check_failed");
+      } finally {
+        if (!controller.signal.aborted) setIsCheckingStatus(false);
+      }
+    }
+
+    void checkPackageStatus();
+    return () => controller.abort();
+  }, [packageName, version, statusRetryCount]);
 
   const images = application?.images ?? [];
 
@@ -163,7 +176,7 @@ export default function ApplicationDetail() {
                 </div>
               </div>
               <div className="detail-button-area" aria-live="polite">
-                {packageStatus === null ? (
+                {isCheckingStatus ? (
                   <span
                     className="detail-status-loading"
                     role="status"
@@ -176,17 +189,37 @@ export default function ApplicationDetail() {
                     Install <span aria-hidden="true">&#8594;</span>
                   </button>
                 ) : packageStatus === "update_available" ? (
-                  <button type="button" className="detail-install">
-                    Update <span aria-hidden="true">&#8594;</span>
-                  </button>
+                  <div className="detail-actions">
+                    <button type="button" className="detail-install">
+                      Update <span aria-hidden="true">&#8594;</span>
+                    </button>
+                    <button type="button" className="detail-action">
+                      Open
+                    </button>
+                    <button type="button" className="detail-action">
+                      Uninstall
+                    </button>
+                  </div>
                 ) : packageStatus === "up_to_date" ? (
-                  <button type="button" className="detail-install" disabled>
-                    Open
-                  </button>
+                  <div className="detail-actions">
+                    <button type="button" className="detail-install">
+                      Open
+                    </button>
+                    <button type="button" className="detail-action">
+                      Uninstall
+                    </button>
+                  </div>
                 ) : (
-                  <span className="detail-status-message">
-                    Status unavailable
-                  </span>
+                  <div className="detail-status-error">
+                    <span role="alert">Could not check installation status.</span>
+                    <button
+                      type="button"
+                      className="detail-action"
+                      onClick={() => setStatusRetryCount((count) => count + 1)}
+                    >
+                      Retry
+                    </button>
+                  </div>
                 )}
               </div>
             </div>

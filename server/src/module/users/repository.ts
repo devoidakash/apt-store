@@ -8,6 +8,8 @@ interface ApplicationCardData {
   maintainer: string;
   caption: string;
   iconUpdatedAt: Date;
+  packageName: string;
+  version: string;
 }
 
 interface ApplicationDetails {
@@ -37,13 +39,16 @@ interface RepositoryData {
 export async function fetchApplications(): Promise<ApplicationCardData[]> {
   const result = await pool.query<ApplicationCardData>(`
     SELECT
-      id,
-      display_name AS "displayName",
-      maintainer,
-      caption,
-      icon_updated_at AS "iconUpdatedAt"
-    FROM applications
-    WHERE status = 'published'`);
+      a.id,
+      a.display_name AS "displayName",
+      a.maintainer,
+      a.caption,
+      a.icon_updated_at AS "iconUpdatedAt",
+      a.version,
+      r.package_name AS "packageName"
+    FROM applications a
+    JOIN repositories r ON r.application_id = a.id
+    WHERE a.status = 'published'`);
   return result.rows;
 }
 
