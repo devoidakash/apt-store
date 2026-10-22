@@ -928,11 +928,11 @@ export default function ManageApplication() {
                   {[
                     [
                       "Download size",
-                      formatBytes(application.downloadSizeBytes),
+                      formatBytes(application.downloadSizeInBytes),
                     ],
                     [
                       "Installed size",
-                      formatBytes(application.installedSizeBytes),
+                      formatBytes(application.installedSizeInBytes),
                     ],
                     ["Version", application.version],
                     ["Last updated", formatDate(application.updatedAt)],

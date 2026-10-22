@@ -116,8 +116,8 @@ export async function insertIntoApplications(
       data.version,
       data.maintainer,
       data.description,
-      data.downloadSizeBytes,
-      data.installedSizeBytes,
+      data.downloadSizeInBytes,
+      data.installedSizeInBytes,
       data.homepageUri,
     ],
   );
@@ -176,8 +176,8 @@ export async function updateApplicationById(
       data.version,
       data.maintainer,
       data.description,
-      data.downloadSizeBytes,
-      data.installedSizeBytes,
+      data.downloadSizeInBytes,
+      data.installedSizeInBytes,
       data.homepageUri,
     ],
   );

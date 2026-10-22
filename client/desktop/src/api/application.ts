@@ -9,8 +9,8 @@ export interface ApplicationSummary {
 }
 
 export interface ApplicationDetail extends ApplicationSummary {
-  downloadSizeBytes: number | string;
-  installedSizeBytes: number | string;
+  downloadSizeInBytes: number | string;
+  installedSizeInBytes: number | string;
   description: string | null;
   images: string[] | null;
   homepage: string | null;

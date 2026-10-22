@@ -10,8 +10,8 @@ import { CreateRepositoryType } from "../schema";
 export type LatestApplication = {
   packageName: string;
   version: string;
-  downloadSizeBytes: number;
-  installedSizeBytes: number;
+  downloadSizeInBytes: number;
+  installedSizeInBytes: number;
   description: string | null;
   homepageUri: string | null;
   maintainer: string | null;
@@ -90,8 +90,8 @@ function findLatestApplication(
   return {
     packageName: latestPackage.Package,
     version: latestPackage.Version,
-    downloadSizeBytes: Number.parseInt(latestPackage.Size ?? "0", 10),
-    installedSizeBytes:
+    downloadSizeInBytes: Number.parseInt(latestPackage.Size ?? "0", 10),
+    installedSizeInBytes:
       Number.parseInt(latestPackage["Installed-Size"] ?? "0", 10) * 1024,
     description: latestPackage.Description?.[0] ?? null,
     homepageUri: latestPackage.Homepage ?? null,

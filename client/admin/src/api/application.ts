@@ -19,8 +19,9 @@ export interface ApplicationDetail extends ApplicationSummary {
   description: string | null;
   iconUpdatedAt: string | null;
   images: string[] | null;
-  downloadSizeBytes: number | string;
-  installedSizeBytes: number | string;
+
+  Bytes: number | string;
+  installedSizeInBytes: number | string;
   homepageUri: string | null;
   missingSince: string | null;
   createdAt: string;

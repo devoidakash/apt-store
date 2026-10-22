@@ -173,11 +173,11 @@ export default function ApplicationDetail() {
             <dl className="detail-stats">
               <div>
                 <dt>Download size</dt>
-                <dd>{formatBytes(application.downloadSizeBytes)}</dd>
+                <dd>{formatBytes(application.downloadSizeInBytes)}</dd>
               </div>
               <div>
                 <dt>Installed size</dt>
-                <dd>{formatBytes(application.installedSizeBytes)}</dd>
+                <dd>{formatBytes(application.installedSizeInBytes)}</dd>
               </div>
               <div>
                 <dt>Version</dt>
