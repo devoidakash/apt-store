@@ -148,7 +148,7 @@ export default function Applications() {
                   aria-label={`View ${application.displayName || application.packageName}`}
                 >
                   <article className="flex min-h-24 items-center gap-4 border border-slate-200 bg-white p-5 shadow-sm transition hover:border-emerald-600">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center border border-slate-200 bg-slate-50 text-emerald-700">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center text-emerald-700">
                       {application.icon ? (
                         <img
                           src={getApplicationicon(application.icon)}

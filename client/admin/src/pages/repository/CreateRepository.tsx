@@ -139,6 +139,7 @@ export default function CreateRepository() {
           fieldErrors={{}}
           isSaving={isSubmitting}
           saveError={error}
+          buttonText="Create"
           repositoryDetails={repositoryDetails}
           onCancel={() => navigate("/repositories")}
           onFieldChange={updateField}

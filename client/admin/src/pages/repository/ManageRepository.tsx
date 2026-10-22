@@ -465,6 +465,7 @@ export default function ManageRepository() {
                 fieldErrors={fieldErrors}
                 isSaving={isSaving}
                 saveError={saveError}
+                buttonText="Save changes"
                 repositoryDetails={repositoryDetails}
                 onCancel={cancelEditing}
                 onFieldChange={updateField}

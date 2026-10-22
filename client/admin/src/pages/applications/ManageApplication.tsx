@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import axios from "axios";
 import {
+  ArrowRight,
   BadgeCheck,
   Check,
   ExternalLink,
@@ -16,7 +17,7 @@ import {
   ShieldCheck,
   X,
 } from "lucide-react";
-import { useLocation, useNavigate, useParams } from "react-router";
+import { Link, useLocation, useNavigate, useParams } from "react-router";
 import Layout from "../../components/dashboard/Layout";
 import {
   getApplicationById,
@@ -435,61 +436,6 @@ export default function ManageApplication() {
       searchPlaceholder="Search applications..."
     >
       <section className="w-full">
-        {/* <Link
-          to={`/applications?applicationStatus=${application?.status ?? "draft"}`}
-          className="mb-5 inline-flex items-center gap-2 text-sm font-medium text-slate-600 transition-colors hover:text-emerald-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
-        >
-          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-          Back to applications
-        </Link> */}
-
-        {/* <header className="flex flex-wrap items-center justify-between gap-4 border border-slate-200 bg-white px-5 py-4 sm:px-6">
-          <div className="flex min-w-0 items-center gap-4">
-            <span
-              className="flex h-12 w-12 shrink-0 items-center justify-center border border-emerald-200 bg-emerald-50 text-emerald-800"
-              aria-label={
-                application?.icon ? "Application icon" : "Upload image"
-              }
-              title={application?.icon ? "Application icon" : "Upload image"}
-            >
-              {application?.icon ? (
-                <img
-                  src={getApplicationicon(application.icon)}
-                  alt=""
-                  className="h-full w-full object-contain p-1"
-                />
-              ) : application?.iconUpdatedAt ? (
-                <Image className="h-5 w-5" aria-hidden="true" />
-              ) : (
-                <ImagePlus className="h-5 w-5" aria-hidden="true" />
-              )}
-            </span>
-            <div className="min-w-0">
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-emerald-700">
-                Manage application
-              </p>
-              <h1 className="mt-1 wrap-break-word text-2xl font-semibold text-slate-950">
-                {application?.displayName ||
-                  application?.packageName ||
-                  "Application"}
-              </h1>
-            </div>
-          </div>
-          {application && (
-            <div className="flex flex-wrap items-center gap-3">
-              {!isEditRoute && (
-                <Link
-                  to={`/repositories/${application.repositoryId}`}
-                  className="inline-flex h-10 items-center gap-2 border border-orange-200 bg-orange-50 px-3 text-sm font-medium text-orange-700 hover:bg-orange-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-700"
-                >
-                  View repository
-                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
-                </Link>
-              )}
-            </div>
-          )}
-        </header> */}
-
         {isLoading ? (
           <div className=" border border-slate-200 bg-white p-5 sm:p-6">
             <div className="flex items-center gap-3 text-sm text-slate-600">
@@ -519,7 +465,7 @@ export default function ManageApplication() {
           >
             <div className="flex flex-wrap items-center justify-between gap-5 border-b border-slate-200 px-5 py-5 sm:px-8">
               <div className="flex min-w-0 items-center gap-4">
-                <span className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-emerald-200 bg-emerald-50 p-1.5">
+                <span className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl p-1.5">
                   {application?.icon ? (
                     <img
                       src={getApplicationicon(application.icon)}
@@ -607,7 +553,7 @@ export default function ManageApplication() {
                     </div>
                   </div>
                 </div>
-                <div className="relative flex h-56 items-center justify-center border border-slate-200 bg-white">
+                <div className="relative flex h-56 items-center justify-center">
                   {application?.icon ? (
                     <img
                       src={
@@ -694,18 +640,28 @@ export default function ManageApplication() {
                         Update the application details shown to users.
                       </p>
                     </div>
-                    <button
-                      type="submit"
-                      disabled={isSaving}
-                      className="inline-flex h-10 items-center gap-2 bg-emerald-700 px-3 text-sm font-semibold text-white transition hover:bg-emerald-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700 disabled:cursor-wait disabled:opacity-70"
-                    >
-                      {isSaving ? (
-                        <LoaderCircle className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Check className="h-4 w-4" aria-hidden="true" />
+                    <div className="flex flex-wrap items-center justify-end gap-3">
+                      {saveSuccess && (
+                        <p
+                          aria-live="polite"
+                          className="text-sm text-emerald-700"
+                        >
+                          {saveSuccess}
+                        </p>
                       )}
-                      {isSaving ? "Saving..." : "Save changes"}
-                    </button>
+                      <button
+                        type="submit"
+                        disabled={isSaving}
+                        className="inline-flex h-10 items-center gap-2 bg-emerald-700 px-3 text-sm font-semibold text-white transition hover:bg-emerald-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700 disabled:cursor-wait disabled:opacity-70"
+                      >
+                        {isSaving ? (
+                          <LoaderCircle className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Check className="h-4 w-4" aria-hidden="true" />
+                        )}
+                        {isSaving ? "Saving..." : "Save changes"}
+                      </button>
+                    </div>
                   </div>
                 </div>
                 <div className="grid gap-x-8 gap-y-5 sm:grid-cols-2">
@@ -854,7 +810,7 @@ export default function ManageApplication() {
                 <div className="px-6 pb-7 pt-7 sm:px-10 sm:pt-10">
                   <div className="flex flex-wrap items-start justify-between gap-8">
                     <div className="flex min-w-0 items-start gap-5">
-                      <span className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-emerald-200 bg-emerald-50 p-2 shadow-sm sm:h-28 sm:w-28">
+                      <span className="flex h-28 w-28 shrink-0 items-center justify-center overflow-hidden rounded-2xl sm:h-32 sm:w-32">
                         {application.icon ? (
                           <img
                             src={getApplicationicon(application.icon)}
@@ -886,20 +842,30 @@ export default function ManageApplication() {
                       </div>
                     </div>
                     <div className="flex flex-wrap items-center gap-3">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setForm(toApplicationForm(application));
-                          setSaveError("");
-                          setSaveSuccess("");
-                          setFieldErrors({});
-                          navigate(`/applications/${application.id}/edit`);
-                        }}
-                        className="inline-flex h-11 items-center gap-2 bg-emerald-700 px-5 text-sm font-semibold text-white transition hover:bg-emerald-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
-                      >
-                        <Pencil className="h-4 w-4" aria-hidden="true" />
-                        Manage application
-                      </button>
+                      <div className="flex flex-col items-stretch gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setForm(toApplicationForm(application));
+                            setSaveError("");
+                            setSaveSuccess("");
+                            setFieldErrors({});
+                            navigate(`/applications/${application.id}/edit`);
+                          }}
+                          className="inline-flex h-10 items-center gap-2 border border-rose-200 bg-rose-50 px-3 text-sm font-medium text-rose-700 hover:bg-rose-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-700"
+                        >
+                          <Pencil className="h-4 w-4" aria-hidden="true" />
+                          Edit application
+                        </button>
+
+                        <Link
+                          to={`/repositories/${application.repositoryId}`}
+                          className="inline-flex h-10 items-center justify-center gap-2 border border-orange-200 bg-orange-50 px-3 text-sm font-medium text-orange-700 hover:bg-orange-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-700"
+                        >
+                          View repository
+                          <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                        </Link>
+                      </div>
                       {application.homepageUri && (
                         <a
                           href={application.homepageUri}
@@ -1005,30 +971,37 @@ export default function ManageApplication() {
                   Update the icon and images independently.
                 </p>
               </div>
-              <button
-                type={imageFiles.length === 5 ? "submit" : "button"}
-                form="application-images-form"
-                disabled={isUploadingImages}
-                onClick={() => {
-                  if (imageFiles.length < 5) {
-                    imageFileInputRef.current?.click();
-                  }
-                }}
-                className="inline-flex h-10 items-center gap-2 bg-emerald-700 px-4 text-sm font-semibold text-white hover:bg-emerald-800 disabled:cursor-wait disabled:opacity-50"
-              >
-                {isUploadingImages ? (
-                  <LoaderCircle className="h-4 w-4 animate-spin" />
-                ) : imageFiles.length === 5 ? (
-                  <ImagePlus className="h-4 w-4" aria-hidden="true" />
-                ) : (
-                  <Plus className="h-4 w-4" aria-hidden="true" />
+              <div className="flex flex-wrap items-center justify-end gap-3">
+                {imagesUploadSuccess && (
+                  <p aria-live="polite" className="text-sm text-emerald-700">
+                    {imagesUploadSuccess}
+                  </p>
                 )}
-                {isUploadingImages
-                  ? "Uploading..."
-                  : imageFiles.length === 5
-                    ? "Upload images"
-                    : "Select images"}
-              </button>
+                <button
+                  type={imageFiles.length === 5 ? "submit" : "button"}
+                  form="application-images-form"
+                  disabled={isUploadingImages}
+                  onClick={() => {
+                    if (imageFiles.length < 5) {
+                      imageFileInputRef.current?.click();
+                    }
+                  }}
+                  className="inline-flex h-10 items-center gap-2 bg-emerald-700 px-4 text-sm font-semibold text-white hover:bg-emerald-800 disabled:cursor-wait disabled:opacity-50"
+                >
+                  {isUploadingImages ? (
+                    <LoaderCircle className="h-4 w-4 animate-spin" />
+                  ) : imageFiles.length === 5 ? (
+                    <ImagePlus className="h-4 w-4" aria-hidden="true" />
+                  ) : (
+                    <Plus className="h-4 w-4" aria-hidden="true" />
+                  )}
+                  {isUploadingImages
+                    ? "Uploading..."
+                    : imageFiles.length === 5
+                      ? "Upload images"
+                      : "Select images"}
+                </button>
+              </div>
             </div>
             <div>
               <form
@@ -1099,11 +1072,6 @@ export default function ManageApplication() {
                 {imagesUploadError && (
                   <p role="alert" className="text-sm text-rose-700">
                     {imagesUploadError}
-                  </p>
-                )}
-                {imagesUploadSuccess && (
-                  <p aria-live="polite" className="text-sm text-emerald-700">
-                    {imagesUploadSuccess}
                   </p>
                 )}
               </form>

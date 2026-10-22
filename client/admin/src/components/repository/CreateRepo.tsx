@@ -10,6 +10,7 @@ interface CreateRepoProps {
   fieldErrors: Partial<Record<RepositoryFormField, string>>;
   isSaving: boolean;
   saveError: string;
+  buttonText: string;
   repositoryDetails: string;
   onCancel: () => void;
   onFieldChange: (field: RepositoryFormField, value: string) => void;
@@ -65,6 +66,7 @@ export default function CreateRepo({
   fieldErrors,
   isSaving,
   saveError,
+  buttonText,
   repositoryDetails,
   onCancel,
   onFieldChange,
@@ -103,7 +105,7 @@ export default function CreateRepo({
             ) : (
               <Check className="h-4 w-4" aria-hidden="true" />
             )}
-            {isSaving ? "Saving..." : "Save changes"}
+            {isSaving ? "Saving..." : buttonText}
           </button>
         </div>
       </div>
