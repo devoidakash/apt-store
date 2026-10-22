@@ -224,7 +224,6 @@ export default function ManageRepository() {
   const [repository, setRepository] = useState<RepositoryDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
-  const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [saveSuccess, setSaveSuccess] = useState("");
@@ -255,6 +254,7 @@ export default function ManageRepository() {
         }
         setRepository(result);
         setForm(toRepositoryForm(result));
+        if (isEditRoute) setRepositoryDetails(formatRepositoryDetails(toRepositoryForm(result)));
       } catch (loadError) {
         if (controller.signal.aborted) return;
 
@@ -271,7 +271,7 @@ export default function ManageRepository() {
 
     void loadRepository();
     return () => controller.abort();
-  }, [repositoryId]);
+  }, [isEditRoute, repositoryId]);
 
   const updateField = (field: RepositoryFormField, value: string) => {
     setForm((current) => ({ ...current, [field]: value }));
@@ -281,7 +281,7 @@ export default function ManageRepository() {
 
   const handleSave = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!repositoryId || !isEditing) return;
+    if (!repositoryId || !isEditRoute) return;
 
     setIsSaving(true);
     setSaveError("");
@@ -301,7 +301,6 @@ export default function ManageRepository() {
       setRepository(result.data);
       setForm(toRepositoryForm(result.data));
       setSaveSuccess(result.message);
-      setIsEditing(false);
     } catch (saveFailure) {
       if (axios.isAxiosError<ApiErrorResponse>(saveFailure)) {
         const errors: Partial<Record<RepositoryFormField, string>> = {};
@@ -328,29 +327,18 @@ export default function ManageRepository() {
 
   const startEditing = () => {
     setSaveSuccess("");
+    setRepositoryDetails(formatRepositoryDetails(form));
     navigate(`/repositories/${repositoryId}/edit`);
-    setIsEditing(true);
   };
 
   const cancelEditing = () => {
     if (repository) setForm(toRepositoryForm(repository));
     navigate(`/repositories/${repositoryId}`);
-    setIsEditing(false);
     setSaveError("");
     setSaveSuccess("");
     setFieldErrors({});
     setRepositoryDetails("");
   };
-
-  useEffect(() => {
-    setIsEditing(isEditRoute);
-  }, [isEditRoute]);
-
-  useEffect(() => {
-    if (isEditing) {
-      setRepositoryDetails(formatRepositoryDetails(form));
-    }
-  }, [form, isEditing]);
 
   const handleRepositoryDetailsChange = (value: string) => {
     setRepositoryDetails(value);
@@ -398,40 +386,54 @@ export default function ManageRepository() {
       searchPlaceholder="Search repositories..."
     >
       <section className="w-full">
-        <Heading
-          icon={
-            <span
-              className="flex h-12 w-12 shrink-0 items-center justify-center border border-emerald-200 bg-emerald-50 text-emerald-800"
-              aria-label={repository?.icon ? "Repository icon" : "Repository"}
-            >
-              {repository?.icon ? (
-                <img
-                  src={repository.icon}
-                  alt=""
-                  className="h-full w-full object-contain p-1"
-                />
-              ) : (
-                <Database
-                  className="h-6 w-6 text-emerald-700"
-                  aria-hidden="true"
-                />
-              )}
-            </span>
-          }
-          name={repository?.displayName ?? "Manage repository"}
-          info="Manage repository"
-          action={
-            repository?.applicationId ? (
-              <Link
-                to={`/applications/${repository.applicationId}`}
-                className="inline-flex h-10 items-center gap-2 border border-yellow-200 bg-yellow-50 px-3 text-sm font-medium text-yellow-700 hover:bg-yellow-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-yellow-700"
+        {isEditRoute ? (
+          <header className="border border-slate-200 bg-white px-5 py-4 sm:px-6">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-emerald-700">
+              Manage repositories
+            </p>
+            <h1 className="mt-2 text-2xl font-semibold text-slate-950">
+              Edit Repository
+            </h1>
+            <p className="mt-1 text-sm text-slate-600">
+              Update the source and package configuration.
+            </p>
+          </header>
+        ) : (
+          <Heading
+            icon={
+              <span
+                className="flex h-12 w-12 shrink-0 items-center justify-center border border-emerald-200 bg-emerald-50 text-emerald-800"
+                aria-label={repository?.icon ? "Repository icon" : "Repository"}
               >
-                View application
-                <ArrowRight className="h-4 w-4" aria-hidden="true" />
-              </Link>
-            ) : null
-          }
-        />
+                {repository?.icon ? (
+                  <img
+                    src={repository.icon}
+                    alt=""
+                    className="h-full w-full object-contain p-1"
+                  />
+                ) : (
+                  <Database
+                    className="h-6 w-6 text-emerald-700"
+                    aria-hidden="true"
+                  />
+                )}
+              </span>
+            }
+            name={repository?.displayName ?? "Manage repository"}
+            info="Manage repository"
+            action={
+              repository?.applicationId ? (
+                <Link
+                  to={`/applications/${repository.applicationId}`}
+                  className="inline-flex h-10 items-center gap-2 border border-yellow-200 bg-yellow-50 px-3 text-sm font-medium text-yellow-700 hover:bg-yellow-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-yellow-700"
+                >
+                  View application
+                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                </Link>
+              ) : null
+            }
+          />
+        )}
 
         {isLoading ? (
           <div className="mt-6 border border-slate-200 bg-white p-5 sm:p-6">
@@ -459,46 +461,23 @@ export default function ManageRepository() {
           /* One card, one grid: view and edit render in the same place. */
           <form
             onSubmit={handleSave}
-            className="mt-6 border border-slate-200 bg-white px-5 sm:px-6"
+            className={
+              isEditRoute
+                ? "w-full py-7"
+                : "mt-6 border border-slate-200 bg-white px-5 sm:px-6"
+            }
           >
-            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 py-4">
-              <div>
-                <h2 className="text-base font-semibold text-slate-900">
-                  {isEditing ? "Edit repository" : "Repository details"}
-                </h2>
-                <p className="mt-1 text-sm text-slate-500">
-                  {isEditing
-                    ? "Update the source and package configuration."
-                    : "Source location and package configuration"}
-                </p>
-              </div>
-
-              {isEditing ? (
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    disabled={isSaving}
-                    onClick={cancelEditing}
-                    className="inline-flex h-10 items-center gap-2 rounded-md border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700 disabled:opacity-70"
-                  >
-                    <X className="h-4 w-4" aria-hidden="true" />
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isSaving}
-                    className="inline-flex h-10 items-center gap-2 rounded-md bg-emerald-700 px-3 text-sm font-semibold text-white transition hover:bg-emerald-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700 disabled:cursor-wait disabled:opacity-70"
-                  >
-                    {isSaving ? (
-                      <LoaderCircle className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Check className="h-4 w-4" aria-hidden="true" />
-                    )}
-                    {isSaving ? "Saving..." : "Save changes"}
-                  </button>
+            {!isEditRoute && (
+              <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 py-4">
+                <div>
+                  <h2 className="text-base font-semibold text-slate-900">
+                    Repository details
+                  </h2>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Source location and package configuration
+                  </p>
                 </div>
-              ) : (
-                repository && (
+                {repository && (
                   <button
                     type="button"
                     onClick={startEditing}
@@ -507,9 +486,9 @@ export default function ManageRepository() {
                     <Pencil className="h-4 w-4" aria-hidden="true" />
                     Edit repository
                   </button>
-                )
-              )}
-            </div>
+                )}
+              </div>
+            )}
 
             <div aria-live="polite">
               {saveSuccess && (
@@ -527,7 +506,7 @@ export default function ManageRepository() {
               )}
             </div>
 
-            {isEditing ? (
+            {isEditRoute ? (
               <div className="grid gap-8 py-6 lg:grid-cols-[3fr_2fr] lg:items-start">
                 <div className="border border-slate-200 bg-white p-5 sm:p-6">
                   <h3 className="text-lg font-semibold text-slate-950">
@@ -576,6 +555,35 @@ export default function ManageRepository() {
                         );
                       },
                     )}
+                    <div
+                      aria-live="polite"
+                      className="min-h-6 text-sm sm:col-span-2"
+                    >
+                      {saveError && <p className="text-rose-700">{saveError}</p>}
+                    </div>
+                    <div className="flex flex-wrap gap-2 sm:col-span-2">
+                      <button
+                        type="button"
+                        disabled={isSaving}
+                        onClick={cancelEditing}
+                        className="inline-flex h-11 items-center gap-2 rounded-md border border-slate-300 bg-white px-4 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700 disabled:opacity-70"
+                      >
+                        <X className="h-4 w-4" aria-hidden="true" />
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={isSaving}
+                        className="inline-flex h-11 items-center gap-2 rounded-md bg-emerald-700 px-4 text-sm font-semibold text-white transition hover:bg-emerald-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700 disabled:cursor-wait disabled:opacity-70"
+                      >
+                        {isSaving ? (
+                          <LoaderCircle className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Check className="h-4 w-4" aria-hidden="true" />
+                        )}
+                        {isSaving ? "Saving..." : "Save changes"}
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -650,7 +658,7 @@ Fingerprint: ABCD 1234 EF56 7890`}
               </div>
             )}
 
-            {!isEditing && (
+            {!isEditRoute && (
               <dl className="grid gap-x-6 gap-y-4 border-t border-slate-100 py-5 sm:grid-cols-2">
                 {meta.map(({ label, value, exactValue }) => (
                   <div key={label} className="min-w-0">
