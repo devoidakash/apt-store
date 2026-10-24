@@ -5,9 +5,10 @@ import { useNavigate } from "react-router";
 import { createRepository } from "../../api/repository";
 import Heading from "../../components/cards/Heading";
 import CreateRepo from "../../components/repository/CreateRepo";
-import type {
-  RepositoryForm,
-  RepositoryFormField,
+import {
+  formatRepositoryErrorMessage,
+  type RepositoryForm,
+  type RepositoryFormField,
 } from "../../components/repository/repository-form";
 
 interface ApiValidationError {
@@ -148,13 +149,17 @@ export default function CreateRepository() {
         }
         setFieldErrors(errors);
         setError(
-          submitError.response?.data?.message ?? submitError.message,
+          formatRepositoryErrorMessage(
+            submitError.response?.data?.message ?? submitError.message,
+          ),
         );
       } else {
         setError(
-          submitError instanceof Error
-            ? submitError.message
-            : "Could not add this repository.",
+          formatRepositoryErrorMessage(
+            submitError instanceof Error
+              ? submitError.message
+              : "Could not add this repository.",
+          ),
         );
       }
     } finally {

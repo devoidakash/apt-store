@@ -16,6 +16,7 @@ import Layout from "../../components/dashboard/Layout";
 import CreateRepo from "../../components/repository/CreateRepo";
 import {
   formatFingerprint,
+  formatRepositoryErrorMessage,
   type RepositoryForm,
   type RepositoryFormField,
 } from "../../components/repository/repository-form";
@@ -229,7 +230,7 @@ export default function ManageRepository() {
           : loadError instanceof Error
             ? loadError.message
             : "Could not load this repository.";
-        setError(message);
+        setError(formatRepositoryErrorMessage(message));
       } finally {
         if (!controller.signal.aborted) setIsLoading(false);
       }
@@ -278,12 +279,18 @@ export default function ManageRepository() {
           }
         }
         setFieldErrors(errors);
-        setSaveError(saveFailure.response?.data.message ?? saveFailure.message);
+        setSaveError(
+          formatRepositoryErrorMessage(
+            saveFailure.response?.data.message ?? saveFailure.message,
+          ),
+        );
       } else {
         setSaveError(
-          saveFailure instanceof Error
-            ? saveFailure.message
-            : "Could not update this repository.",
+          formatRepositoryErrorMessage(
+            saveFailure instanceof Error
+              ? saveFailure.message
+              : "Could not update this repository.",
+          ),
         );
       }
     } finally {

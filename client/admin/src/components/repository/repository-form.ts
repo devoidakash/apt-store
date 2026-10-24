@@ -16,3 +16,18 @@ export function formatFingerprint(value: string) {
     .replace(/(.{4})/g, "$1 ")
     .trim();
 }
+
+export function formatRepositoryErrorMessage(message: string) {
+  return message.replace(
+    /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})/g,
+    (timestamp) => {
+      const date = new Date(timestamp);
+      return Number.isNaN(date.getTime())
+        ? timestamp
+        : date.toLocaleString(undefined, {
+            dateStyle: "medium",
+            timeStyle: "short",
+          });
+    },
+  );
+}
