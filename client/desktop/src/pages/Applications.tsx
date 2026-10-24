@@ -5,7 +5,7 @@ import { getApplications, type ApplicationSummary } from "../api/application";
 function ApplicationCard({ application }: { application: ApplicationSummary }) {
   return (
     <Link
-      to={`/applications/${application.id}?packageName=${encodeURIComponent(application.packageName || "")}&version=${encodeURIComponent(application.version || "")}`}
+      to={`/applications/${application.id}?packageName=${encodeURIComponent(application.packageName || "")}&latestVersion=${encodeURIComponent(application.version || "")}`}
       className="application-card"
       aria-label={`View ${application.displayName || application.packageName || "application"}`}
     >

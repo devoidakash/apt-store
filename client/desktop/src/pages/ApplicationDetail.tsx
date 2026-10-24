@@ -1,16 +1,11 @@
 import { useEffect, useState } from "react";
-import { invoke } from "@tauri-apps/api/core";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import {
   getApplicationById,
   type ApplicationDetail as ApplicationDetailData,
 } from "../api/application";
-
-type PackageStatus =
-  | "not_installed"
-  | "update_available"
-  | "up_to_date"
-  | "check_failed";
+import { usePackageStatus } from "../hooks/usePackageStatus";
+import type { PackageStatus } from "../types/package-status";
 
 function formatBytes(value: number | string) {
   const bytes = Number(value);
@@ -19,22 +14,172 @@ function formatBytes(value: number | string) {
     : "-";
 }
 
+function assertNever(value: never): never {
+  throw new Error(`Unhandled package status: ${value}`);
+}
+
+interface PackageActionsProps {
+  status: PackageStatus;
+  packageName: string;
+  onRetry: () => void;
+}
+
+function PackageActions({ status, packageName, onRetry }: PackageActionsProps) {
+  switch (status) {
+    case "NotInstalled":
+      return (
+        <button
+          type="button"
+          className="detail-install"
+          onClick={() => {
+            /* TODO: implement installation */
+          }}
+        >
+          Install <span aria-hidden="true">&#8594;</span>
+        </button>
+      );
+    case "UpToDate":
+      return (
+        <div className="detail-actions">
+          <button
+            type="button"
+            className="detail-install"
+            onClick={() => {
+              /* TODO: implement opening */
+            }}
+          >
+            Open
+          </button>
+          <button
+            type="button"
+            className="detail-action"
+            onClick={() => {
+              /* TODO: implement uninstallation */
+            }}
+          >
+            Uninstall
+          </button>
+        </div>
+      );
+    case "UpdateAvailable":
+      return (
+        <div className="detail-actions">
+          <button
+            type="button"
+            className="detail-install"
+            onClick={() => {
+              /* TODO: implement update */
+            }}
+          >
+            Update <span aria-hidden="true">&#8594;</span>
+          </button>
+          <button
+            type="button"
+            className="detail-action"
+            onClick={() => {
+              /* TODO: implement opening */
+            }}
+          >
+            Open
+          </button>
+          <button
+            type="button"
+            className="detail-action"
+            onClick={() => {
+              /* TODO: implement uninstallation */
+            }}
+          >
+            Uninstall
+          </button>
+        </div>
+      );
+    case "OnHold":
+      return (
+        <div className="detail-on-hold">
+          <div className="detail-actions">
+            <button
+              type="button"
+              className="detail-install"
+              onClick={() => {
+                /* TODO: implement opening */
+              }}
+            >
+              Open
+            </button>
+            <button
+              type="button"
+              className="detail-action"
+              onClick={() => {
+                /* TODO: implement uninstallation */
+              }}
+            >
+              Uninstall
+            </button>
+          </div>
+          <div className="detail-on-hold-warning" role="status">
+            This package is on hold. Run{" "}
+            <code>sudo apt-mark unhold {packageName}</code> to allow updates.
+          </div>
+        </div>
+      );
+    case "InstallCheckFailed":
+      return (
+        <div className="detail-status-error">
+          <span role="alert">We couldn't check if this app is installed.</span>
+          <button type="button" className="detail-action" onClick={onRetry}>
+            Try again
+          </button>
+        </div>
+      );
+    case "VersionComparisonFailed":
+      return (
+        <div className="detail-status-error">
+          <span role="alert">
+            This app is installed, but we couldn't check for updates.
+          </span>
+          <div className="detail-actions">
+            <button
+              type="button"
+              className="detail-install"
+              onClick={() => {
+                /* TODO: implement opening */
+              }}
+            >
+              Open
+            </button>
+            <button
+              type="button"
+              className="detail-action"
+              onClick={() => {
+                /* TODO: implement uninstallation */
+              }}
+            >
+              Uninstall
+            </button>
+          </div>
+        </div>
+      );
+    default:
+      return assertNever(status);
+  }
+}
+
 export default function ApplicationDetail() {
   const { applicationId } = useParams();
   const [searchParams] = useSearchParams();
   const packageName = searchParams.get("packageName") || "";
-  const version = searchParams.get("version") || "";
+  const latestVersion = searchParams.get("latestVersion") || "";
   const [application, setApplication] = useState<ApplicationDetailData | null>(
-    null,
-  );
-  const [packageStatus, setPackageStatus] = useState<PackageStatus | null>(
     null,
   );
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
-  const [isCheckingStatus, setIsCheckingStatus] = useState(true);
-  const [statusRetryCount, setStatusRetryCount] = useState(0);
   const [error, setError] = useState("");
+  const {
+    status: packageStatus,
+    isLoading: isCheckingStatus,
+    refetch: retryStatusCheck,
+  } = usePackageStatus(packageName, latestVersion);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -72,49 +217,6 @@ export default function ApplicationDetail() {
     void loadApplication();
     return () => controller.abort();
   }, [applicationId]);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    setPackageStatus(null);
-    setIsCheckingStatus(true);
-
-    async function checkPackageStatus() {
-      if (!packageName || !version) {
-        setPackageStatus("check_failed");
-        setIsCheckingStatus(false);
-        return;
-      }
-
-      try {
-        const status = await invoke<string>("check_package_status", {
-          packageName,
-          version,
-        });
-        const normalizedStatus = status.trim().toLowerCase();
-        const validStatuses: PackageStatus[] = [
-          "not_installed",
-          "update_available",
-          "up_to_date",
-        ];
-
-        if (!controller.signal.aborted) {
-          setPackageStatus(
-            validStatuses.includes(normalizedStatus as PackageStatus)
-              ? (normalizedStatus as PackageStatus)
-              : "check_failed",
-          );
-        }
-      } catch (statusError) {
-        console.error("Could not check package status.", statusError);
-        if (!controller.signal.aborted) setPackageStatus("check_failed");
-      } finally {
-        if (!controller.signal.aborted) setIsCheckingStatus(false);
-      }
-    }
-
-    void checkPackageStatus();
-    return () => controller.abort();
-  }, [packageName, version, statusRetryCount]);
 
   const images = application?.images ?? [];
 
@@ -184,43 +286,13 @@ export default function ApplicationDetail() {
                   >
                     <span className="loading-orbit" aria-hidden="true" />
                   </span>
-                ) : packageStatus === "not_installed" ? (
-                  <button type="button" className="detail-install">
-                    Install <span aria-hidden="true">&#8594;</span>
-                  </button>
-                ) : packageStatus === "update_available" ? (
-                  <div className="detail-actions">
-                    <button type="button" className="detail-install">
-                      Update <span aria-hidden="true">&#8594;</span>
-                    </button>
-                    <button type="button" className="detail-action">
-                      Open
-                    </button>
-                    <button type="button" className="detail-action">
-                      Uninstall
-                    </button>
-                  </div>
-                ) : packageStatus === "up_to_date" ? (
-                  <div className="detail-actions">
-                    <button type="button" className="detail-install">
-                      Open
-                    </button>
-                    <button type="button" className="detail-action">
-                      Uninstall
-                    </button>
-                  </div>
-                ) : (
-                  <div className="detail-status-error">
-                    <span role="alert">Could not check installation status.</span>
-                    <button
-                      type="button"
-                      className="detail-action"
-                      onClick={() => setStatusRetryCount((count) => count + 1)}
-                    >
-                      Retry
-                    </button>
-                  </div>
-                )}
+                ) : packageStatus ? (
+                  <PackageActions
+                    status={packageStatus}
+                    packageName={packageName}
+                    onRetry={retryStatusCheck}
+                  />
+                ) : null}
               </div>
             </div>
 

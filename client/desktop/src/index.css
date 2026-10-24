@@ -476,6 +476,30 @@ button {
     font-size: 13px;
 }
 
+.detail-on-hold {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+}
+
+.detail-on-hold-warning {
+    max-width: 320px;
+    padding: 8px 10px;
+    color: #9f2d20;
+    font-size: 12px;
+    line-height: 1.4;
+    text-align: right;
+    background: #fff1ed;
+    border: 1px solid #f3b6a8;
+    border-radius: 6px;
+}
+
+.detail-on-hold-warning code {
+    font-size: 11px;
+    font-weight: 700;
+}
+
 .detail-install {
     flex: 0 0 auto;
     padding: 12px 18px;
