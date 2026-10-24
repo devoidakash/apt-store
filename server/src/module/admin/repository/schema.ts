@@ -22,7 +22,7 @@ export const createRepository = z.object({
       error: "URIs must not end with a slash",
     }),
   suite: z.string().trim().toLowerCase(),
-  component: z.string().trim().toLowerCase(),
+  component: z.string().trim().toLowerCase().optional(),
   key_uri: z
     .string()
     .trim()
