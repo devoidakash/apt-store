@@ -144,11 +144,11 @@ export default function Applications() {
               <li key={application.id}>
                 <Link
                   to={`/applications/${application.id}`}
-                  className="block focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
+                  className="flex h-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
                   aria-label={`View ${application.displayName || application.packageName}`}
                 >
-                  <article className="flex min-h-24 items-center gap-4 border border-slate-200 bg-white p-5 shadow-sm transition hover:border-emerald-600">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center text-emerald-700">
+                  <article className="flex h-36 w-full items-center gap-4 overflow-hidden border border-slate-200 bg-white p-5 shadow-sm transition hover:border-emerald-600">
+                    <div className="flex h-16 w-16 shrink-0 items-center justify-center text-emerald-700">
                       {application.icon ? (
                         <img
                           src={getApplicationicon(application.icon)}
@@ -156,16 +156,18 @@ export default function Applications() {
                           className="h-full w-full object-contain p-1"
                         />
                       ) : (
-                        <Package className="h-6 w-6" aria-hidden="true" />
+                        <Package className="h-8 w-8" aria-hidden="true" />
                       )}
                     </div>
-                    <div className="min-w-0">
-                      <h2 className="wrap-break-word text-base font-semibold text-slate-900">
+                    <div className="min-w-0 flex-1">
+                      <h2 className="truncate text-base font-semibold text-slate-900">
                         {application.displayName || application.packageName}
                       </h2>
                       {application.maintainer && (
-                        <p className="mt-0.5 flex items-center gap-1 wrap-break-word text-xs text-slate-600">
-                          {application.maintainer}
+                        <p className="mt-0.5 flex min-w-0 items-center gap-1 text-xs text-slate-600">
+                          <span className="truncate">
+                            {application.maintainer}
+                          </span>
                           <ShieldCheck
                             className="h-4 w-4 shrink-0 text-emerald-600"
                             aria-label="Verified maintainer"
@@ -173,7 +175,7 @@ export default function Applications() {
                         </p>
                       )}
                       {application.caption && (
-                        <p className="mt-1 wrap-break-word text-sm text-slate-600">
+                        <p className="mt-1 line-clamp-2 text-sm text-slate-600">
                           {application.caption}
                         </p>
                       )}

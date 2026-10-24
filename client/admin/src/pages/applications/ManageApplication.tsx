@@ -843,6 +843,13 @@ export default function ManageApplication() {
                     </div>
                     <div className="flex flex-wrap items-center gap-3">
                       <div className="flex flex-col items-stretch gap-2">
+                        <Link
+                          to={`/repositories/${application.repositoryId}`}
+                          className="inline-flex h-10 items-center justify-center gap-2 border border-orange-200 bg-orange-50 px-3 text-sm font-medium text-orange-700 hover:bg-orange-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-700"
+                        >
+                          View repository
+                          <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                        </Link>
                         <button
                           type="button"
                           onClick={() => {
@@ -857,14 +864,6 @@ export default function ManageApplication() {
                           <Pencil className="h-4 w-4" aria-hidden="true" />
                           Edit application
                         </button>
-
-                        <Link
-                          to={`/repositories/${application.repositoryId}`}
-                          className="inline-flex h-10 items-center justify-center gap-2 border border-orange-200 bg-orange-50 px-3 text-sm font-medium text-orange-700 hover:bg-orange-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-700"
-                        >
-                          View repository
-                          <ArrowRight className="h-4 w-4" aria-hidden="true" />
-                        </Link>
                       </div>
                       {application.homepageUri && (
                         <a
