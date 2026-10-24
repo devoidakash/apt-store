@@ -8,7 +8,7 @@ pub enum PackageStatus {
     UpdateAvailable,
     OnHold,
     InstallCheckFailed,
-    VersionCompareFailed,
+    VersionComparisonFailed,
 }
 
 #[derive(Debug, PartialEq)]
@@ -129,11 +129,11 @@ fn compare_versions(installed: &str, latest: &str) -> PackageStatus {
                 "[check_package_status] dpkg --compare-versions gave code {:?} for {installed} vs {latest}",
                 status.code()
             );
-            PackageStatus::VersionCompareFailed
+            PackageStatus::VersionComparisonFailed
         }
         Err(e) => {
             eprintln!("[check_package_status] dpkg could not run: {e}");
-            PackageStatus::VersionCompareFailed
+            PackageStatus::VersionComparisonFailed
         }
     }
 }
