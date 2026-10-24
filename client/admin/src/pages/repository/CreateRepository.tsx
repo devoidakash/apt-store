@@ -10,6 +10,36 @@ import type {
   RepositoryFormField,
 } from "../../components/repository/repository-form";
 
+interface ApiValidationError {
+  field: string;
+  message: string;
+}
+
+interface ApiErrorResponse {
+  message?: string;
+  errors?: ApiValidationError[];
+}
+
+const apiFieldToFormField: Record<string, RepositoryFormField> = {
+  name: "name",
+  displayName: "name",
+  display_name: "name",
+  application_name: "name",
+  "application-name": "name",
+  packageName: "packageName",
+  package_name: "packageName",
+  "package-name": "packageName",
+  uri: "uri",
+  uris: "uri",
+  suite: "suite",
+  suites: "suite",
+  component: "component",
+  components: "component",
+  key_uri: "key_uri",
+  "key-uri": "key_uri",
+  fingerprint: "fingerprint",
+};
+
 const initialForm: RepositoryForm = {
   name: "",
   packageName: "",
@@ -69,9 +99,13 @@ export default function CreateRepository() {
   const [repositoryDetails, setRepositoryDetails] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<
+    Partial<Record<RepositoryFormField, string>>
+  >({});
 
   const updateField = (field: RepositoryFormField, value: string) => {
     setForm((current) => ({ ...current, [field]: value }));
+    setFieldErrors((current) => ({ ...current, [field]: undefined }));
     setError("");
   };
 
@@ -81,12 +115,14 @@ export default function CreateRepository() {
       ...current,
       ...parseRepositoryDetails(value),
     }));
+    setFieldErrors({});
     setError("");
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError("");
+    setFieldErrors({});
     setIsSubmitting(true);
 
     try {
@@ -101,12 +137,26 @@ export default function CreateRepository() {
       });
       navigate(`/repositories/${result.data.id}`);
     } catch (submitError) {
-      const message = axios.isAxiosError<{ message?: string }>(submitError)
-        ? (submitError.response?.data?.message ?? submitError.message)
-        : submitError instanceof Error
-          ? submitError.message
-          : "Could not add this repository.";
-      setError(message);
+      if (axios.isAxiosError<ApiErrorResponse>(submitError)) {
+        const errors: Partial<Record<RepositoryFormField, string>> = {};
+        for (const validationError of submitError.response?.data.errors ?? []) {
+          const apiField = validationError.field.split(".")[0];
+          const formField = apiFieldToFormField[apiField];
+          if (formField && !errors[formField]) {
+            errors[formField] = validationError.message;
+          }
+        }
+        setFieldErrors(errors);
+        setError(
+          submitError.response?.data?.message ?? submitError.message,
+        );
+      } else {
+        setError(
+          submitError instanceof Error
+            ? submitError.message
+            : "Could not add this repository.",
+        );
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -136,7 +186,7 @@ export default function CreateRepository() {
       >
         <CreateRepo
           form={form}
-          fieldErrors={{}}
+          fieldErrors={fieldErrors}
           isSaving={isSubmitting}
           saveError={error}
           buttonText="Create"
