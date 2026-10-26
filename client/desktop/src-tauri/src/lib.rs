@@ -1,5 +1,4 @@
 mod app_status;
-
 use app_status::check_package_status;
 
 pub fn run() {

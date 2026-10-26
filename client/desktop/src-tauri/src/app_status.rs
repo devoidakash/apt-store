@@ -3,19 +3,19 @@ use std::process::Command;
 
 #[derive(Debug, PartialEq, Serialize)]
 pub enum PackageStatus {
+    Installed,
     NotInstalled,
-    UpToDate,
     UpdateAvailable,
     OnHold,
-    InstallCheckFailed,
-    VersionComparisonFailed,
+    Error,
 }
 
 #[derive(Debug, PartialEq)]
 enum InstalledState {
-    NotInstalled,
     Installed(String),
-    OnHold(String),
+    NotInstalled,
+    OnHold,
+    QueryFailed,
     Unreadable,
 }
 
@@ -29,8 +29,10 @@ pub async fn check_package_status(package_name: String, latest_version: String) 
     match result {
         Ok(status) => status,
         Err(e) => {
-            eprintln!("[check_package_status] background task failed: {e}");
-            PackageStatus::InstallCheckFailed
+            eprintln!(
+                "[check_package_status] Failed to execute package status check in background: {e}"
+            );
+            PackageStatus::Error
         }
     }
 }
@@ -38,16 +40,17 @@ pub async fn check_package_status(package_name: String, latest_version: String) 
 fn get_package_status(package_name: &str, latest_version: &str) -> PackageStatus {
     if package_name.is_empty() || latest_version.is_empty() {
         eprintln!("[check_package_status] empty package name or latest version received");
-        return PackageStatus::InstallCheckFailed;
+        return PackageStatus::Error;
     }
 
     match read_installed_state(package_name) {
-        InstalledState::NotInstalled => PackageStatus::NotInstalled,
-        InstalledState::Unreadable => PackageStatus::InstallCheckFailed,
+        InstalledState::QueryFailed => PackageStatus::Error,
+        InstalledState::Unreadable => PackageStatus::Error,
+        InstalledState::OnHold => PackageStatus::OnHold,
         InstalledState::Installed(installed_version) => {
             compare_versions(&installed_version, latest_version)
         }
-        InstalledState::OnHold(_) => PackageStatus::OnHold,
+        InstalledState::NotInstalled => PackageStatus::NotInstalled,
     }
 }
 
@@ -63,8 +66,8 @@ fn read_installed_state(package_name: &str) -> InstalledState {
     {
         Ok(output) => output,
         Err(e) => {
-            eprintln!("[check_package_status] dpkg-query could not run: {e}");
-            return InstalledState::Unreadable;
+            eprintln!("[check_package_status] dpkg-query failed to run: {e}");
+            return InstalledState::QueryFailed;
         }
     };
 
@@ -85,55 +88,44 @@ fn read_installed_state(package_name: &str) -> InstalledState {
     InstalledState::Unreadable
 }
 
-// Expected text looks like: "install ok installed\t1.2.3-1"
 fn parse_dpkg_output(text: &str) -> InstalledState {
-    let text = text.trim_end_matches(['\n', '\r']);
+    let text = text.trim_end();
 
     let Some((status, version)) = text.split_once('\t') else {
         eprintln!("[check_package_status] unexpected dpkg-query output: {text:?}");
         return InstalledState::Unreadable;
     };
 
-    let words: Vec<&str> = status.split_whitespace().collect();
-    if words.last() != Some(&"installed") {
-        return InstalledState::NotInstalled;
-    }
-    let is_on_hold = words.first() == Some(&"hold");
-    if is_on_hold {
+    if status.trim() == "hold ok installed" {
         eprintln!("[check_package_status] package is on hold: {status}");
+        return InstalledState::OnHold;
     }
 
-    let version = version.trim();
-    if version.is_empty() {
-        eprintln!("[check_package_status] installed but version is empty: {status}");
-        return InstalledState::Unreadable;
+    if status.trim() == "install ok installed" {
+        return InstalledState::Installed(version.to_string());
     }
 
-    if is_on_hold {
-        InstalledState::OnHold(version.to_string())
-    } else {
-        InstalledState::Installed(version.to_string())
-    }
+    eprintln!("[check_package_status] unexpected package status: {status}");
+    InstalledState::Unreadable
 }
 
-// Asks dpkg: "is installed < latest?"  exit 0 = yes, exit 1 = no.
 fn compare_versions(installed: &str, latest: &str) -> PackageStatus {
     match Command::new("dpkg")
         .args(["--compare-versions", installed, "lt", latest])
         .status()
     {
         Ok(status) if status.success() => PackageStatus::UpdateAvailable,
-        Ok(status) if status.code() == Some(1) => PackageStatus::UpToDate,
+        Ok(status) if status.code() == Some(1) => PackageStatus::Installed,
         Ok(status) => {
             eprintln!(
                 "[check_package_status] dpkg --compare-versions gave code {:?} for {installed} vs {latest}",
                 status.code()
             );
-            PackageStatus::VersionComparisonFailed
+            PackageStatus::Error
         }
         Err(e) => {
             eprintln!("[check_package_status] dpkg could not run: {e}");
-            PackageStatus::VersionComparisonFailed
+            PackageStatus::Error
         }
     }
 }

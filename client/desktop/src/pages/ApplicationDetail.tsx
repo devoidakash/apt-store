@@ -38,7 +38,7 @@ function PackageActions({ status, packageName, onRetry }: PackageActionsProps) {
           Install <span aria-hidden="true">&#8594;</span>
         </button>
       );
-    case "UpToDate":
+    case "Installed":
       return (
         <div className="detail-actions">
           <button
@@ -122,41 +122,13 @@ function PackageActions({ status, packageName, onRetry }: PackageActionsProps) {
           </div>
         </div>
       );
-    case "InstallCheckFailed":
+    case "Error":
       return (
         <div className="detail-status-error">
-          <span role="alert">We couldn't check if this app is installed.</span>
+          <span role="alert">We couldn't determine this app's status.</span>
           <button type="button" className="detail-action" onClick={onRetry}>
             Try again
           </button>
-        </div>
-      );
-    case "VersionComparisonFailed":
-      return (
-        <div className="detail-status-error">
-          <span role="alert">
-            This app is installed, but we couldn't check for updates.
-          </span>
-          <div className="detail-actions">
-            <button
-              type="button"
-              className="detail-install"
-              onClick={() => {
-                /* TODO: implement opening */
-              }}
-            >
-              Open
-            </button>
-            <button
-              type="button"
-              className="detail-action"
-              onClick={() => {
-                /* TODO: implement uninstallation */
-              }}
-            >
-              Uninstall
-            </button>
-          </div>
         </div>
       );
     default:

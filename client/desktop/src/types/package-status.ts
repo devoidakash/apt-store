@@ -1,7 +1,6 @@
 export type PackageStatus =
+  | "Installed"
   | "NotInstalled"
-  | "UpToDate"
   | "UpdateAvailable"
   | "OnHold"
-  | "InstallCheckFailed"
-  | "VersionComparisonFailed";
+  | "Error";

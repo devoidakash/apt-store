@@ -26,7 +26,7 @@ export function usePackageStatus(
     setIsLoading(true);
 
     if (!packageName || !latestVersion) {
-      setStatus("InstallCheckFailed");
+      setStatus("Error");
       setIsLoading(false);
       return () => {
         isCurrentRequest = false;
@@ -42,7 +42,7 @@ export function usePackageStatus(
         if (isCurrentRequest) setStatus(result);
       } catch (error) {
         console.error("Could not check package status.", error);
-        if (isCurrentRequest) setStatus("InstallCheckFailed");
+        if (isCurrentRequest) setStatus("Error");
       } finally {
         if (isCurrentRequest) setIsLoading(false);
       }
