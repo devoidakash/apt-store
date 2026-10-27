@@ -3,7 +3,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-fn find_repo_file(uri: &str) -> Option<PathBuf> {
+pub fn check_repo_status(uri: &str) -> Option<PathBuf> {
     if let Ok(entries) = fs::read_dir("/etc/apt/sources.list.d") {
         for entry in entries.flatten() {
             let path = entry.path();
