@@ -68,8 +68,11 @@ export async function getApplicationById(
 
   const result = (await response.json()) as ApplicationDetailResponse;
   return {
-    ...result.data.application,
-    packageName: result.data.repository.packageName,
-    images: result.data.application.images ?? [],
+    application: {
+      ...result.data.application,
+      packageName: result.data.repository.packageName,
+      images: result.data.application.images ?? [],
+    },
+    repository: result.data.repository,
   };
 }

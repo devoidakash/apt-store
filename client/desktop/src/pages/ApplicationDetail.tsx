@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
+import { invoke } from "@tauri-apps/api/core";
 import {
   getApplicationById,
   type ApplicationDetail as ApplicationDetailData,
@@ -18,25 +19,76 @@ function assertNever(value: never): never {
   throw new Error(`Unhandled package status: ${value}`);
 }
 
+interface Repository {
+  packageName: string;
+  uri: string;
+  suite: string;
+  component: string | null;
+  keyContent: string;
+}
+
 interface PackageActionsProps {
   status: PackageStatus;
   packageName: string;
   onRetry: () => void;
+  repository: Repository | null;
+  onInstallComplete: () => void;
 }
 
-function PackageActions({ status, packageName, onRetry }: PackageActionsProps) {
+function PackageActions({
+  status,
+  packageName,
+  onRetry,
+  repository,
+  onInstallComplete,
+}: PackageActionsProps) {
+  const [isInstalling, setIsInstalling] = useState(false);
+  const [installError, setInstallError] = useState("");
+
+  const handleInstall = async () => {
+    if (!repository) {
+      setInstallError("Repository information is missing.");
+      return;
+    }
+    setIsInstalling(true);
+    setInstallError("");
+    try {
+      await invoke("install_packages", { repository });
+      onInstallComplete();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      const normalized = message.toLowerCase();
+
+      if (normalized.includes("cancelled") || normalized === '"cancelled"') {
+        setInstallError("");
+        return;
+      }
+
+      setInstallError(message);
+    } finally {
+      setIsInstalling(false);
+    }
+  };
+
   switch (status) {
     case "NotInstalled":
       return (
-        <button
-          type="button"
-          className="detail-install"
-          onClick={() => {
-            /* TODO: implement installation */
-          }}
-        >
-          Install <span aria-hidden="true">&#8594;</span>
-        </button>
+        <div className="detail-install-group">
+          <button
+            type="button"
+            className="detail-install"
+            onClick={handleInstall}
+            disabled={isInstalling}
+          >
+            {isInstalling ? "Installing..." : "Install"}
+            {!isInstalling && <span aria-hidden="true">&#8594;</span>}
+          </button>
+          {installError && (
+            <span className="detail-inline-error" role="alert">
+              {installError}
+            </span>
+          )}
+        </div>
       );
     case "Installed":
       return (
@@ -144,6 +196,7 @@ export default function ApplicationDetail() {
   const [application, setApplication] = useState<ApplicationDetailData | null>(
     null,
   );
+  const [repository, setRepository] = useState<Repository | null>(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -167,12 +220,13 @@ export default function ApplicationDetail() {
       setError("");
       setApplication(null);
       try {
-        const loadedApplication = await getApplicationById(
+        const loaded = await getApplicationById(
           applicationId,
           controller.signal,
         );
         if (controller.signal.aborted) return;
-        setApplication(loadedApplication);
+        setApplication(loaded.application);
+        setRepository(loaded.repository);
         setSelectedImageIndex(0);
       } catch (loadError) {
         if (controller.signal.aborted) return;
@@ -263,6 +317,8 @@ export default function ApplicationDetail() {
                     status={packageStatus}
                     packageName={packageName}
                     onRetry={retryStatusCheck}
+                    repository={repository}
+                    onInstallComplete={retryStatusCheck}
                   />
                 ) : null}
               </div>

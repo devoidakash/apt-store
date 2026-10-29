@@ -1,7 +1,7 @@
 use serde::Serialize;
 use std::process::Command;
 
-#[derive(Debug, PartialEq, Serialize)]
+#[derive(Debug, Serialize)]
 pub enum PackageStatus {
     Installed,
     NotInstalled,
@@ -10,7 +10,7 @@ pub enum PackageStatus {
     Error,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug)]
 enum InstalledState {
     Installed(String),
     NotInstalled,
@@ -20,7 +20,10 @@ enum InstalledState {
 }
 
 #[tauri::command]
-pub async fn check_package_status(package_name: String, latest_version: String) -> PackageStatus {
+pub(crate) async fn check_package_status(
+    package_name: String,
+    latest_version: String,
+) -> PackageStatus {
     let result = tauri::async_runtime::spawn_blocking(move || {
         get_package_status(&package_name, &latest_version)
     })
@@ -103,6 +106,10 @@ fn parse_dpkg_output(text: &str) -> InstalledState {
 
     if status.trim() == "install ok installed" {
         return InstalledState::Installed(version.to_string());
+    }
+
+    if status.trim().ends_with("config-files") || status.trim().ends_with("not-installed") {
+        return InstalledState::NotInstalled;
     }
 
     eprintln!("[check_package_status] unexpected package status: {status}");
