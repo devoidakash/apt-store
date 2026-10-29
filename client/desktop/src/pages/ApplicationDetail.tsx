@@ -42,6 +42,36 @@ function describeOpenError(error: unknown): string {
   );
 }
 
+type RepositoryCommand = "install_packages" | "update_packages";
+
+type RepositoryCommandResult =
+  | { status: "success" }
+  | { status: "cancelled" }
+  | { status: "error"; message: string };
+
+async function runRepositoryCommand(
+  command: RepositoryCommand,
+  repository: Repository | null,
+): Promise<RepositoryCommandResult> {
+  if (!repository) {
+    return { status: "error", message: "Repository information is missing." };
+  }
+
+  try {
+    await invoke(command, { repository });
+    return { status: "success" };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    const normalized = message.toLowerCase();
+
+    if (normalized.includes("cancelled") || normalized === '"cancelled"') {
+      return { status: "cancelled" };
+    }
+
+    return { status: "error", message };
+  }
+}
+
 interface Repository {
   packageName: string;
   uri: string;
@@ -55,7 +85,7 @@ interface PackageActionsProps {
   packageName: string;
   onRetry: () => void;
   repository: Repository | null;
-  onInstallComplete: () => void;
+  onActionComplete: () => void;
 }
 
 function PackageActions({
@@ -63,35 +93,36 @@ function PackageActions({
   packageName,
   onRetry,
   repository,
-  onInstallComplete,
+  onActionComplete,
 }: PackageActionsProps) {
   const [isInstalling, setIsInstalling] = useState(false);
   const [installError, setInstallError] = useState("");
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [updateError, setUpdateError] = useState("");
   const [isOpening, setIsOpening] = useState(false);
   const [openError, setOpenError] = useState("");
 
   const handleInstall = async () => {
-    if (!repository) {
-      setInstallError("Repository information is missing.");
-      return;
-    }
     setIsInstalling(true);
     setInstallError("");
     try {
-      await invoke("install_packages", { repository });
-      onInstallComplete();
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      const normalized = message.toLowerCase();
-
-      if (normalized.includes("cancelled") || normalized === '"cancelled"') {
-        setInstallError("");
-        return;
-      }
-
-      setInstallError(message);
+      const result = await runRepositoryCommand("install_packages", repository);
+      if (result.status === "success") onActionComplete();
+      else if (result.status === "error") setInstallError(result.message);
     } finally {
       setIsInstalling(false);
+    }
+  };
+
+  const handleUpdate = async () => {
+    setIsUpdating(true);
+    setUpdateError("");
+    try {
+      const result = await runRepositoryCommand("update_packages", repository);
+      if (result.status === "success") onActionComplete();
+      else if (result.status === "error") setUpdateError(result.message);
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -127,6 +158,12 @@ function PackageActions({
   const openErrorAlert = openError ? (
     <span className="detail-inline-error" role="alert">
       {openError}
+    </span>
+  ) : null;
+
+  const updateErrorAlert = updateError ? (
+    <span className="detail-inline-error" role="alert">
+      {updateError}
     </span>
   ) : null;
 
@@ -175,11 +212,11 @@ function PackageActions({
             <button
               type="button"
               className="detail-install"
-              onClick={() => {
-                /* TODO: implement update */
-              }}
+              onClick={handleUpdate}
+              disabled={isUpdating}
             >
-              Update <span aria-hidden="true">&#8594;</span>
+              {isUpdating ? "Updating..." : "Update"}
+              {!isUpdating && <span aria-hidden="true">&#8594;</span>}
             </button>
             {renderOpenButton("detail-action")}
             <button
@@ -192,6 +229,7 @@ function PackageActions({
               Uninstall
             </button>
           </div>
+          {updateErrorAlert}
           {openErrorAlert}
         </div>
       );
@@ -362,7 +400,7 @@ export default function ApplicationDetail() {
                     packageName={resolvedPackageName}
                     onRetry={retryStatusCheck}
                     repository={repository}
-                    onInstallComplete={retryStatusCheck}
+                    onActionComplete={retryStatusCheck}
                   />
                 ) : null}
               </div>

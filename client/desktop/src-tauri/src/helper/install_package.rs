@@ -34,6 +34,10 @@ fn install_package(filepath: &Path, package_name: &str) -> Result<(), InstallErr
 
     // Step 2: Install the requested package.
     let output = Command::new("apt-get")
+        .arg("-o")
+        .arg(format!("Dir::Etc::sourcelist={}", filepath.display()))
+        .arg("-o")
+        .arg("Dir::Etc::sourceparts=-")
         .args(["install", "-y", package_name])
         .output()
         .map_err(|_| InstallError::PackageInstallFailed)?;
