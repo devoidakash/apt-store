@@ -21,3 +21,11 @@ pub enum InstallError {
     Cancelled,
     Unknown,
 }
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub enum RemoveError {
+    Cancelled,
+    InvalidInput,
+    PackageRemovalFailed,
+}

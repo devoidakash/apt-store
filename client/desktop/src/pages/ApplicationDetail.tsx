@@ -42,12 +42,33 @@ function describeOpenError(error: unknown): string {
   );
 }
 
-type RepositoryCommand = "install_packages" | "update_packages";
+const REMOVE_ERROR_MESSAGES: Record<string, string> = {
+  invalidInput: "This application cannot be removed.",
+  packageRemovalFailed: "This application could not be removed.",
+};
+
+type RepositoryCommand =
+  | "install_packages"
+  | "update_packages"
+  | "remove_packages";
 
 type RepositoryCommandResult =
   | { status: "success" }
   | { status: "cancelled" }
   | { status: "error"; message: string };
+
+function describeRepositoryError(
+  command: RepositoryCommand,
+  message: string,
+): string {
+  if (command === "remove_packages") {
+    return (
+      REMOVE_ERROR_MESSAGES[message] ?? "This application could not be removed."
+    );
+  }
+
+  return message;
+}
 
 async function runRepositoryCommand(
   command: RepositoryCommand,
@@ -68,7 +89,7 @@ async function runRepositoryCommand(
       return { status: "cancelled" };
     }
 
-    return { status: "error", message };
+    return { status: "error", message: describeRepositoryError(command, message) };
   }
 }
 
@@ -101,6 +122,8 @@ function PackageActions({
   const [updateError, setUpdateError] = useState("");
   const [isOpening, setIsOpening] = useState(false);
   const [openError, setOpenError] = useState("");
+  const [isRemoving, setIsRemoving] = useState(false);
+  const [removeError, setRemoveError] = useState("");
 
   const handleInstall = async () => {
     setIsInstalling(true);
@@ -123,6 +146,18 @@ function PackageActions({
       else if (result.status === "error") setUpdateError(result.message);
     } finally {
       setIsUpdating(false);
+    }
+  };
+
+  const handleRemove = async () => {
+    setIsRemoving(true);
+    setRemoveError("");
+    try {
+      const result = await runRepositoryCommand("remove_packages", repository);
+      if (result.status === "success") onActionComplete();
+      else if (result.status === "error") setRemoveError(result.message);
+    } finally {
+      setIsRemoving(false);
     }
   };
 
@@ -155,6 +190,17 @@ function PackageActions({
     </button>
   );
 
+  const renderRemoveButton = (className: string) => (
+    <button
+      type="button"
+      className={className}
+      onClick={handleRemove}
+      disabled={isRemoving}
+    >
+      {isRemoving ? "Removing..." : "Uninstall"}
+    </button>
+  );
+
   const openErrorAlert = openError ? (
     <span className="detail-inline-error" role="alert">
       {openError}
@@ -164,6 +210,12 @@ function PackageActions({
   const updateErrorAlert = updateError ? (
     <span className="detail-inline-error" role="alert">
       {updateError}
+    </span>
+  ) : null;
+
+  const removeErrorAlert = removeError ? (
+    <span className="detail-inline-error" role="alert">
+      {removeError}
     </span>
   ) : null;
 
@@ -192,17 +244,10 @@ function PackageActions({
         <div className="detail-open-panel">
           <div className="detail-actions">
             {renderOpenButton("detail-install")}
-            <button
-              type="button"
-              className="detail-action"
-              onClick={() => {
-                /* TODO: implement uninstallation */
-              }}
-            >
-              Uninstall
-            </button>
+            {renderRemoveButton("detail-action")}
           </div>
           {openErrorAlert}
+          {removeErrorAlert}
         </div>
       );
     case "UpdateAvailable":
@@ -219,18 +264,11 @@ function PackageActions({
               {!isUpdating && <span aria-hidden="true">&#8594;</span>}
             </button>
             {renderOpenButton("detail-action")}
-            <button
-              type="button"
-              className="detail-action"
-              onClick={() => {
-                /* TODO: implement uninstallation */
-              }}
-            >
-              Uninstall
-            </button>
+            {renderRemoveButton("detail-action")}
           </div>
           {updateErrorAlert}
           {openErrorAlert}
+          {removeErrorAlert}
         </div>
       );
     case "OnHold":
@@ -238,17 +276,10 @@ function PackageActions({
         <div className="detail-on-hold">
           <div className="detail-actions">
             {renderOpenButton("detail-install")}
-            <button
-              type="button"
-              className="detail-action"
-              onClick={() => {
-                /* TODO: implement uninstallation */
-              }}
-            >
-              Uninstall
-            </button>
+            {renderRemoveButton("detail-action")}
           </div>
           {openErrorAlert}
+          {removeErrorAlert}
           <div className="detail-on-hold-warning" role="status">
             This package is on hold. Run{" "}
             <code>sudo apt-mark unhold {packageName}</code> to allow updates.

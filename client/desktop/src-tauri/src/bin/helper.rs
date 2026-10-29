@@ -1,4 +1,5 @@
 use desktop_lib::helper::install_package;
+use desktop_lib::helper::remove_package;
 use desktop_lib::helper::update_package;
 use desktop_lib::types::Repository;
 
@@ -43,6 +44,25 @@ fn main() {
 
             if let Err(error) = update_package::update(&repository) {
                 eprintln!("Update failed: {:?}", error);
+                std::process::exit(1);
+            }
+        }
+        Some("remove") => {
+            if args.len() != 3 {
+                eprintln!("Usage: helper remove <repository_json>");
+                std::process::exit(1);
+            }
+
+            let repository: Repository = match serde_json::from_str(&args[2]) {
+                Ok(repository) => repository,
+                Err(error) => {
+                    eprintln!("Invalid repository payload: {error}");
+                    std::process::exit(1);
+                }
+            };
+
+            if let Err(error) = remove_package::remove(&repository) {
+                eprintln!("Removal failed: {:?}", error);
                 std::process::exit(1);
             }
         }
