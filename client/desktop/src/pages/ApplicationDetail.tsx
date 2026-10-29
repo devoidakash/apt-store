@@ -19,6 +19,29 @@ function assertNever(value: never): never {
   throw new Error(`Unhandled package status: ${value}`);
 }
 
+const OPEN_ERROR_MESSAGES: Record<string, string> = {
+  invalidInput: "This application cannot be opened.",
+  notInstalled: "This application is no longer installed.",
+  noLauncherFound: "No desktop launcher was found for this application.",
+  launchFailed: "This application could not be started.",
+};
+
+function openErrorCode(error: unknown): string {
+  if (typeof error === "string") return error;
+  if (error instanceof Error) return error.message;
+  if (error && typeof error === "object" && "message" in error) {
+    return String((error as { message: unknown }).message);
+  }
+  return "";
+}
+
+function describeOpenError(error: unknown): string {
+  return (
+    OPEN_ERROR_MESSAGES[openErrorCode(error)] ??
+    "This application could not be opened."
+  );
+}
+
 interface Repository {
   packageName: string;
   uri: string;
@@ -44,6 +67,8 @@ function PackageActions({
 }: PackageActionsProps) {
   const [isInstalling, setIsInstalling] = useState(false);
   const [installError, setInstallError] = useState("");
+  const [isOpening, setIsOpening] = useState(false);
+  const [openError, setOpenError] = useState("");
 
   const handleInstall = async () => {
     if (!repository) {
@@ -70,6 +95,41 @@ function PackageActions({
     }
   };
 
+  const handleOpen = async () => {
+    if (!packageName.trim()) {
+      setOpenError("Package name is missing.");
+      return;
+    }
+
+    setIsOpening(true);
+    setOpenError("");
+    try {
+      await invoke("open_app", { packageName });
+    } catch (error) {
+      setOpenError(describeOpenError(error));
+      if (openErrorCode(error) === "notInstalled") onRetry();
+    } finally {
+      setIsOpening(false);
+    }
+  };
+
+  const renderOpenButton = (className: string) => (
+    <button
+      type="button"
+      className={className}
+      onClick={handleOpen}
+      disabled={isOpening}
+    >
+      {isOpening ? "Opening..." : "Open"}
+    </button>
+  );
+
+  const openErrorAlert = openError ? (
+    <span className="detail-inline-error" role="alert">
+      {openError}
+    </span>
+  ) : null;
+
   switch (status) {
     case "NotInstalled":
       return (
@@ -92,72 +152,9 @@ function PackageActions({
       );
     case "Installed":
       return (
-        <div className="detail-actions">
-          <button
-            type="button"
-            className="detail-install"
-            onClick={() => {
-              /* TODO: implement opening */
-            }}
-          >
-            Open
-          </button>
-          <button
-            type="button"
-            className="detail-action"
-            onClick={() => {
-              /* TODO: implement uninstallation */
-            }}
-          >
-            Uninstall
-          </button>
-        </div>
-      );
-    case "UpdateAvailable":
-      return (
-        <div className="detail-actions">
-          <button
-            type="button"
-            className="detail-install"
-            onClick={() => {
-              /* TODO: implement update */
-            }}
-          >
-            Update <span aria-hidden="true">&#8594;</span>
-          </button>
-          <button
-            type="button"
-            className="detail-action"
-            onClick={() => {
-              /* TODO: implement opening */
-            }}
-          >
-            Open
-          </button>
-          <button
-            type="button"
-            className="detail-action"
-            onClick={() => {
-              /* TODO: implement uninstallation */
-            }}
-          >
-            Uninstall
-          </button>
-        </div>
-      );
-    case "OnHold":
-      return (
-        <div className="detail-on-hold">
+        <div className="detail-open-panel">
           <div className="detail-actions">
-            <button
-              type="button"
-              className="detail-install"
-              onClick={() => {
-                /* TODO: implement opening */
-              }}
-            >
-              Open
-            </button>
+            {renderOpenButton("detail-install")}
             <button
               type="button"
               className="detail-action"
@@ -168,6 +165,52 @@ function PackageActions({
               Uninstall
             </button>
           </div>
+          {openErrorAlert}
+        </div>
+      );
+    case "UpdateAvailable":
+      return (
+        <div className="detail-open-panel">
+          <div className="detail-actions">
+            <button
+              type="button"
+              className="detail-install"
+              onClick={() => {
+                /* TODO: implement update */
+              }}
+            >
+              Update <span aria-hidden="true">&#8594;</span>
+            </button>
+            {renderOpenButton("detail-action")}
+            <button
+              type="button"
+              className="detail-action"
+              onClick={() => {
+                /* TODO: implement uninstallation */
+              }}
+            >
+              Uninstall
+            </button>
+          </div>
+          {openErrorAlert}
+        </div>
+      );
+    case "OnHold":
+      return (
+        <div className="detail-on-hold">
+          <div className="detail-actions">
+            {renderOpenButton("detail-install")}
+            <button
+              type="button"
+              className="detail-action"
+              onClick={() => {
+                /* TODO: implement uninstallation */
+              }}
+            >
+              Uninstall
+            </button>
+          </div>
+          {openErrorAlert}
           <div className="detail-on-hold-warning" role="status">
             This package is on hold. Run{" "}
             <code>sudo apt-mark unhold {packageName}</code> to allow updates.
@@ -245,6 +288,7 @@ export default function ApplicationDetail() {
   }, [applicationId]);
 
   const images = application?.images ?? [];
+  const resolvedPackageName = packageName || application?.packageName || "";
 
   return (
     <main className="store-shell">
@@ -315,7 +359,7 @@ export default function ApplicationDetail() {
                 ) : packageStatus ? (
                   <PackageActions
                     status={packageStatus}
-                    packageName={packageName}
+                    packageName={resolvedPackageName}
                     onRetry={retryStatusCheck}
                     repository={repository}
                     onInstallComplete={retryStatusCheck}

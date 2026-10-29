@@ -1,10 +1,12 @@
 pub mod helper;
 mod install;
+mod open;
 mod package_status;
 mod repo_status;
 pub mod types;
 
 use install::install_packages;
+use open::open_app;
 use package_status::check_package_status;
 
 pub fn run() {
@@ -12,7 +14,8 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
             check_package_status,
-            install_packages
+            install_packages,
+            open_app
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

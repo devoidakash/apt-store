@@ -452,6 +452,32 @@ button {
     gap: 8px;
 }
 
+.detail-actions {
+    flex-wrap: wrap;
+}
+
+.detail-open-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+}
+
+.detail-install-group {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+}
+
+.detail-inline-error {
+    max-width: 320px;
+    color: #b42318;
+    font-size: 12px;
+    line-height: 1.4;
+    text-align: right;
+}
+
 .detail-status-error {
     color: #b42318;
     font-size: 13px;
@@ -533,6 +559,12 @@ button {
 
 .detail-action:hover {
     background: #f0faf3;
+}
+
+.detail-action:disabled {
+    color: #7d9a8b;
+    background: #f4f8f5;
+    cursor: default;
 }
 
 .detail-stats {
@@ -757,6 +789,11 @@ button {
     }
 
     .detail-install {
+        width: 100%;
+    }
+
+    .detail-open-panel,
+    .detail-install-group {
         width: 100%;
     }
 
