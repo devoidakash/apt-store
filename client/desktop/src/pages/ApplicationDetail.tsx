@@ -20,10 +20,10 @@ function assertNever(value: never): never {
 }
 
 const OPEN_ERROR_MESSAGES: Record<string, string> = {
-  invalidInput: "This application cannot be opened.",
-  notInstalled: "This application is no longer installed.",
-  noLauncherFound: "No desktop launcher was found for this application.",
-  launchFailed: "This application could not be started.",
+  InvalidInput: "This application cannot be opened.",
+  NotInstalled: "This application is no longer installed.",
+  NoLauncherFound: "No desktop launcher was found for this application.",
+  LaunchFailed: "This application could not be started.",
 };
 
 function openErrorCode(error: unknown): string {
@@ -173,7 +173,7 @@ function PackageActions({
       await invoke("open_app", { packageName });
     } catch (error) {
       setOpenError(describeOpenError(error));
-      if (openErrorCode(error) === "notInstalled") onRetry();
+      if (openErrorCode(error) === "NotInstalled") onRetry();
     } finally {
       setIsOpening(false);
     }

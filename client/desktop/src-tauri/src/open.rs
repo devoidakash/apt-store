@@ -6,8 +6,7 @@ use std::{
     process::{Command, Stdio},
 };
 
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Serialize)]
 pub enum OpenError {
     InvalidInput,
     NotInstalled,
@@ -17,15 +16,12 @@ pub enum OpenError {
 
 #[tauri::command]
 pub async fn open_app(package_name: String) -> Result<(), OpenError> {
-    let result = tauri::async_runtime::spawn_blocking(move || launch_app(&package_name)).await;
-
-    match result {
-        Ok(open_result) => open_result,
-        Err(e) => {
+    tauri::async_runtime::spawn_blocking(move || launch_app(&package_name))
+        .await
+        .unwrap_or_else(|e| {
             eprintln!("[open_app] Failed to run in background: {e}");
             Err(OpenError::LaunchFailed)
-        }
-    }
+        })
 }
 
 fn launch_app(package_name: &str) -> Result<(), OpenError> {
