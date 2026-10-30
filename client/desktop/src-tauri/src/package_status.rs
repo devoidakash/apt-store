@@ -1,7 +1,7 @@
 use serde::Serialize;
 use std::process::Command;
 
-#[derive(Debug, Serialize)]
+#[derive(Serialize)]
 pub enum PackageStatus {
     Installed,
     NotInstalled,
@@ -10,7 +10,11 @@ pub enum PackageStatus {
     Error,
 }
 
-#[derive(Debug)]
+#[derive(Serialize)]
+pub enum PackageError {
+    CheckFailed,
+}
+
 enum InstalledState {
     Installed(String),
     NotInstalled,
@@ -20,40 +24,36 @@ enum InstalledState {
 }
 
 #[tauri::command]
-pub(crate) async fn check_package_status(
+pub async fn check_package_status(
     package_name: String,
     latest_version: String,
-) -> PackageStatus {
-    let result = tauri::async_runtime::spawn_blocking(move || {
-        get_package_status(&package_name, &latest_version)
-    })
-    .await;
-
-    match result {
-        Ok(status) => status,
-        Err(e) => {
+) -> Result<PackageStatus, PackageError> {
+    tauri::async_runtime::spawn_blocking(move || get_package_status(&package_name, &latest_version))
+        .await
+        .unwrap_or_else(|e| {
             eprintln!(
                 "[check_package_status] Failed to execute package status check in background: {e}"
             );
-            PackageStatus::Error
-        }
-    }
+            Err(PackageError::CheckFailed)
+        })
 }
 
-fn get_package_status(package_name: &str, latest_version: &str) -> PackageStatus {
+fn get_package_status(
+    package_name: &str,
+    latest_version: &str,
+) -> Result<PackageStatus, PackageError> {
     if package_name.is_empty() || latest_version.is_empty() {
-        eprintln!("[check_package_status] empty package name or latest version received");
-        return PackageStatus::Error;
+        eprintln!("[check_package_status] empty package_name or latest_version received");
+        return Err(PackageError::CheckFailed);
     }
 
     match read_installed_state(package_name) {
-        InstalledState::QueryFailed => PackageStatus::Error,
-        InstalledState::Unreadable => PackageStatus::Error,
-        InstalledState::OnHold => PackageStatus::OnHold,
+        InstalledState::QueryFailed | InstalledState::Unreadable => Ok(PackageStatus::Error),
+        InstalledState::OnHold => Ok(PackageStatus::OnHold),
         InstalledState::Installed(installed_version) => {
             compare_versions(&installed_version, latest_version)
         }
-        InstalledState::NotInstalled => PackageStatus::NotInstalled,
+        InstalledState::NotInstalled => Ok(PackageStatus::NotInstalled),
     }
 }
 
@@ -116,23 +116,23 @@ fn parse_dpkg_output(text: &str) -> InstalledState {
     InstalledState::Unreadable
 }
 
-fn compare_versions(installed: &str, latest: &str) -> PackageStatus {
+fn compare_versions(installed: &str, latest: &str) -> Result<PackageStatus, PackageError> {
     match Command::new("dpkg")
         .args(["--compare-versions", installed, "lt", latest])
         .status()
     {
-        Ok(status) if status.success() => PackageStatus::UpdateAvailable,
-        Ok(status) if status.code() == Some(1) => PackageStatus::Installed,
+        Ok(status) if status.success() => Ok(PackageStatus::UpdateAvailable),
+        Ok(status) if status.code() == Some(1) => Ok(PackageStatus::Installed),
         Ok(status) => {
             eprintln!(
                 "[check_package_status] dpkg --compare-versions gave code {:?} for {installed} vs {latest}",
                 status.code()
             );
-            PackageStatus::Error
+            Err(PackageError::CheckFailed)
         }
         Err(e) => {
             eprintln!("[check_package_status] dpkg could not run: {e}");
-            PackageStatus::Error
+            Err(PackageError::CheckFailed)
         }
     }
 }
