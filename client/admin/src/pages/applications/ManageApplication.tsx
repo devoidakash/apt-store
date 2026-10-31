@@ -162,6 +162,18 @@ export default function ManageApplication() {
       label: "Repositories",
       icon: Database,
       end: false,
+      children: [
+        {
+          to: "/repositories?applicationStatus=draft",
+          label: "Draft",
+          icon: FileText,
+        },
+        {
+          to: "/repositories?applicationStatus=published",
+          label: "Published",
+          icon: BadgeCheck,
+        },
+      ],
     },
     {
       to: "/applications",

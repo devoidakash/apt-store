@@ -7,10 +7,14 @@ import REPOSITORY_ERRORS from "./error";
 import { processRepositoryMetadata } from "./helpers/apt-metadata";
 import { verifyRepositoryKey } from "./helpers/gpg-keys";
 import * as repository from "./repository";
-import { CreateRepositoryType } from "./schema";
+import { CreateRepositoryType, RepositoryApplicationStatus } from "./schema";
 
-export async function getRepositories() {
-  const repositories = await repository.fetchRepositories();
+export async function getRepositories(
+  repositoryApplicationStatus: RepositoryApplicationStatus,
+) {
+  const repositories = await repository.fetchRepositories(
+    repositoryApplicationStatus,
+  );
 
   return repositories.map((repo) => {
     const { iconUpdatedAt, ...data } = repo;

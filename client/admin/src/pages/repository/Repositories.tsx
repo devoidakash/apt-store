@@ -9,9 +9,13 @@ import {
   Plus,
   ShieldCheck,
 } from "lucide-react";
-import { Link } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import Layout from "../../components/dashboard/Layout";
-import { getRepositories, type Repository } from "../../api/repository";
+import {
+  getRepositories,
+  type Repository,
+  type RepositoryApplicationStatus,
+} from "../../api/repository";
 
 const sidebarLinks = [
   {
@@ -19,6 +23,18 @@ const sidebarLinks = [
     label: "Repositories",
     icon: Database,
     end: false,
+    children: [
+      {
+        to: "/repositories?applicationStatus=draft",
+        label: "Draft",
+        icon: FileText,
+      },
+      {
+        to: "/repositories?applicationStatus=published",
+        label: "Published",
+        icon: BadgeCheck,
+      },
+    ],
   },
   {
     to: "/applications",
@@ -41,10 +57,20 @@ const sidebarLinks = [
 ];
 
 export default function Repositories() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const rawStatus = searchParams.get("applicationStatus");
+  const status: RepositoryApplicationStatus =
+    rawStatus === "published" ? "published" : "draft";
   const [repositories, setRepositories] = useState<Repository[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
+
+  useEffect(() => {
+    if (rawStatus !== "draft" && rawStatus !== "published") {
+      setSearchParams({ applicationStatus: "draft" }, { replace: true });
+    }
+  }, [rawStatus, setSearchParams]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -54,7 +80,7 @@ export default function Repositories() {
       setError("");
 
       try {
-        setRepositories(await getRepositories(controller.signal));
+        setRepositories(await getRepositories(status, controller.signal));
       } catch (loadError) {
         if (controller.signal.aborted) return;
 
@@ -71,7 +97,13 @@ export default function Repositories() {
 
     void loadRepositories();
     return () => controller.abort();
-  }, [reloadKey]);
+  }, [reloadKey, status]);
+
+  const StatusIcon = status === "published" ? BadgeCheck : FileText;
+  const statusPillClassName =
+    status === "published"
+      ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+      : "border-amber-200 bg-amber-50 text-amber-700";
 
   return (
     <Layout
@@ -89,10 +121,13 @@ export default function Repositories() {
             </h1>
           </div>
           {!isLoading && !error && (
-            <p className="text-sm text-slate-500">
-              {repositories.length}{" "}
-              {repositories.length === 1 ? "source" : "sources"}
-            </p>
+            <span
+              className={`inline-flex items-center gap-2 border px-3 py-2 text-sm font-medium ${statusPillClassName}`}
+            >
+              <StatusIcon className="h-4 w-4" aria-hidden="true" />
+              <span>{repositories.length}</span>
+              <span className="capitalize">{status}</span>
+            </span>
           )}
         </header>
 
@@ -112,7 +147,7 @@ export default function Repositories() {
           {isLoading ? (
             <li className="flex min-h-24 items-center text-sm text-slate-600">
               <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-              Loading repositories...
+              Loading {status} repositories...
             </li>
           ) : error ? (
             <li
@@ -127,6 +162,10 @@ export default function Repositories() {
               >
                 Try again
               </button>
+            </li>
+          ) : repositories.length === 0 ? (
+            <li className="flex min-h-24 items-center text-sm text-slate-600">
+              No {status} repositories.
             </li>
           ) : (
             repositories.map((repository) => (

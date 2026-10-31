@@ -1,8 +1,17 @@
 import { Request, Response } from "express";
 import * as service from "./service";
+import { RepositoryApplicationStatus } from "./schema";
 
-export async function getRepositories(req: Request, res: Response) {
-  const data = await service.getRepositories();
+export async function getRepositories(
+  req: Request<
+    {},
+    {},
+    {},
+    { applicationStatus: RepositoryApplicationStatus }
+  >,
+  res: Response,
+) {
+  const data = await service.getRepositories(req.query.applicationStatus);
   res.status(200).json({
     success: true,
     message: "Repositories fetched successfully",

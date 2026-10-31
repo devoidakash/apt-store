@@ -5,7 +5,11 @@ import * as controller from "./controller";
 
 const router = express.Router();
 
-router.get("/repositories", controller.getRepositories);
+router.get(
+  "/repositories",
+  validateSchema(schema.repositoryApplicationStatusQuery, "query"),
+  controller.getRepositories,
+);
 
 router.get(
   "/repositories/:repositoryId",

@@ -42,7 +42,6 @@ async function fetchRepositoryMetadata(
   const url = `${data.uri}/dists/${encodeURIComponent(data.suite)}/${encodeURIComponent(data.component)}/binary-amd64/Packages.gz`;
 
   const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
-  console.log(res);
 
   if (!res.ok) {
     throw new ApiError({

@@ -1,6 +1,19 @@
 import z from "zod";
 
+// types
+export type RepositoryApplicationStatus = z.infer<
+  typeof repositoryApplicationStatus
+>;
 export type CreateRepositoryType = z.infer<typeof createRepository>;
+
+// Schemas
+export const repositoryApplicationStatus = z.enum(["draft", "published"], {
+  error: "Status must be either 'draft' or 'published'",
+});
+
+export const repositoryApplicationStatusQuery = z.object({
+  applicationStatus: repositoryApplicationStatus,
+});
 
 export const repositoryId = z
   .string()

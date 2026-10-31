@@ -1,7 +1,7 @@
 import type { PoolClient } from "pg";
 import pool from "../../../infra/database/db";
 import { LatestApplication } from "./helpers/apt-metadata";
-import { CreateRepositoryType } from "./schema";
+import { CreateRepositoryType, RepositoryApplicationStatus } from "./schema";
 
 // Types and interfaces
 interface RepositoryCardData {
@@ -48,17 +48,24 @@ interface UpdateRepositoryData {
 }
 
 // Functions
-export async function fetchRepositories(): Promise<RepositoryCardData[]> {
-  const result = await pool.query<RepositoryCardData>(`
+export async function fetchRepositories(
+  repositoryApplicationStatus: RepositoryApplicationStatus,
+): Promise<RepositoryCardData[]> {
+  const result = await pool.query<RepositoryCardData>(
+    `
     SELECT
       r.id,
       a.id AS "applicationId",
       a.display_name AS "displayName",
       a.icon_updated_at AS "iconUpdatedAt",
-      a.maintainer
+      a.maintainer,
+      a.status
     FROM repositories r
     JOIN applications a ON r.application_id = a.id
-  `);
+    WHERE a.status = $1
+  `,
+    [repositoryApplicationStatus],
+  );
 
   return result.rows;
 }

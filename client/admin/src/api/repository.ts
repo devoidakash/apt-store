@@ -1,5 +1,7 @@
 import axiosClient from "../lib/axios-client";
 
+export type RepositoryApplicationStatus = "draft" | "published";
+
 export interface CreateRepositoryRequest {
   displayName: string;
   packageName: string;
@@ -62,11 +64,15 @@ interface RepositoryListResponse {
 }
 
 export async function getRepositories(
+  status: RepositoryApplicationStatus,
   signal?: AbortSignal,
 ): Promise<Repository[]> {
   const response = await axiosClient.get<RepositoryListResponse>(
     "/admin/repositories",
-    { signal },
+    {
+      params: { applicationStatus: status },
+      signal,
+    },
   );
 
   return response.data.data;
