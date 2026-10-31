@@ -15,6 +15,7 @@ interface RepositoryCardData {
 interface RepositoryDetails {
   id: string;
   applicationId: string;
+  status: RepositoryApplicationStatus;
   packageName: string;
   uri: string;
   suite: string;
@@ -78,6 +79,7 @@ export async function fetchRepositoryById(
       SELECT
         a.display_name as "displayName",
         a.icon_updated_at AS "iconUpdatedAt",
+        a.status,
         r.id,
         r.application_id AS "applicationId",
         r.package_name AS "packageName",

@@ -153,45 +153,6 @@ function formatExactTime(value: string) {
   return Number.isNaN(date.getTime()) ? "-" : date.toLocaleString();
 }
 
-const sidebarLinks = [
-  {
-    to: "/repositories",
-    label: "Repositories",
-    icon: Database,
-    end: false,
-    children: [
-      {
-        to: "/repositories?applicationStatus=draft",
-        label: "Draft",
-        icon: FileText,
-      },
-      {
-        to: "/repositories?applicationStatus=published",
-        label: "Published",
-        icon: BadgeCheck,
-      },
-    ],
-  },
-  {
-    to: "/applications",
-    label: "Applications",
-    icon: LayoutGrid,
-    end: false,
-    children: [
-      {
-        to: "/applications?applicationStatus=draft",
-        label: "Draft",
-        icon: FileText,
-      },
-      {
-        to: "/applications?applicationStatus=published",
-        label: "Published",
-        icon: BadgeCheck,
-      },
-    ],
-  },
-];
-
 export default function ManageRepository() {
   const { repositoryId } = useParams();
   const location = useLocation();
@@ -209,6 +170,51 @@ export default function ManageRepository() {
   >({});
   const [form, setForm] = useState(emptyForm);
   const [copyStatus, setCopyStatus] = useState("");
+
+  const sidebarLinks = [
+    {
+      to: "/repositories",
+      label: "Repositories",
+      icon: Database,
+      end: false,
+      children: [
+        {
+          to: "/repositories?applicationStatus=draft",
+          label: "Draft",
+          icon: FileText,
+          active:
+            repository === null ? undefined : repository.status === "draft",
+        },
+        {
+          to: "/repositories?applicationStatus=published",
+          label: "Published",
+          icon: BadgeCheck,
+          active:
+            repository === null
+              ? undefined
+              : repository.status === "published",
+        },
+      ],
+    },
+    {
+      to: "/applications",
+      label: "Applications",
+      icon: LayoutGrid,
+      end: false,
+      children: [
+        {
+          to: "/applications?applicationStatus=draft",
+          label: "Draft",
+          icon: FileText,
+        },
+        {
+          to: "/applications?applicationStatus=published",
+          label: "Published",
+          icon: BadgeCheck,
+        },
+      ],
+    },
+  ];
 
   useEffect(() => {
     const controller = new AbortController();

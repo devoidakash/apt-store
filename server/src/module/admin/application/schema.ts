@@ -37,8 +37,5 @@ export const updateApplication = z.object({
   homepageUri: z
     .string()
     .trim()
-    .pipe(z.url({ protocol: /^https?$/ }))
-    .refine((uri) => !uri.endsWith("/"), {
-      error: "Homepage url must not end with a slash",
-    }),
+    .pipe(z.url({ protocol: /^https?$/ })),
 });

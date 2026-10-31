@@ -29,6 +29,7 @@ export interface Repository {
 
 export interface RepositoryDetail extends Repository {
   applicationId: string | null;
+  status: RepositoryApplicationStatus;
   displayName: string;
   packageName: string;
   uri: string;

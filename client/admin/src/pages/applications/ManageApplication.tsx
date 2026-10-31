@@ -1163,7 +1163,7 @@ export default function ManageApplication() {
                     className="mt-2 h-11 w-full border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/15"
                   >
                     <option value="draft">Draft</option>
-                    <option value="published">Published</option>
+                    <option value="published">Publish</option>
                   </select>
                 </label>
               </div>
