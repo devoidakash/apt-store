@@ -1,8 +1,8 @@
-use crate::types::{RemoveError, Repository};
+use crate::types::RemoveError;
 use std::process::Command;
 
-pub fn remove(repository: &Repository) -> Result<(), RemoveError> {
-    if repository.package_name.trim().is_empty() {
+pub fn remove(package_name: &str) -> Result<(), RemoveError> {
+    if package_name.trim().is_empty() {
         return Err(RemoveError::InvalidInput);
     }
 
@@ -10,11 +10,18 @@ pub fn remove(repository: &Repository) -> Result<(), RemoveError> {
         .arg("remove")
         .arg("-y")
         .arg("--")
-        .arg(&repository.package_name)
+        .arg(package_name)
         .output()
-        .map_err(|_| RemoveError::PackageRemovalFailed)?;
+        .map_err(|e| {
+            eprintln!("[remove] Failed to execute apt-get remove: {e}");
+            RemoveError::PackageRemovalFailed
+        })?;
 
     if !output.status.success() {
+        eprintln!(
+            "[remove] Package removal failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
         return Err(RemoveError::PackageRemovalFailed);
     }
 

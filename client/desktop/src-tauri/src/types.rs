@@ -1,7 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Deserialize, Serialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Deserialize, Serialize)]
 pub struct Repository {
     pub package_name: String,
     pub uri: String,
@@ -10,22 +9,33 @@ pub struct Repository {
     pub key_content: String,
 }
 
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Debug, serde::Serialize)]
 pub enum InstallError {
-    PackageInstallFailed,
     InvalidInput,
     FileSystemError,
-    RepositorySetupFailed,
     KeySetupFailed,
+    RepositorySetupFailed,
+    PackageInstallFailed,
+    PrivilegeEscalationFailed,
     Cancelled,
-    Unknown,
+    BackgroundTaskFailed,
 }
 
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub enum RemoveError {
-    Cancelled,
+#[derive(Debug, serde::Serialize)]
+pub enum UpdateError {
     InvalidInput,
+    RepositorySetupFailed,
+    UpdateFailed,
+    PrivilegeEscalationFailed,
+    Cancelled,
+    BackgroundTaskFailed,
+}
+
+#[derive(Debug, serde::Serialize)]
+pub enum RemoveError {
+    PrivilegeEscalationFailed,
+    Cancelled,
     PackageRemovalFailed,
+    BackgroundTaskFailed,
+    InvalidInput,
 }

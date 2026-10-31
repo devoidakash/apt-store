@@ -3,35 +3,41 @@ use std::process::Command;
 
 #[tauri::command]
 pub async fn install_packages(repository: Repository) -> Result<(), InstallError> {
-    let result =
-        tauri::async_runtime::spawn_blocking(move || process_installation(&repository)).await;
-
-    match result {
-        Ok(install_result) => install_result,
-        Err(e) => {
+    tauri::async_runtime::spawn_blocking(move || process_installation(&repository))
+        .await
+        .unwrap_or_else(|e| {
             eprintln!("[install_packages] Failed to execute installation in background: {e}");
             Err(InstallError::PackageInstallFailed)
-        }
-    }
+        })
 }
 
 fn process_installation(repository: &Repository) -> Result<(), InstallError> {
-    let repository_json =
-        serde_json::to_string(repository).map_err(|_| InstallError::InvalidInput)?;
+    let repository_json = serde_json::to_string(repository).map_err(|e| {
+        eprintln!("[process_installation] Failed to serialize repository: {e}");
+        InstallError::InvalidInput
+    })?;
 
     let status = Command::new("pkexec")
         .arg(helper_path())
         .arg("install")
         .arg(repository_json)
         .status()
-        .map_err(|_| InstallError::RepositorySetupFailed)?;
+        .map_err(|e| {
+            eprintln!("[process_installation] Failed to execute pkexec: {e}");
+            InstallError::PrivilegeEscalationFailed
+        })?;
 
     if status.code() == Some(126) {
+        eprintln!("[process_installation] Installation cancelled by user");
         return Err(InstallError::Cancelled);
     }
 
     if !status.success() {
-        return Err(InstallError::RepositorySetupFailed);
+        eprintln!(
+            "[process_installation] Installation helper failed. Exit code: {:?}",
+            status.code()
+        );
+        return Err(InstallError::PackageInstallFailed);
     }
 
     Ok(())

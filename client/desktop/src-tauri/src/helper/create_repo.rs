@@ -1,7 +1,7 @@
-use std::fs;
-use std::path::PathBuf;
-
 use crate::types::{InstallError, Repository};
+use std::fs::{self, OpenOptions};
+use std::io::Write;
+use std::path::PathBuf;
 
 pub fn create_repo(repository: &Repository) -> Result<PathBuf, InstallError> {
     let key_path = PathBuf::from(format!(
@@ -14,14 +14,13 @@ pub fn create_repo(repository: &Repository) -> Result<PathBuf, InstallError> {
         repository.package_name
     ));
 
-    let components = if let Some(component) = repository
+    let components = match repository
         .component
         .as_deref()
-        .filter(|c| !c.trim().is_empty())
+        .filter(|component| !component.trim().is_empty())
     {
-        format!("Components: {}\n", component)
-    } else {
-        String::new()
+        Some(component) => format!("Components: {}\n", component),
+        None => String::new(),
     };
 
     let source_content = format!(
@@ -31,14 +30,46 @@ pub fn create_repo(repository: &Repository) -> Result<PathBuf, InstallError> {
         components,
         key_path.display()
     );
-    let key_content = repository.key_content.trim();
+
+    let key_content = format!("{}\n", repository.key_content.trim());
 
     fs::create_dir_all("/etc/apt/keyrings").map_err(|_| InstallError::FileSystemError)?;
+
     fs::create_dir_all("/etc/apt/sources.list.d").map_err(|_| InstallError::FileSystemError)?;
 
-    fs::write(&key_path, key_content).map_err(|_| InstallError::KeySetupFailed)?;
+    // create_new prevents accidentally overwriting an existing key.
+    let mut key_file = OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(&key_path)
+        .map_err(|error| {
+            eprintln!("[create_repo] Failed to create key file: {error}");
+            InstallError::KeySetupFailed
+        })?;
 
-    if fs::write(&source_path, source_content).is_err() {
+    if let Err(error) = key_file.write_all(key_content.as_bytes()) {
+        eprintln!("[create_repo] Failed to write key file: {error}");
+        let _ = fs::remove_file(&key_path);
+        return Err(InstallError::KeySetupFailed);
+    }
+
+    // If source creation fails, remove the key created above.
+    let mut source_file = match OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(&source_path)
+    {
+        Ok(file) => file,
+        Err(error) => {
+            eprintln!("[create_repo] Failed to create source file: {error}");
+            let _ = fs::remove_file(&key_path);
+            return Err(InstallError::RepositorySetupFailed);
+        }
+    };
+
+    if let Err(error) = source_file.write_all(source_content.as_bytes()) {
+        eprintln!("[create_repo] Failed to write source file: {error}");
+        let _ = fs::remove_file(&source_path);
         let _ = fs::remove_file(&key_path);
         return Err(InstallError::RepositorySetupFailed);
     }

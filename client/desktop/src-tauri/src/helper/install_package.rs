@@ -6,6 +6,7 @@ use std::{path::Path, process::Command};
 
 pub fn install(repository: &Repository) -> Result<(), InstallError> {
     validate_repository(repository)?;
+
     match check_repo_status(&repository.uri) {
         Some(filepath) => install_package(&filepath, &repository.package_name),
         None => {
@@ -16,7 +17,7 @@ pub fn install(repository: &Repository) -> Result<(), InstallError> {
 }
 
 fn install_package(filepath: &Path, package_name: &str) -> Result<(), InstallError> {
-    // Step 1: Update package lists for the specified repository.
+    // Step 1: Update package lists using only the specified repository.
     let output = Command::new("apt-get")
         .arg("update")
         .arg("-o")
@@ -26,9 +27,16 @@ fn install_package(filepath: &Path, package_name: &str) -> Result<(), InstallErr
         .arg("-o")
         .arg("APT::Get::List-Cleanup=0")
         .output()
-        .map_err(|_| InstallError::RepositorySetupFailed)?;
+        .map_err(|error| {
+            eprintln!("[install] Failed to execute apt-get update: {error}");
+            InstallError::RepositorySetupFailed
+        })?;
 
     if !output.status.success() {
+        eprintln!(
+            "[install] Repository package-list update failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
         return Err(InstallError::RepositorySetupFailed);
     }
 
@@ -38,11 +46,18 @@ fn install_package(filepath: &Path, package_name: &str) -> Result<(), InstallErr
         .arg(format!("Dir::Etc::sourcelist={}", filepath.display()))
         .arg("-o")
         .arg("Dir::Etc::sourceparts=-")
-        .args(["install", "-y", package_name])
+        .args(["install", "-y", "--", package_name])
         .output()
-        .map_err(|_| InstallError::PackageInstallFailed)?;
+        .map_err(|error| {
+            eprintln!("[install] Failed to execute apt-get install: {error}");
+            InstallError::PackageInstallFailed
+        })?;
 
     if !output.status.success() {
+        eprintln!(
+            "[install] Package installation failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
         return Err(InstallError::PackageInstallFailed);
     }
 

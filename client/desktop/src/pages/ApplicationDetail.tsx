@@ -42,9 +42,16 @@ function describeOpenError(error: unknown): string {
   );
 }
 
-const REMOVE_ERROR_MESSAGES: Record<string, string> = {
-  invalidInput: "This application cannot be removed.",
-  packageRemovalFailed: "This application could not be removed.",
+const REPOSITORY_ERROR_MESSAGES: Record<string, string> = {
+  InvalidInput: "The application details are invalid.",
+  FileSystemError: "A filesystem error prevented the operation.",
+  KeySetupFailed: "The repository signing key could not be configured.",
+  RepositorySetupFailed: "The package repository could not be configured.",
+  PackageInstallFailed: "This application could not be installed.",
+  UpdateFailed: "This application could not be updated.",
+  PrivilegeEscalationFailed: "Administrator permission could not be obtained.",
+  PackageRemovalFailed: "This application could not be removed.",
+  BackgroundTaskFailed: "The operation could not be started.",
 };
 
 type RepositoryCommand =
@@ -58,38 +65,58 @@ type RepositoryCommandResult =
   | { status: "error"; message: string };
 
 function describeRepositoryError(
-  command: RepositoryCommand,
   message: string,
 ): string {
-  if (command === "remove_packages") {
-    return (
-      REMOVE_ERROR_MESSAGES[message] ?? "This application could not be removed."
-    );
-  }
+  return REPOSITORY_ERROR_MESSAGES[message] ?? message;
+}
 
-  return message;
+function toRustRepository(repository: Repository) {
+  return {
+    package_name: repository.packageName,
+    uri: repository.uri,
+    suite: repository.suite,
+    component: repository.component,
+    key_content: repository.keyContent,
+  };
 }
 
 async function runRepositoryCommand(
   command: RepositoryCommand,
   repository: Repository | null,
+  packageName: string,
 ): Promise<RepositoryCommandResult> {
-  if (!repository) {
-    return { status: "error", message: "Repository information is missing." };
+  if (command === "remove_packages" && !packageName.trim()) {
+    return { status: "error", message: "Package name is missing." };
   }
 
   try {
-    await invoke(command, { repository });
+    if (command === "remove_packages") {
+      await invoke(command, { packageName });
+    } else {
+      if (!repository) {
+        return {
+          status: "error",
+          message: "Repository information is missing.",
+        };
+      }
+      await invoke(command, {
+        repository: toRustRepository(repository),
+      });
+    }
     return { status: "success" };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    const normalized = message.toLowerCase();
+    const errorCode = message.replaceAll('"', "");
+    const normalized = errorCode.toLowerCase();
 
-    if (normalized.includes("cancelled") || normalized === '"cancelled"') {
+    if (normalized.includes("cancelled")) {
       return { status: "cancelled" };
     }
 
-    return { status: "error", message: describeRepositoryError(command, message) };
+    return {
+      status: "error",
+      message: describeRepositoryError(errorCode),
+    };
   }
 }
 
@@ -129,7 +156,11 @@ function PackageActions({
     setIsInstalling(true);
     setInstallError("");
     try {
-      const result = await runRepositoryCommand("install_packages", repository);
+      const result = await runRepositoryCommand(
+        "install_packages",
+        repository,
+        packageName,
+      );
       if (result.status === "success") onActionComplete();
       else if (result.status === "error") setInstallError(result.message);
     } finally {
@@ -141,7 +172,11 @@ function PackageActions({
     setIsUpdating(true);
     setUpdateError("");
     try {
-      const result = await runRepositoryCommand("update_packages", repository);
+      const result = await runRepositoryCommand(
+        "update_packages",
+        repository,
+        packageName,
+      );
       if (result.status === "success") onActionComplete();
       else if (result.status === "error") setUpdateError(result.message);
     } finally {
@@ -153,7 +188,11 @@ function PackageActions({
     setIsRemoving(true);
     setRemoveError("");
     try {
-      const result = await runRepositoryCommand("remove_packages", repository);
+      const result = await runRepositoryCommand(
+        "remove_packages",
+        repository,
+        packageName,
+      );
       if (result.status === "success") onActionComplete();
       else if (result.status === "error") setRemoveError(result.message);
     } finally {
@@ -228,6 +267,7 @@ function PackageActions({
             className="detail-install"
             onClick={handleInstall}
             disabled={isInstalling}
+            aria-busy={isInstalling}
           >
             {isInstalling ? "Installing..." : "Install"}
             {!isInstalling && <span aria-hidden="true">&#8594;</span>}
@@ -259,6 +299,7 @@ function PackageActions({
               className="detail-install"
               onClick={handleUpdate}
               disabled={isUpdating}
+              aria-busy={isUpdating}
             >
               {isUpdating ? "Updating..." : "Update"}
               {!isUpdating && <span aria-hidden="true">&#8594;</span>}
