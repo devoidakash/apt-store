@@ -39,7 +39,19 @@ export async function processRepositoryMetadata(
 async function fetchRepositoryMetadata(
   data: CreateRepositoryType,
 ): Promise<Package[]> {
-  const baseUrl = `${data.uri}/dists/${encodeURIComponent(data.suite)}/${encodeURIComponent(data.component)}/binary-amd64`;
+  const componentPath = data.component
+    ? `/${encodeURIComponent(data.component)}`
+    : "";
+
+  const isFlatRepo = data.suite === "./";
+
+  let baseUrl: string;
+
+  if (isFlatRepo) {
+    baseUrl = data.uri.replace(/\/+$/, "");
+  } else {
+    baseUrl = `${data.uri.replace(/\/+$/, "")}/dists/${data.suite.replace(/^\/+|\/+$/g, "")}${componentPath}/binary-amd64`;
+  }
 
   let res = await fetch(`${baseUrl}/Packages.gz`, {
     signal: AbortSignal.timeout(10000),

@@ -22,6 +22,7 @@ const repositoryFields: {
   label: string;
   type?: string;
   wide?: boolean;
+  required?: boolean;
   hint?: string;
   placeholder: string;
 }[] = [
@@ -43,7 +44,12 @@ const repositoryFields: {
     placeholder: "https://packages.example.com/debian",
   },
   { key: "suite", label: "Suite", placeholder: "e.g. stable" },
-  { key: "component", label: "Component", placeholder: "main" },
+  {
+    key: "component",
+    label: "Component (optional)",
+    required: false,
+    placeholder: "main",
+  },
   {
     key: "key_uri",
     label: "Key URL",
@@ -116,7 +122,15 @@ export default function CreateRepo({
           </h2>
           <div className="mt-5 grid gap-x-6 gap-y-5 sm:grid-cols-2">
             {repositoryFields.map(
-              ({ key, label, type, wide, hint, placeholder }) => {
+              ({
+                key,
+                label,
+                type,
+                wide,
+                required = true,
+                hint,
+                placeholder,
+              }) => {
                 const errorId = `${key}-error`;
                 const cell = wide ? "sm:col-span-2" : "";
 
@@ -127,7 +141,7 @@ export default function CreateRepo({
                   >
                     {label}
                     <input
-                      required
+                      required={required}
                       type={type}
                       placeholder={placeholder}
                       value={

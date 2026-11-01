@@ -80,7 +80,7 @@ function parseRepositoryDetails(value: string): Partial<RepositoryForm> {
     if (!field) return;
 
     const fieldValue = line.slice(separatorIndex + 1).trim();
-    if (fieldValue) parsed[field] = fieldValue;
+    if (fieldValue || field === "component") parsed[field] = fieldValue;
   });
 
   if (parsed.name && !parsed.packageName) {

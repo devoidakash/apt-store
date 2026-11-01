@@ -7,7 +7,7 @@ export interface CreateRepositoryRequest {
   packageName: string;
   uri: string;
   suite: string;
-  component: string;
+  component?: string;
   key_uri: string;
   fingerprint: string;
 }
@@ -47,7 +47,7 @@ export interface UpdateRepositoryRequest {
   packageName: string;
   uri: string;
   suite: string;
-  component: string;
+  component?: string;
   key_uri: string;
   fingerprint: string;
 }

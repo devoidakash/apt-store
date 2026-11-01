@@ -97,7 +97,9 @@ function parseRepositoryDetails(value: string): Partial<RepositoryForm> {
 
     const field = fields[line.slice(0, separatorIndex).trim().toLowerCase()];
     const fieldValue = line.slice(separatorIndex + 1).trim();
-    if (field && fieldValue) parsed[field] = fieldValue;
+    if (field && (fieldValue || field === "component")) {
+      parsed[field] = fieldValue;
+    }
   });
 
   return parsed;
