@@ -88,7 +88,7 @@ CREATE TABLE repositories (
     created_at     TIMESTAMPTZ   NOT NULL DEFAULT now(),
     updated_at     TIMESTAMPTZ   NOT NULL DEFAULT now(),
 
-    CONSTRAINT repositories_repo_unique UNIQUE (uri, suite, component),
+    CONSTRAINT repositories_repo_unique UNIQUE (uri, suite, component, package_name),
 
     -- https only, no trailing slash
     CONSTRAINT repositories_uri_format

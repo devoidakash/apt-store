@@ -137,8 +137,8 @@ export default function Repositories() {
               to="/repositories/new"
               className="flex min-h-24 items-center gap-4 border border-dashed border-emerald-700 bg-white p-5 text-emerald-800 transition hover:bg-emerald-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
             >
-              <span className="flex h-12 w-12 shrink-0 items-center justify-center border border-emerald-200 bg-emerald-50">
-                <Plus className="h-6 w-6" aria-hidden="true" />
+              <span className="flex h-14 w-14 shrink-0 items-center justify-center border border-emerald-200 bg-emerald-50">
+                <Plus className="h-7 w-7" aria-hidden="true" />
               </span>
               <span className="text-base font-semibold">Add repositories</span>
             </Link>
@@ -177,14 +177,14 @@ export default function Repositories() {
                 >
                   <article className="flex min-h-24 items-center gap-4 border border-slate-200 bg-white p-5 shadow-sm transition hover:border-emerald-600">
                     <div
-                      className="flex h-12 w-12 shrink-0 items-center justify-center border border-slate-200 bg-slate-50 text-emerald-700"
+                      className="flex h-14 w-14 shrink-0 items-center justify-center border border-slate-200 bg-slate-50 text-emerald-700"
                       aria-hidden="true"
                     >
                       {repository.icon ? (
                         <img
                           src={repository.icon}
                           alt=""
-                          className="h-full w-full object-contain p-1"
+                          className="h-full w-full object-contain"
                         />
                       ) : (
                         <LayoutGrid className="h-6 w-6" />

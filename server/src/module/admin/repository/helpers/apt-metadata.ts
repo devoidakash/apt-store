@@ -39,29 +39,46 @@ export async function processRepositoryMetadata(
 async function fetchRepositoryMetadata(
   data: CreateRepositoryType,
 ): Promise<Package[]> {
-  const url = `${data.uri}/dists/${encodeURIComponent(data.suite)}/${encodeURIComponent(data.component)}/binary-amd64/Packages.gz`;
+  const baseUrl = `${data.uri}/dists/${encodeURIComponent(data.suite)}/${encodeURIComponent(data.component)}/binary-amd64`;
 
-  const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
+  let res = await fetch(`${baseUrl}/Packages.gz`, {
+    signal: AbortSignal.timeout(10000),
+  });
 
-  if (!res.ok) {
-    throw new ApiError({
-      statusCode: res.status,
-      message: "Failed to fetch repository URIs",
-      code: "REPOSITORY_URI_FETCH_FAILED",
+  let packages: string;
+
+  if (res.status === 404) {
+    res = await fetch(`${baseUrl}/Packages`, {
+      signal: AbortSignal.timeout(10000),
     });
+
+    if (!res.ok) {
+      throw new ApiError({
+        statusCode: res.status,
+        message: "Failed to fetch repository URIs",
+        code: "REPOSITORY_URI_FETCH_FAILED",
+      });
+    }
+
+    packages = Buffer.from(await res.arrayBuffer()).toString("utf8");
+  } else {
+    if (!res.ok) {
+      throw new ApiError({
+        statusCode: res.status,
+        message: "Failed to fetch repository URIs",
+        code: "REPOSITORY_URI_FETCH_FAILED",
+      });
+    }
+
+    const compressed = Buffer.from(await res.arrayBuffer());
+    packages = (await promisify(gunzip)(compressed)).toString("utf8");
   }
 
-  const compressed = Buffer.from(await res.arrayBuffer());
-  const gunzipAsync = promisify(gunzip);
-  const decompressed = await gunzipAsync(compressed);
-  const text = decompressed.toString("utf8");
-  const packages = text
+  return packages
     .trim()
     .split(/\r?\n[ \t]*\r?\n/)
     .filter((paragraph) => paragraph.trim())
     .map((paragraph) => parse(paragraph));
-
-  return packages;
 }
 
 function findLatestApplication(
