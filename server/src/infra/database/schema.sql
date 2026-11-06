@@ -16,11 +16,20 @@ CREATE TABLE if not exists admins (
     created_at    TIMESTAMPTZ  NOT NULL DEFAULT now()
 );
 
-CREATE TYPE application_source_type AS ENUM ('repository');
-CREATE TYPE application_status      AS ENUM ('draft', 'published');
+DO $$ BEGIN
+    CREATE TYPE application_source_type AS ENUM ('repository');
+EXCEPTION
+    WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$ BEGIN
+    CREATE TYPE application_status AS ENUM ('draft', 'published');
+EXCEPTION
+    WHEN duplicate_object THEN NULL;
+END $$;
 
 
-CREATE TABLE applications (
+CREATE TABLE IF NOT EXISTS applications (
     id                      UUID                    PRIMARY KEY DEFAULT gen_random_uuid(),
     display_name            VARCHAR(100)            NOT NULL,
     source_type             application_source_type NOT NULL,
@@ -47,7 +56,7 @@ CREATE TABLE applications (
         CHECK (
             cardinality(images) = 0
             OR cardinality(images) = 5
-        );,
+        ),
 
     -- Drafts may be incomplete; published applications must have publishable metadata.
     CONSTRAINT applications_live_requires_complete
@@ -59,22 +68,21 @@ CREATE TABLE applications (
                 AND description IS NOT NULL
                 AND category    IS NOT NULL
                 AND icon_updated_at IS NOT NULL
-                AND images      IS NOT NULL
                 AND homepage_uri    IS NOT NULL
-                AND download_size_in_bytes IS NOT NULL
-                AND installed_size_in_bytes IS NOT NULL
             )
         )
 );
 
-CREATE INDEX applications_status_idx
+CREATE INDEX IF NOT EXISTS applications_status_idx
     ON applications (status);
+
+DROP TRIGGER IF EXISTS applications_set_updated_at ON applications;
 CREATE TRIGGER applications_set_updated_at
     BEFORE UPDATE ON applications
     FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
 
-CREATE TABLE repositories (
+CREATE TABLE IF NOT EXISTS repositories (
     id             UUID          PRIMARY KEY DEFAULT gen_random_uuid(),
     application_id UUID          NOT NULL UNIQUE
                                  REFERENCES applications(id) ON DELETE CASCADE,
@@ -101,6 +109,7 @@ CREATE TABLE repositories (
         CHECK (fingerprint ~ '^([0-9A-F]{40}|[0-9A-F]{64})$')
 );
 
+DROP TRIGGER IF EXISTS repositories_set_updated_at ON repositories;
 CREATE TRIGGER repositories_set_updated_at
     BEFORE UPDATE ON repositories
     FOR EACH ROW EXECUTE FUNCTION set_updated_at();
