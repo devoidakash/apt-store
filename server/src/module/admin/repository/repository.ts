@@ -17,6 +17,7 @@ interface RepositoryDetails {
   applicationId: string;
   status: RepositoryApplicationStatus;
   packageName: string;
+  metadataUri: string;
   uri: string;
   suite: string;
   component: string;
@@ -83,6 +84,7 @@ export async function fetchRepositoryById(
         r.id,
         r.application_id AS "applicationId",
         r.package_name AS "packageName",
+        r.metadata_uri AS "metadataUri",
         r.uri,
         r.suite,
         r.component,
@@ -140,19 +142,20 @@ export async function insertIntoRepository(
   const result = await client.query<{ id: string }>(
     `
       INSERT INTO repositories (
-        application_id, package_name, uri, suite, component,
+        application_id, metadata_uri, package_name, uri, suite, component,
         key_uri, key_content, fingerprint
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
       RETURNING id
     `,
     [
       data.applicationId,
+      data.metadataUri,
       data.packageName,
       data.uri,
       data.suite,
       data.component,
-      data.key_uri,
+      data.keyUri,
       data.keyContent,
       data.fingerprint,
     ],
@@ -201,12 +204,13 @@ export async function updateRepository(
       UPDATE repositories
       SET
         package_name = $2,
-        uri = $3,
-        suite = $4,
-        component = $5,
-        key_uri = $6,
-        key_content = $7,
-        fingerprint = $8,
+        metadata_uri = $3,
+        uri = $4,
+        suite = $5,
+        component = $6,
+        key_uri = $7,
+        key_content = $8,
+        fingerprint = $9,
         updated_at = now()
       WHERE id = $1
       RETURNING id
@@ -214,10 +218,11 @@ export async function updateRepository(
     [
       data.repositoryId,
       data.data.packageName,
+      data.data.metadataUri,
       data.data.uri,
       data.data.suite,
       data.data.component,
-      data.data.key_uri,
+      data.data.keyUri,
       data.keyContent,
       data.data.fingerprint,
     ],

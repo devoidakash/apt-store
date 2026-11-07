@@ -41,7 +41,7 @@ export async function getRepositoryById(repositoryId: string) {
 export async function createRepository(
   data: CreateRepositoryType,
 ): Promise<{ id: string }> {
-  const keyContent = await verifyRepositoryKey(data.key_uri, data.fingerprint);
+  const keyContent = await verifyRepositoryKey(data.keyUri, data.fingerprint);
   const application = await processRepositoryMetadata(data);
 
   return withTransaction(pool, async (client: PoolClient) => {
@@ -67,7 +67,7 @@ export async function updateRepository(
     throw new ApiError(REPOSITORY_ERRORS.REPOSITORY_NOT_FOUND);
   }
 
-  const keyContent = await verifyRepositoryKey(data.key_uri, data.fingerprint);
+  const keyContent = await verifyRepositoryKey(data.keyUri, data.fingerprint);
   const application = await processRepositoryMetadata(data);
 
   return withTransaction(pool, async (client: PoolClient) => {

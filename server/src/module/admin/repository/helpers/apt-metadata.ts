@@ -1,7 +1,5 @@
 import { parse } from "debian-control";
 import compareDpkgVersions from "dpkg-compare-versions";
-import { promisify } from "node:util";
-import { gunzip } from "node:zlib";
 import ApiError from "../../../../err/api-error";
 import REPOSITORY_ERRORS from "../error";
 import { CreateRepositoryType } from "../schema";
@@ -39,53 +37,22 @@ export async function processRepositoryMetadata(
 async function fetchRepositoryMetadata(
   data: CreateRepositoryType,
 ): Promise<Package[]> {
-  const componentPath = data.component
-    ? `/${encodeURIComponent(data.component)}`
-    : "";
-
-  const isFlatRepo = data.suite === "./";
-
-  let baseUrl: string;
-
-  if (isFlatRepo) {
-    baseUrl = data.uri.replace(/\/+$/, "");
-  } else {
-    baseUrl = `${data.uri.replace(/\/+$/, "")}/dists/${data.suite.replace(/^\/+|\/+$/g, "")}${componentPath}/binary-amd64`;
-  }
-
-  let res = await fetch(`${baseUrl}/Packages.gz`, {
+  const res = await fetch(data.metadataUri, {
     signal: AbortSignal.timeout(10000),
   });
 
-  let packages: string;
-
-  if (res.status === 404) {
-    res = await fetch(`${baseUrl}/Packages`, {
-      signal: AbortSignal.timeout(10000),
+  if (!res.ok) {
+    throw new ApiError({
+      statusCode: res.status,
+      message:
+        res.status === 404
+          ? "Metadata url not found"
+          : "Failed to fetch repository metadata",
+      code: "REPOSITORY_URI_FETCH_FAILED",
     });
-
-    if (!res.ok) {
-      throw new ApiError({
-        statusCode: res.status,
-        message: "Failed to fetch repository URIs",
-        code: "REPOSITORY_URI_FETCH_FAILED",
-      });
-    }
-
-    packages = Buffer.from(await res.arrayBuffer()).toString("utf8");
-  } else {
-    if (!res.ok) {
-      throw new ApiError({
-        statusCode: res.status,
-        message: "Failed to fetch repository URIs",
-        code: "REPOSITORY_URI_FETCH_FAILED",
-      });
-    }
-
-    const compressed = Buffer.from(await res.arrayBuffer());
-    packages = (await promisify(gunzip)(compressed)).toString("utf8");
   }
 
+  const packages = await res.text();
   return packages
     .trim()
     .split(/\r?\n[ \t]*\r?\n/)

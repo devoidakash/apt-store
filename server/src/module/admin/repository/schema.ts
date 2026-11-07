@@ -27,6 +27,13 @@ export const repositoryIdParams = z.object({
 export const createRepository = z.object({
   displayName: z.string().trim(),
   packageName: z.string().trim().toLowerCase(),
+  metadataUri: z
+    .string()
+    .trim()
+    .pipe(z.url({ protocol: /^https?$/ }))
+    .refine((uri) => !uri.endsWith("/"), {
+      error: "Metadata uri must not end with a slash",
+    }),
   uri: z
     .string()
     .trim()
@@ -41,7 +48,7 @@ export const createRepository = z.object({
     .toLowerCase()
     .optional()
     .transform((component) => component ?? ""),
-  key_uri: z
+  keyUri: z
     .string()
     .trim()
     .pipe(z.url({ protocol: /^https?$/ }))
