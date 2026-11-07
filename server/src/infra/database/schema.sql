@@ -86,6 +86,7 @@ CREATE TABLE IF NOT EXISTS repositories (
     id             UUID          PRIMARY KEY DEFAULT gen_random_uuid(),
     application_id UUID          NOT NULL UNIQUE
                                  REFERENCES applications(id) ON DELETE CASCADE,
+    metadata_uri   VARCHAR(512) NOT NULL,
     package_name   VARCHAR(100)  NOT NULL,
     uri            VARCHAR(512) NOT NULL,
     suite          VARCHAR(100)  NOT NULL,
@@ -99,6 +100,8 @@ CREATE TABLE IF NOT EXISTS repositories (
     CONSTRAINT repositories_repo_unique UNIQUE (uri, suite, component, package_name),
 
     -- https only, no trailing slash
+    CONSTRAINT repositories_metadata_uri_format
+        CHECK (uri ~ '^https://' AND uri !~ '/$'),
     CONSTRAINT repositories_uri_format
         CHECK (uri ~ '^https://' AND uri !~ '/$'),
     CONSTRAINT repositories_key_uri_format
