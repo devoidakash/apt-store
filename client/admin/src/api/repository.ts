@@ -5,10 +5,11 @@ export type RepositoryApplicationStatus = "draft" | "published";
 export interface CreateRepositoryRequest {
   displayName: string;
   packageName: string;
+  metadataUri: string;
   uri: string;
   suite: string;
   component?: string;
-  key_uri: string;
+  keyUri: string;
   fingerprint: string;
 }
 
@@ -32,6 +33,7 @@ export interface RepositoryDetail extends Repository {
   status: RepositoryApplicationStatus;
   displayName: string;
   packageName: string;
+  metadataUri: string;
   uri: string;
   suite: string;
   component: string;
@@ -45,10 +47,11 @@ export interface RepositoryDetail extends Repository {
 export interface UpdateRepositoryRequest {
   displayName: string;
   packageName: string;
+  metadataUri: string;
   uri: string;
   suite: string;
   component?: string;
-  key_uri: string;
+  keyUri: string;
   fingerprint: string;
 }
 

@@ -65,6 +65,7 @@ export default function Repositories() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     if (rawStatus !== "draft" && rawStatus !== "published") {
@@ -99,6 +100,12 @@ export default function Repositories() {
     return () => controller.abort();
   }, [reloadKey, status]);
 
+  const normalizedSearch = searchQuery.trim().toLowerCase();
+  const filteredRepositories = repositories.filter((repository) =>
+    [repository.displayName, repository.maintainer].some((value) =>
+      value?.toLowerCase().includes(normalizedSearch),
+    ),
+  );
   const StatusIcon = status === "published" ? BadgeCheck : FileText;
   const statusPillClassName =
     status === "published"
@@ -109,6 +116,7 @@ export default function Repositories() {
     <Layout
       sidebarLinks={sidebarLinks}
       searchPlaceholder="Search repositories..."
+      onSearch={setSearchQuery}
     >
       <section className="w-full">
         <header className="flex flex-wrap items-end justify-between gap-4 border border-slate-200 bg-white px-5 py-4 sm:px-6">
@@ -125,7 +133,7 @@ export default function Repositories() {
               className={`inline-flex items-center gap-2 border px-3 py-2 text-sm font-medium ${statusPillClassName}`}
             >
               <StatusIcon className="h-4 w-4" aria-hidden="true" />
-              <span>{repositories.length}</span>
+              <span>{filteredRepositories.length}</span>
               <span className="capitalize">{status}</span>
             </span>
           )}
@@ -163,12 +171,8 @@ export default function Repositories() {
                 Try again
               </button>
             </li>
-          ) : repositories.length === 0 ? (
-            <li className="flex min-h-24 items-center text-sm text-slate-600">
-              No {status} repositories.
-            </li>
-          ) : (
-            repositories.map((repository) => (
+          ) : filteredRepositories.length > 0 ? (
+            filteredRepositories.map((repository) => (
               <li key={repository.id}>
                 <Link
                   to={`/repositories/${repository.id}`}
@@ -208,6 +212,12 @@ export default function Repositories() {
                 </Link>
               </li>
             ))
+          ) : (
+            <li className="flex min-h-24 items-center text-sm text-slate-600">
+              {normalizedSearch
+                ? `No repositories match “${searchQuery.trim()}”.`
+                : `No ${status} repositories.`}
+            </li>
           )}
         </ul>
       </section>

@@ -1,6 +1,7 @@
 export interface RepositoryForm {
   name: string;
   packageName: string;
+  metadataUri: string;
   uri: string;
   suite: string;
   component: string;

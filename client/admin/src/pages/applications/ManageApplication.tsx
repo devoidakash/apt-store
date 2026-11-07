@@ -91,6 +91,7 @@ export default function ManageApplication() {
   );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [reloadKey, setReloadKey] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [saveSuccess, setSaveSuccess] = useState("");
@@ -237,7 +238,7 @@ export default function ManageApplication() {
 
     void loadApplication();
     return () => controller.abort();
-  }, [applicationId]);
+  }, [applicationId, reloadKey]);
 
   const handleSave = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -464,12 +465,19 @@ export default function ManageApplication() {
             </div>
           </div>
         ) : error ? (
-          <p
+          <div
             role="alert"
-            className=" border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800"
+            className="flex flex-wrap items-center gap-4 border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800"
           >
-            {error}
-          </p>
+            <p>{error}</p>
+            <button
+              type="button"
+              onClick={() => setReloadKey((key) => key + 1)}
+              className="border border-rose-300 bg-white px-3 py-2 font-medium text-rose-800 hover:bg-rose-50"
+            >
+              Try again
+            </button>
+          </div>
         ) : isEditRoute ? (
           <form
             onSubmit={handleSave}
@@ -1070,7 +1078,11 @@ export default function ManageApplication() {
                       const files = Array.from(event.target.files ?? []);
                       setImageFiles(files);
                       updateImagePreviews(files);
-                      setImagesUploadError("");
+                      setImagesUploadError(
+                        files.length === 0 || files.length === 5
+                          ? ""
+                          : "Select exactly 5 images.",
+                      );
                       setImagesUploadSuccess("");
                     }}
                     className="sr-only"

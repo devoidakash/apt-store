@@ -53,6 +53,8 @@ export default function Applications() {
   const [applications, setApplications] = useState<ApplicationSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [reloadKey, setReloadKey] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     if (rawStatus !== "draft" && rawStatus !== "published") {
@@ -85,7 +87,19 @@ export default function Applications() {
 
     void loadApplications();
     return () => controller.abort();
-  }, [status]);
+  }, [reloadKey, status]);
+
+  const normalizedSearch = searchQuery.trim().toLowerCase();
+  const filteredApplications = applications.filter((application) =>
+    [
+      application.displayName,
+      application.packageName,
+      application.maintainer,
+      application.caption,
+      application.category,
+      application.version,
+    ].some((value) => value?.toLowerCase().includes(normalizedSearch)),
+  );
 
   const StatusIcon = status === "published" ? BadgeCheck : FileText;
   const statusPillClassName =
@@ -97,6 +111,7 @@ export default function Applications() {
     <Layout
       sidebarLinks={sidebarLinks}
       searchPlaceholder="Search applications..."
+      onSearch={setSearchQuery}
     >
       <section className="w-full">
         <header className="flex flex-wrap items-end justify-between gap-4 border border-slate-200 bg-white px-5 py-4 sm:px-6">
@@ -113,7 +128,7 @@ export default function Applications() {
               className={`inline-flex items-center gap-2 border px-3 py-2 text-sm font-medium ${statusPillClassName}`}
             >
               <StatusIcon className="h-4 w-4" aria-hidden="true" />
-              <span>{applications.length}</span>
+              <span>{filteredApplications.length}</span>
               <span className="capitalize">{status}</span>
             </span>
           )}
@@ -125,9 +140,19 @@ export default function Applications() {
             Loading {status} applications...
           </div>
         ) : error ? (
-          <p role="alert" className="py-8 text-sm text-rose-700">
-            {error}
-          </p>
+          <div
+            role="alert"
+            className="flex flex-wrap items-center gap-4 py-8 text-sm"
+          >
+            <p className="text-rose-700">{error}</p>
+            <button
+              type="button"
+              onClick={() => setReloadKey((key) => key + 1)}
+              className="border border-slate-300 bg-white px-3 py-2 font-medium text-slate-700 hover:bg-slate-50"
+            >
+              Try again
+            </button>
+          </div>
         ) : applications.length === 0 ? (
           <div className="relative min-h-[calc(100vh-14rem)]">
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 text-center text-lg font-medium text-slate-600">
@@ -138,9 +163,13 @@ export default function Applications() {
               <p>No {status} applications.</p>
             </div>
           </div>
+        ) : filteredApplications.length === 0 ? (
+          <div className="flex min-h-48 items-center justify-center text-center text-sm text-slate-600">
+            No applications match “{searchQuery.trim()}”.
+          </div>
         ) : (
           <ul className="grid gap-4 py-6 sm:grid-cols-2 xl:grid-cols-3">
-            {applications.map((application) => (
+            {filteredApplications.map((application) => (
               <li key={application.id}>
                 <Link
                   to={`/applications/${application.id}`}

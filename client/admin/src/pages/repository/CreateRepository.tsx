@@ -32,6 +32,10 @@ const apiFieldToFormField: Record<string, RepositoryFormField> = {
   "package-name": "packageName",
   uri: "uri",
   uris: "uri",
+  metadataUri: "metadataUri",
+  metadata_uri: "metadataUri",
+  "metadata-uri": "metadataUri",
+  "metadata-url": "metadataUri",
   suite: "suite",
   suites: "suite",
   component: "component",
@@ -44,6 +48,7 @@ const apiFieldToFormField: Record<string, RepositoryFormField> = {
 const initialForm: RepositoryForm = {
   name: "",
   packageName: "",
+  metadataUri: "",
   uri: "",
   suite: "",
   component: "",
@@ -55,11 +60,21 @@ function parseRepositoryDetails(value: string): Partial<RepositoryForm> {
   const parsed: Partial<RepositoryForm> = {};
   const fields: Record<string, RepositoryFormField> = {
     name: "name",
+    "application name": "name",
+    applicationname: "name",
     application_name: "name",
     "application-name": "name",
     "display-name": "name",
     "package-name": "packageName",
+    "package name": "packageName",
+    packagename: "packageName",
     package_name: "packageName",
+    metadatauri: "metadataUri",
+    metadata_uri: "metadataUri",
+    "metadata-uri": "metadataUri",
+    "metadata-url": "metadataUri",
+    "metadata url": "metadataUri",
+    "repository url": "uri",
     uris: "uri",
     uri: "uri",
     suites: "suite",
@@ -67,6 +82,8 @@ function parseRepositoryDetails(value: string): Partial<RepositoryForm> {
     components: "component",
     component: "component",
     "key-uri": "key_uri",
+    "key url": "key_uri",
+    keyuri: "key_uri",
     key_uri: "key_uri",
     fingerprint: "fingerprint",
   };
@@ -130,10 +147,11 @@ export default function CreateRepository() {
       const result = await createRepository({
         displayName: form.name,
         packageName: form.packageName,
+        metadataUri: form.metadataUri,
         uri: form.uri,
         suite: form.suite,
         component: form.component,
-        key_uri: form.key_uri,
+        keyUri: form.key_uri,
         fingerprint: form.fingerprint,
       });
       navigate(`/repositories/${result.data.id}`);
@@ -141,7 +159,7 @@ export default function CreateRepository() {
       if (axios.isAxiosError<ApiErrorResponse>(submitError)) {
         const errors: Partial<Record<RepositoryFormField, string>> = {};
         for (const validationError of submitError.response?.data.errors ?? []) {
-          const apiField = validationError.field.split(".")[0];
+          const apiField = validationError.field.split(".").at(-1) ?? "";
           const formField = apiFieldToFormField[apiField];
           if (formField && !errors[formField]) {
             errors[formField] = validationError.message;
@@ -194,6 +212,7 @@ export default function CreateRepository() {
           fieldErrors={fieldErrors}
           isSaving={isSubmitting}
           saveError={error}
+          sectionTitle="Add repository"
           buttonText="Create"
           repositoryDetails={repositoryDetails}
           onCancel={() => navigate("/repositories")}

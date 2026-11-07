@@ -39,17 +39,30 @@ interface ApiErrorResponse {
 const apiFieldToFormField: Record<string, RepositoryFormField> = {
   name: "name",
   displayName: "name",
+  display_name: "name",
+  application_name: "name",
   packageName: "packageName",
+  package_name: "packageName",
+  metadataUri: "metadataUri",
+  metadata_uri: "metadataUri",
+  "metadata-uri": "metadataUri",
+  "metadata-url": "metadataUri",
   uri: "uri",
+  uris: "uri",
   suite: "suite",
+  suites: "suite",
   component: "component",
+  components: "component",
   key_uri: "key_uri",
+  keyUri: "key_uri",
+  "key-uri": "key_uri",
   fingerprint: "fingerprint",
 };
 
 const emptyForm: RepositoryForm = {
   name: "",
   packageName: "",
+  metadataUri: "",
   uri: "",
   suite: "",
   component: "",
@@ -64,6 +77,7 @@ const viewFields: {
 }[] = [
   { key: "name", label: "Application name" },
   { key: "packageName", label: "Package name" },
+  { key: "metadataUri", label: "Metadata URL", wide: true },
   { key: "uri", label: "Repository URL", wide: true },
   { key: "suite", label: "Suite" },
   { key: "component", label: "Component" },
@@ -75,11 +89,21 @@ function parseRepositoryDetails(value: string): Partial<RepositoryForm> {
   const parsed: Partial<RepositoryForm> = {};
   const fields: Record<string, RepositoryFormField> = {
     name: "name",
+    "application name": "name",
+    applicationname: "name",
     application_name: "name",
     "application-name": "name",
     "display-name": "name",
     "package-name": "packageName",
+    "package name": "packageName",
+    packagename: "packageName",
     package_name: "packageName",
+    metadatauri: "metadataUri",
+    metadata_uri: "metadataUri",
+    "metadata-uri": "metadataUri",
+    "metadata-url": "metadataUri",
+    "metadata url": "metadataUri",
+    "repository url": "uri",
     uris: "uri",
     uri: "uri",
     suites: "suite",
@@ -87,6 +111,8 @@ function parseRepositoryDetails(value: string): Partial<RepositoryForm> {
     components: "component",
     component: "component",
     "key-uri": "key_uri",
+    "key url": "key_uri",
+    keyuri: "key_uri",
     key_uri: "key_uri",
     fingerprint: "fingerprint",
   };
@@ -106,12 +132,13 @@ function parseRepositoryDetails(value: string): Partial<RepositoryForm> {
 }
 
 function formatRepositoryDetails(form: RepositoryForm) {
-  return `application_name: ${form.name}
-package_name: ${form.packageName}
-URIs: ${form.uri}
-Suites: ${form.suite}
-Components: ${form.component}
-Key-URI: ${form.key_uri}
+  return `Application name: ${form.name}
+Package name: ${form.packageName}
+Metadata URL: ${form.metadataUri}
+Repository URL: ${form.uri}
+Suite: ${form.suite}
+Component: ${form.component}
+Key URL: ${form.key_uri}
 Fingerprint: ${formatFingerprint(form.fingerprint)}`;
 }
 
@@ -119,6 +146,7 @@ function toRepositoryForm(data: RepositoryDetail): RepositoryForm {
   return {
     name: data.displayName,
     packageName: data.packageName,
+    metadataUri: data.metadataUri,
     uri: data.uri,
     suite: data.suite,
     component: data.component,
@@ -163,6 +191,7 @@ export default function ManageRepository() {
   const [repository, setRepository] = useState<RepositoryDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [reloadKey, setReloadKey] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [saveSuccess, setSaveSuccess] = useState("");
@@ -258,7 +287,7 @@ export default function ManageRepository() {
 
     void loadRepository();
     return () => controller.abort();
-  }, [isEditRoute, repositoryId]);
+  }, [isEditRoute, reloadKey, repositoryId]);
 
   const updateField = (field: RepositoryFormField, value: string) => {
     setForm((current) => ({ ...current, [field]: value }));
@@ -279,10 +308,11 @@ export default function ManageRepository() {
       const result = await updateRepository(repositoryId, {
         displayName: form.name.trim(),
         packageName: form.packageName.trim(),
+        metadataUri: form.metadataUri.trim(),
         uri: form.uri.trim(),
         suite: form.suite.trim(),
         component: form.component.trim(),
-        key_uri: form.key_uri.trim(),
+        keyUri: form.key_uri.trim(),
         fingerprint: form.fingerprint.trim(),
       });
       setRepository(result.data);
@@ -292,7 +322,7 @@ export default function ManageRepository() {
       if (axios.isAxiosError<ApiErrorResponse>(saveFailure)) {
         const errors: Partial<Record<RepositoryFormField, string>> = {};
         for (const validationError of saveFailure.response?.data.errors ?? []) {
-          const apiField = validationError.field.split(".")[0];
+          const apiField = validationError.field.split(".").at(-1) ?? "";
           const formField = apiFieldToFormField[apiField];
           if (formField && !errors[formField]) {
             errors[formField] = validationError.message;
@@ -436,9 +466,16 @@ export default function ManageRepository() {
         ) : error ? (
           <div
             role="alert"
-            className="mt-6 border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800"
+            className="mt-6 flex flex-wrap items-center gap-4 border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800"
           >
             {error}
+            <button
+              type="button"
+              onClick={() => setReloadKey((key) => key + 1)}
+              className="border border-rose-300 bg-white px-3 py-2 font-medium text-rose-800 hover:bg-rose-50"
+            >
+              Try again
+            </button>
           </div>
         ) : (
           /* One card, one grid: view and edit render in the same place. */
@@ -476,14 +513,6 @@ export default function ManageRepository() {
                   {saveSuccess}
                 </p>
               )}
-              {saveError && (
-                <p
-                  role="alert"
-                  className="mt-5 rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800"
-                >
-                  {saveError}
-                </p>
-              )}
             </div>
 
             {isEditRoute ? (
@@ -492,6 +521,7 @@ export default function ManageRepository() {
                 fieldErrors={fieldErrors}
                 isSaving={isSaving}
                 saveError={saveError}
+                sectionTitle="Edit repository"
                 buttonText="Save changes"
                 repositoryDetails={repositoryDetails}
                 onCancel={cancelEditing}

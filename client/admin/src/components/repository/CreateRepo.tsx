@@ -1,15 +1,13 @@
 import { Check, LoaderCircle, X } from "lucide-react";
 import { formatFingerprint } from "./repository-form";
-import type {
-  RepositoryForm,
-  RepositoryFormField,
-} from "./repository-form";
+import type { RepositoryForm, RepositoryFormField } from "./repository-form";
 
 interface CreateRepoProps {
   form: RepositoryForm;
   fieldErrors: Partial<Record<RepositoryFormField, string>>;
   isSaving: boolean;
   saveError: string;
+  sectionTitle: string;
   buttonText: string;
   repositoryDetails: string;
   onCancel: () => void;
@@ -37,6 +35,13 @@ const repositoryFields: {
     placeholder: "e.g. firefox-esr",
   },
   {
+    key: "metadataUri",
+    label: "Metadata URL",
+    type: "url",
+    wide: true,
+    placeholder: "https://download.sublimetext.com/apt/stable/Packages.xz",
+  },
+  {
     key: "uri",
     label: "Repository URL",
     type: "url",
@@ -46,7 +51,7 @@ const repositoryFields: {
   { key: "suite", label: "Suite", placeholder: "e.g. stable" },
   {
     key: "component",
-    label: "Component (optional)",
+    label: "Component",
     required: false,
     placeholder: "main",
   },
@@ -60,7 +65,8 @@ const repositoryFields: {
   {
     key: "fingerprint",
     label: "Fingerprint",
-    placeholder: "ABCD 1234 EF56 7890",
+    wide: true,
+    placeholder: "ABCD 1234 EF56 7890 21D5 A877 2835",
   },
 ];
 
@@ -72,6 +78,7 @@ export default function CreateRepo({
   fieldErrors,
   isSaving,
   saveError,
+  sectionTitle,
   buttonText,
   repositoryDetails,
   onCancel,
@@ -83,7 +90,7 @@ export default function CreateRepo({
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 py-4">
         <div>
           <h2 className="text-base font-semibold text-slate-900">
-            Add repository
+            {sectionTitle}
           </h2>
           {saveError && (
             <p role="alert" className="mt-1 text-sm text-rose-700">
@@ -188,12 +195,13 @@ export default function CreateRepo({
                 onRepositoryDetailsChange(event.target.value)
               }
               rows={10}
-              placeholder={`application_name: Example app
-package_name: example_package
-URIs: https://example_package-apt-release.s3.example.com
-Suites: stable
-Components: main
-Key-URI: https://packages.example.com/repository-key.gpg
+              placeholder={`Application name: Example app
+Package name: example_package
+Metadata URL: https://example.com/dists/stable/main/binary-amd64/Packages.xz
+Repository URL: https://example_package-apt-release.s3.example.com
+Suite: stable
+Component: main
+Key URL: https://packages.example.com/repository-key.gpg
 Fingerprint: ABCD 1234 EF56 7890`}
               className="mt-2 w-full rounded-md border border-slate-300 bg-white px-3 py-3 font-mono text-sm text-slate-900 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/15"
             />
